@@ -28,11 +28,12 @@ namespace AspNetCore.WeixinOAuth.Events
         /// <param name="tokens">The tokens returned from the token endpoint.</param>
         public WeixinOAuthCreatingTicketContext(
             HttpContext context,
+            AuthenticationScheme scheme,
             WeixinOAuthOptions options,
             HttpClient backchannel,
             AuthenticationTicket ticket,
             WeixinOAuthTokenResponse tokens)
-            : this(context, options, backchannel, ticket, tokens, user: new JObject())
+            : this(context, scheme, options, backchannel, ticket, tokens, user: new JObject())
         {
         }
 
@@ -47,12 +48,13 @@ namespace AspNetCore.WeixinOAuth.Events
         /// <param name="user">The JSON-serialized user.</param>
         public WeixinOAuthCreatingTicketContext(
             HttpContext context,
+            AuthenticationScheme scheme,
             WeixinOAuthOptions options,
             HttpClient backchannel,
             AuthenticationTicket ticket,
             WeixinOAuthTokenResponse tokens,
             JObject user)
-            : base(context, options)
+            : base(context, scheme, options)
         {
             if (context == null)
             {

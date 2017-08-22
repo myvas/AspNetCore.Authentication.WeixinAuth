@@ -11,7 +11,7 @@ namespace AspNetCore.WeixinOAuth.Events
     /// <summary>
     /// Default <see cref="IWeixinOAuthEvents"/> implementation.
     /// </summary>
-    public class WeixinOAuthEvents : RemoteAuthenticationEvents, IWeixinOAuthEvents
+    public class WeixinOAuthEvents : RemoteAuthenticationEvents
     {
         /// <summary>
         /// Gets or sets the function that is invoked when the CreatingTicket method is invoked.

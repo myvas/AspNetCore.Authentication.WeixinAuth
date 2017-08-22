@@ -64,7 +64,7 @@ namespace AspNetCore.WeixinOAuth
                 options.CallbackPath = WeixinOAuthDefaults.CallbackPathQr;
             }
 
-            return app.UseMiddleware<WeixinOAuthMiddleware>(Options.Create(options));
+            return null;// app.UseMiddleware<WeixinOAuthMiddleware>(Options.Create(options));
         }
     }
 }

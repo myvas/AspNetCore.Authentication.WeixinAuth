@@ -1,7 +1,6 @@
 ﻿using System.Net.Http;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.OAuth;
-using Microsoft.AspNetCore.Http.Authentication;
 using Microsoft.AspNetCore.Http.Extensions;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
@@ -20,6 +19,8 @@ using Microsoft.AspNetCore.Http;
 using AspNetCore.WeixinOAuth.Events;
 using AspNetCore.WeixinOAuth.Messages;
 using AspNetCore.WeixinOAuth.Extensions;
+using Microsoft.Extensions.Options;
+using System.Text.Encodings.Web;
 
 namespace AspNetCore.WeixinOAuth
 {
@@ -32,12 +33,27 @@ namespace AspNetCore.WeixinOAuth
 
         protected static readonly RandomNumberGenerator CryptoRandom = RandomNumberGenerator.Create();
 
-        protected HttpClient Backchannel { get; private set; }
+        protected HttpClient Backchannel => Options.Backchannel;
 
-        public WeixinOAuthHandler(HttpClient backchannel)
+        /// <summary>
+        /// The handler calls methods on the events which give the application control at certain points where processing is occurring. 
+        /// If it is not provided a default instance is supplied which does nothing when the methods are called.
+        /// </summary>
+        protected new WeixinOAuthEvents Events
         {
-            Backchannel = backchannel;
+            get { return (WeixinOAuthEvents)base.Events; }
+            set { base.Events = value; }
         }
+
+        /// <summary>
+        /// Creates a new instance of the events instance.
+        /// </summary>
+        /// <returns>A new instance of the events instance.</returns>
+        protected override Task<object> CreateEventsAsync() => Task.FromResult<object>(new WeixinOAuthEvents());
+
+        public WeixinOAuthHandler(IOptionsMonitor<WeixinOAuthOptions> options, ILoggerFactory logger, UrlEncoder encoder, ISystemClock clock)
+            : base(options, logger, encoder, clock)
+        { }
 
         protected virtual string FormatScope()
         {
@@ -78,15 +94,8 @@ namespace AspNetCore.WeixinOAuth
             return Options.AuthorizationEndpoint + queryBuilder + "#wechat_redirect";
         }
 
-        protected override async Task<bool> HandleUnauthorizedAsync(ChallengeContext context)
+        protected override async Task HandleChallengeAsync(AuthenticationProperties properties)
         {
-            if (context == null)
-            {
-                throw new ArgumentNullException(nameof(context));
-            }
-
-            var properties = new AuthenticationProperties(context.Properties);
-
             if (string.IsNullOrEmpty(properties.RedirectUri))
             {
                 properties.RedirectUri = CurrentUri;
@@ -97,15 +106,141 @@ namespace AspNetCore.WeixinOAuth
 
             var authorizationEndpoint = BuildChallengeUrl(properties, BuildRedirectUri(Options.CallbackPath));
             var redirectContext = new WeixinOAuthRedirectToAuthorizationContext(
-                Context, Options,
+                Context, Scheme, Options,
                 properties, authorizationEndpoint);
-            await Options.Events.RedirectToAuthorizationEndpoint(redirectContext);
+            await Events.RedirectToAuthorizationEndpoint(redirectContext);
             Logger.LogInformation($"Redirecting to {authorizationEndpoint}...");
+        }
+
+        public override Task<bool> ShouldHandleRequestAsync() => Task.FromResult(Options.CallbackPath == Request.Path);
+
+        public override async Task<bool> HandleRequestAsync()
+        {
+            if (!await ShouldHandleRequestAsync())
+            {
+                return false;
+            }
+
+            AuthenticationTicket ticket = null;
+            Exception exception = null;
+            try
+            {
+                var authResult = await HandleRemoteAuthenticateAsync();
+                if (authResult == null)
+                {
+                    exception = new InvalidOperationException("Invalid return state, unable to redirect.");
+                }
+                else if (authResult.Handled)
+                {
+                    return true;
+                }
+                else if (authResult.Skipped || authResult.None)
+                {
+                    return false;
+                }
+                else if (!authResult.Succeeded)
+                {
+                    exception = authResult.Failure ??
+                                new InvalidOperationException("Invalid return state, unable to redirect.");
+                }
+
+                ticket = authResult.Ticket;
+            }
+            catch (Exception ex)
+            {
+                exception = ex;
+            }
+
+            if (exception != null)
+            {
+                Logger.LogWarning($"Error on remote authentication: {exception.Message}");
+
+                var errorContext = new RemoteFailureContext(Context, Scheme, Options, exception);
+                await Events.RemoteFailure(errorContext);
+
+                if (errorContext.Result != null)
+                {
+                    if (errorContext.Result.Handled)
+                    {
+                        return true;
+                    }
+                    else if (errorContext.Result.Skipped)
+                    {
+                        return false;
+                    }
+                }
+
+                throw exception;
+            }
+
+            // We have a ticket if we get here
+            var ticketContext = new TicketReceivedContext(Context, Scheme, Options, ticket)
+            {
+                ReturnUri = ticket.Properties.RedirectUri
+            };
+            // REVIEW: is this safe or good?
+            ticket.Properties.RedirectUri = null;
+
+            // Mark which provider produced this identity so we can cross-check later in HandleAuthenticateAsync
+            ticketContext.Properties.Items[AuthSchemeKey] = Scheme.Name;
+
+            await Events.TicketReceived(ticketContext);
+
+            if (ticketContext.Result != null)
+            {
+                if (ticketContext.Result.Handled)
+                {
+                    Logger.LogInformation($"Signin handled.");
+                    return true;
+                }
+                else if (ticketContext.Result.Skipped)
+                {
+                    Logger.LogInformation($"Signin skipped.");
+                    return false;
+                }
+            }
+
+            await Context.SignInAsync(SignInScheme, ticketContext.Principal, ticketContext.Properties);
+
+            // Default redirect path is the base path
+            if (string.IsNullOrEmpty(ticketContext.ReturnUri))
+            {
+                ticketContext.ReturnUri = "/";
+            }
+
+            Response.Redirect(ticketContext.ReturnUri);
             return true;
         }
 
+        protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
+        {
+            var result = await Context.AuthenticateAsync(SignInScheme);
+            if (result != null)
+            {
+                if (result.Failure != null)
+                {
+                    return result;
+                }
 
-        protected override async Task<AuthenticateResult> HandleRemoteAuthenticateAsync()
+                // The SignInScheme may be shared with multiple providers, make sure this provider issued the identity.
+                string authenticatedScheme;
+                var ticket = result.Ticket;
+                if (ticket != null && ticket.Principal != null && ticket.Properties != null
+                    && ticket.Properties.Items.TryGetValue(AuthSchemeKey, out authenticatedScheme)
+                    && string.Equals(Scheme.Name, authenticatedScheme, StringComparison.Ordinal))
+                {
+                    return AuthenticateResult.Success(new AuthenticationTicket(ticket.Principal,
+                        ticket.Properties, Scheme.Name));
+                }
+
+                return AuthenticateResult.Fail("Not authenticated");
+            }
+
+            return AuthenticateResult.Fail("Remote authentication does not directly support AuthenticateAsync");
+        }
+        protected override Task HandleForbiddenAsync(AuthenticationProperties properties) => Context.ForbidAsync(SignInScheme);
+
+        protected override async Task<HandleRequestResult> HandleRemoteAuthenticateAsync()
         {
             Logger.LogInformation($"Handling callback from remote at {Options.CallbackPath}...");
             AuthenticationProperties properties = null;
@@ -127,7 +262,7 @@ namespace AspNetCore.WeixinOAuth
                     failureMessage.Append(";Uri=").Append(errorUri);
                 }
 
-                return AuthenticateResult.Fail(failureMessage.ToString());
+                return HandleRequestResult.Fail(failureMessage.ToString());
             }
 
             var code = query["code"];
@@ -139,7 +274,7 @@ namespace AspNetCore.WeixinOAuth
             {
                 var errMsg = $"'{stateCookieName}' cookie not found.";
                 Logger.LogWarning(errMsg);
-                return AuthenticateResult.Fail("Correlation failed." + errMsg);
+                return HandleRequestResult.Fail("Correlation failed." + errMsg);
             }
 
             properties = Options.StateDataFormat.Unprotect(protectedProperties);
@@ -147,7 +282,7 @@ namespace AspNetCore.WeixinOAuth
             {
                 var errMsg = "The oauth state was missing or invalid.";
                 Logger.LogWarning(errMsg);
-                return AuthenticateResult.Fail(errMsg);
+                return HandleRequestResult.Fail(errMsg);
             }
 
             // OAuth2 10.12 CSRF
@@ -155,26 +290,26 @@ namespace AspNetCore.WeixinOAuth
             {
                 var errMsg = "Correlation failed.";
                 Logger.LogWarning(errMsg);
-                return AuthenticateResult.Fail(errMsg);
+                return HandleRequestResult.Fail(errMsg);
             }
 
             if (StringValues.IsNullOrEmpty(code))
             {
                 Logger.LogWarning("Code was not found.");
-                return AuthenticateResult.Fail("Code was not found.");
+                return HandleRequestResult.Fail("Code was not found.");
             }
 
             var tokens = await CustomExchangeCodeAsync(code, BuildRedirectUri(Options.CallbackPath));
             if (tokens.Error != null)
             {
                 Logger.LogWarning(tokens.Error.StackTrace);
-                return AuthenticateResult.Fail(tokens.Error);
+                return HandleRequestResult.Fail(tokens.Error);
             }
 
             if (string.IsNullOrEmpty(tokens.AccessToken))
             {
                 Logger.LogWarning("Failed to retrieve access token.");
-                return AuthenticateResult.Fail("Failed to retrieve access token.");
+                return HandleRequestResult.Fail("Failed to retrieve access token.");
             }
 
             var identity = new ClaimsIdentity(Options.ClaimsIssuer);
@@ -206,8 +341,12 @@ namespace AspNetCore.WeixinOAuth
                     {
                         // https://www.w3.org/TR/xmlschema-2/#dateTime
                         // https://msdn.microsoft.com/en-us/library/az4se3k1(v=vs.110).aspx
-                        var expiresAt = Options.SystemClock.UtcNow + TimeSpan.FromSeconds(value);
-                        authTokens.Add(new AuthenticationToken { Name = WeixinAuthenticationTokenNames.expires_at, Value = expiresAt.ToString("o", CultureInfo.InvariantCulture) });
+                        var expiresAt = Clock.UtcNow + TimeSpan.FromSeconds(value);
+                        authTokens.Add(new AuthenticationToken
+                        {
+                            Name = WeixinAuthenticationTokenNames.expires_at,
+                            Value = expiresAt.ToString("o", CultureInfo.InvariantCulture)
+                        });
                     }
                 }
 
@@ -217,12 +356,12 @@ namespace AspNetCore.WeixinOAuth
             var ticket = await CustomCreateTicketAsync(identity, properties, tokens);
             if (ticket != null)
             {
-                return AuthenticateResult.Success(ticket);
+                return HandleRequestResult.Success(ticket);
             }
             else
             {
                 Logger.LogWarning("Failed to retrieve user information from remote server.");
-                return AuthenticateResult.Fail("Failed to retrieve user information from remote server.");
+                return HandleRequestResult.Fail("Failed to retrieve user information from remote server.");
             }
         }
 
@@ -314,8 +453,8 @@ namespace AspNetCore.WeixinOAuth
             }
 
             var principal = new ClaimsPrincipal(identity);
-            var ticket = new AuthenticationTicket(principal, properties, Options.AuthenticationScheme);
-            var context = new WeixinOAuthCreatingTicketContext(Context, Options, Backchannel, ticket, tokens);
+            var ticket = new AuthenticationTicket(principal, properties, Scheme.Name);
+            var context = new WeixinOAuthCreatingTicketContext(Context, Scheme, Options, Backchannel, ticket, tokens);
             await Options.Events.CreatingTicket(context);
 
             return context.Ticket;
@@ -399,7 +538,7 @@ namespace AspNetCore.WeixinOAuth
             {
                 HttpOnly = true,
                 Secure = Request.IsHttps,
-                Expires = Options.SystemClock.UtcNow.Add(Options.RemoteAuthenticationTimeout),
+                Expires = Clock.UtcNow.Add(Options.RemoteAuthenticationTimeout),
             };
 
             properties.Items[CorrelationProperty] = correlationId; //need to build challenge url
@@ -410,7 +549,7 @@ namespace AspNetCore.WeixinOAuth
 
         protected virtual string ConcateCookieName(string correlationId)
         {
-            return CorrelationPrefix + Options.AuthenticationScheme + "." + correlationId;
+            return CorrelationPrefix + Scheme.Name + "." + correlationId;
         }
 
         protected override bool ValidateCorrelationId(AuthenticationProperties properties)

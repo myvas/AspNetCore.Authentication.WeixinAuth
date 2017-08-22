@@ -57,7 +57,7 @@ namespace AspNetCore.WeixinOAuth
             }
             options.Scope.Remove(WeixinOAuthScopes.snsapi_login);
 
-            return app.UseMiddleware<WeixinOAuthMiddleware>(Options.Create(options));
+            return null;// app.UseMiddleware<WeixinOAuthMiddleware>(Options.Create(options));
         }
     }
 }

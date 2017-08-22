@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.Authentication;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,10 +21,11 @@ namespace AspNetCore.WeixinOAuth.Events
         /// <param name="redirectUri">The initial redirect URI.</param>
         public WeixinOAuthRedirectToAuthorizationContext(
             HttpContext context, 
-            WeixinOAuthOptions options, 
-            AuthenticationProperties properties, 
+            AuthenticationScheme scheme,
+            WeixinOAuthOptions options,
+            Microsoft.AspNetCore.Authentication.AuthenticationProperties properties, 
             string redirectUri)
-            : base(context, options)
+            : base(context,scheme, options)
         {
             Properties = properties;
             RedirectUri = redirectUri;

@@ -2,26 +2,26 @@
 
   <PropertyGroup>
     <Description>ASP.NET Core middleware that enables an application to support the Weixin OAuth authentication workflow.</Description>
-    <TargetFramework>netstandard1.6</TargetFramework>
+    <TargetFramework>netstandard2.0</TargetFramework>
     <AssemblyName>AspNetCore.WeixinOAuth</AssemblyName>
     <PackageId>AspNetCore.WeixinOAuth</PackageId>
-    <PackageTargetFallback>$(PackageTargetFallback)</PackageTargetFallback>
+    <AssetTargetFallback>$(AssetTargetFallback);portable-win8+wp8+wpa81;</AssetTargetFallback>
     <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
     <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
     <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
-    <Version>1.1.1-alpha-70325</Version>
-    <VersionPrefix>1.1.1</VersionPrefix>
-    <VersionSufix>alpha-70325</VersionSufix>
+    <Version>2.0.0-alpha-70820</Version>
+    <VersionPrefix>2.0.0</VersionPrefix>
+    <VersionSufix>alpha-70820</VersionSufix>
     <PackageTags>AspNetCore, WeixinOAuth</PackageTags>
     <PackageProjectUrl>https://github.com/myvas/AspNetCore.WeixinOAuth</PackageProjectUrl>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Authentication" Version="1.1.1" />
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.OAuth" Version="1.1.1" />
-    <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="1.1.1" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="1.1.1" />
-    <PackageReference Include="Newtonsoft.Json" Version="10.0.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication" Version="2.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.OAuth" Version="2.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="2.0.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
     <PackageReference Include="System.IO.Compression" Version="4.3.0" />
   </ItemGroup>
 
