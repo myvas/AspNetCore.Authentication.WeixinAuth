@@ -1,0 +1,34 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>@ViewData["Title"]</title>
+
+    <environment names="Development">
+        <link href="~/css/site.css" rel="stylesheet" asp-append-version="true" />
+    </environment>
+    <environment names="Staging,Production">
+        <link href="~/css/site.min.css" rel="stylesheet" asp-append-version="true" />
+    </environment>
+
+    @RenderSection("head", required: false)
+</head>
+<body>
+    <div>
+        @RenderBody()
+
+        <a asp-controller="Home" asp-action="Index">Index</a><br />
+
+        @RenderSection("footer", required: false)
+    </div>
+
+    <environment names="Development">
+        <script src="~/js/site.js" asp-append-version="true"></script>
+    </environment>
+    <environment names="Staging,Production">
+        <script src="~/js/site.min.js" asp-append-version="true"></script>
+    </environment>
+
+    @RenderSection("scripts", required: false)
+</body>
+</html>

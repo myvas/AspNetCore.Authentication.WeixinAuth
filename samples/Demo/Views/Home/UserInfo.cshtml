@@ -1,0 +1,25 @@
+﻿@model  HomeModel
+@{
+    ViewData["Title"] = "User Info";
+}
+
+<h2>@ViewData["Title"]</h2>
+
+Hello @(Model.UserName ?? "anonymous") <br />
+
+<div>
+    --- Claims ---<br />
+    @foreach (var claim in Model.Claims)
+    {
+        <p>@claim.Type : @claim.Value </p><br />
+    }
+</div>
+<hr />
+<div>
+    --- Tokens ---<br />
+    Access Token: @Model.AccessToken <br />
+    Refresh Token: @Model.RefreshToken <br />
+    Token Type: @Model.TokenType <br />
+    Expires At: @Model.ExpiresAt <br />
+</div>
+

@@ -1,0 +1,8 @@
+{
+  "directory": "wwwroot/lib",
+  "registry": {
+    "search": [
+      "https://bower.herokuapp.com"
+    ]
+  }
+}

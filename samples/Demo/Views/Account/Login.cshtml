@@ -1,0 +1,14 @@
+﻿@model  IEnumerable<AuthenticationScheme>
+@{
+    ViewData["Title"] = "Login";
+}
+
+<h2>@ViewData["Title"]</h2>
+
+Choose an authentication scheme: <br />
+@foreach (var t in Model)
+{
+    <a href="?authscheme=@t.Name">@(t.DisplayName ?? $"({t.Name})")</a><br />
+}
+
+

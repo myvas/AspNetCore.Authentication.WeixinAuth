@@ -268,6 +268,18 @@ namespace AspNetCore.WeixinOAuth
             var code = query["code"];
             var state = query["state"]; // correlationId
 
+            if (StringValues.IsNullOrEmpty(code))
+            {
+                Logger.LogWarning("Code was not found.");
+                return HandleRequestResult.Fail("Code was not found.");
+            }
+
+            if (StringValues.IsNullOrEmpty(state))
+            {
+                Logger.LogWarning("State was not found.");
+                return HandleRequestResult.Fail("State was not found.");
+            }
+
             var stateCookieName = ConcateCookieName(state);
             var protectedProperties = Request.Cookies[stateCookieName];
             if (string.IsNullOrEmpty(protectedProperties))
@@ -288,17 +300,12 @@ namespace AspNetCore.WeixinOAuth
             // OAuth2 10.12 CSRF
             if (!ValidateCorrelationId(properties, state))
             {
-                var errMsg = "Correlation failed.";
+                var errMsg = "Correlation failed. Correlation id not valid.";
                 Logger.LogWarning(errMsg);
                 return HandleRequestResult.Fail(errMsg);
             }
-
-            if (StringValues.IsNullOrEmpty(code))
-            {
-                Logger.LogWarning("Code was not found.");
-                return HandleRequestResult.Fail("Code was not found.");
-            }
-
+            
+            //通过code换取网页授权access_token
             var tokens = await CustomExchangeCodeAsync(code, BuildRedirectUri(Options.CallbackPath));
             if (tokens.Error != null)
             {
@@ -561,6 +568,7 @@ namespace AspNetCore.WeixinOAuth
         /// <summary>
         /// cut smaller of <see cref="AuthenticationProperties"/> to suit for WeixinOAuth State's limitation of 128 bytes.
         /// </summary>
+        /// <remarks>The cookie of AspNetCore.Correlation.Weixin-OAuth.{correlationId} will be deleted in this method. </remarks>
         /// <param name="properties">from cookie. properties = Request.Cookies[ConcateCookieName(correlationId)];</param>
         /// <param name="state">from url</param>
         /// <returns></returns>

@@ -1,0 +1,10 @@
+﻿@model Exception
+@{
+    ViewData["Title"] = "Error";
+}
+
+<h2>@ViewData["Title"]</h2>
+
+<p>An remote failure has occurred: @Model.Message</p>
+<a href="/">Home</a>
+
