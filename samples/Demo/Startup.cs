@@ -105,6 +105,7 @@ namespace AspNetCore.WeixinOAuth.Demo
                     options.AppId = Configuration["WeixinOAuth:AppId"];
                     options.AppSecret = Configuration["WeixinOAuth:AppSecret"];
                     options.Scope.Add(WeixinOAuthScopes.snsapi_base);
+                    options.Scope.Add(WeixinOAuthScopes.snsapi_userinfo);
                     options.SaveTokens = true;
                     options.Events = new Events.WeixinOAuthEvents()
                     {

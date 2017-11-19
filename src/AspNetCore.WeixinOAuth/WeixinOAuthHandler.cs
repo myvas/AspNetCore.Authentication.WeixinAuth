@@ -304,7 +304,7 @@ namespace AspNetCore.WeixinOAuth
                 Logger.LogWarning(errMsg);
                 return HandleRequestResult.Fail(errMsg);
             }
-            
+
             //通过code换取网页授权access_token
             var tokens = await CustomExchangeCodeAsync(code, BuildRedirectUri(Options.CallbackPath));
             if (tokens.Error != null)
@@ -319,7 +319,7 @@ namespace AspNetCore.WeixinOAuth
                 return HandleRequestResult.Fail("Failed to retrieve access token.");
             }
 
-            var identity = new ClaimsIdentity(Options.ClaimsIssuer);
+            var identity = new ClaimsIdentity(Options.SignInScheme);
             if (Options.SaveTokens)
             {
                 var authTokens = new List<AuthenticationToken>();
@@ -457,6 +457,10 @@ namespace AspNetCore.WeixinOAuth
             if (SplitScope(scope).Contains(WeixinOAuthScopes.snsapi_userinfo))
             {
                 identity = await RetrieveUserInfoAsync(tokens.AccessToken, openId, identity);
+            }
+            else
+            {
+                identity.AddOptionalClaim(ClaimTypes.Name, $"({openId})", this.Options.ClaimsIssuer);
             }
 
             var principal = new ClaimsPrincipal(identity);

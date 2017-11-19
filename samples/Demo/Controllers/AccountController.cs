@@ -48,7 +48,7 @@ namespace AspNetCore.WeixinOAuth.Demo.Controllers
             // 1.Sign-out to remove the user cookie.
             var name = HttpContext.User.Identity.Name;
             await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
-            return View(name);
+            return View(nameof(Logout), name);
         }
 
         public IActionResult AccessDenied()

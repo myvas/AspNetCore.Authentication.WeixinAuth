@@ -4,13 +4,10 @@
 
 <h2>@ViewData["Title"]</h2>
 
-Hello @(Context.User?.Identity?.Name ?? "anonymous") <br />
+Hello @(Context.User?.Identity?.Name ?? "anonymous") @(Context.User?.Identity?.IsAuthenticated??false?"(Authenticated)":"(Not Authenticated)") <br />
 
 <hr />
 <a asp-controller="Account" asp-action="Login">Login</a><br />
 <a asp-controller="Account" asp-action="Logout">Logout</a><br />
 <a asp-controller="Home" asp-action="Index">Index</a><br />
-<a asp-controller="Home" asp-action="UserId">UserId</a><br />
 <a asp-controller="Home" asp-action="UserInfo">UserInfo</a><br />
-<a asp-controller="Home" asp-action="About">About</a><br />
-<a asp-controller="Home" asp-action="Contact">Contact</a><br />

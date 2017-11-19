@@ -1,11 +1,11 @@
-﻿@model  HomeModel
+﻿@model  UserInfoModel
 @{
     ViewData["Title"] = "User Info";
 }
 
 <h2>@ViewData["Title"]</h2>
 
-Hello @(Model.UserName ?? "anonymous") <br />
+Hello @(Model.UserName ?? "anonymous") @(Model.IsAuthenticated? "(Authenticated)" : "(Not Authenticated)")  <br />
 
 <div>
     --- Claims ---<br />

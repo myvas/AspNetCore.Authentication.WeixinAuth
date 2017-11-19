@@ -7,8 +7,9 @@ using System.Threading.Tasks;
 
 namespace AspNetCore.WeixinOAuth.Demo.Models
 {
-    public class HomeModel
+    public class UserInfoModel
     {
+        public bool IsAuthenticated { get; set; }
         public string UserName { get; set; }
         public IEnumerable<Claim> Claims { get; set; } = new List<Claim>();
         public string AccessToken { get; set; }
