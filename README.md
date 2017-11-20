@@ -1,5 +1,6 @@
 # AspNetCore.WeixinOAuth
 好消息！现在可以在.netcore 2.0下工作了，请参考Demo程序。
+
 非常感谢您的关注！
 
 ## 程序配置
@@ -23,14 +24,15 @@
 - 将文件MP_verify_xxxxxxxxx.txt上传至wwwroot目录下。
 
 ## Demo程序
-Demo程序部署在：http://weixinoauth.myvas.com
+- Demo程序部署在：http://weixinoauth.myvas.com
+OS: debian.8-x64
 
-测试号二维码在这里：http://mmbiz.qpic.cn/mmbiz_jpg/lPe5drS9euRQR1eCK5cGXaibHYL6vBR4pGLB34ju2hXCiaMQiayOU8w5GMfEH7WZsVNTnhLTpnzAC9xfdWuTT89OA/0
+- 测试号二维码在这里：http://mmbiz.qpic.cn/mmbiz_jpg/lPe5drS9euRQR1eCK5cGXaibHYL6vBR4pGLB34ju2hXCiaMQiayOU8w5GMfEH7WZsVNTnhLTpnzAC9xfdWuTT89OA/0
 测试人员须扫码关注这个公众号。
 
 ## 测试工具
 - 微信开发者工具 v1.01.1711160
 下载地址：https://mp.weixin.qq.com/debug/wxadoc/dev/devtools/download.html
 
-## IDE
+- IDE
 Visual Studio 2017 version 15.3 and aspnetcore 2.0
