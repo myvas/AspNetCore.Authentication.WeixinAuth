@@ -22,18 +22,14 @@ Configuration Files: appsettings.json or secrets.json
 - 将文件MP_verify_xxxxxxxxx.txt上传至wwwroot目录下。
 
 ## Demo
-- Deploy on http://weixinoauth.myvas.com
+- Deploy on debian.8-x64 for demostration: http://weixinoauth.myvas.com
 
-OS: debian.8-x64
-
-- QrCode to scan
-
-http://mmbiz.qpic.cn/mmbiz_jpg/lPe5drS9euRQR1eCK5cGXaibHYL6vBR4pGLB34ju2hXCiaMQiayOU8w5GMfEH7WZsVNTnhLTpnzAC9xfdWuTT89OA/0
+- QrCode to scan: http://mmbiz.qpic.cn/mmbiz_jpg/lPe5drS9euRQR1eCK5cGXaibHYL6vBR4pGLB34ju2hXCiaMQiayOU8w5GMfEH7WZsVNTnhLTpnzAC9xfdWuTT89OA/0
 
 All users to be authenticated must be the subscribers of this Open WeChat Service Account.
 
 ## IDE & Dev Tools
 * [微信开发者工具 v1.01.1711160](https://mp.weixin.qq.com/debug/wxadoc/dev/devtools/download.html)
 
-* IDE
+- IDE
 Visual Studio 2017 version 15.3 and aspnetcore 2.0
