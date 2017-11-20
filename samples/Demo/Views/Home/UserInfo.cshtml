@@ -1,11 +1,12 @@
-﻿@model  UserInfoModel
+﻿@model  UserInfoViewModel
+
 @{
-    ViewData["Title"] = "User Info";
+    ViewData["Title"] = "UserInfo";
 }
 
 <h2>@ViewData["Title"]</h2>
 
-Hello @(Model.UserName ?? "anonymous") @(Model.IsAuthenticated? "(Authenticated)" : "(Not Authenticated)")  <br />
+Hello @(Model.UserName ?? "anonymous") @(Model.IsAuthenticated ? "(Authenticated)" : "(Not Authenticated)")  <br />
 
 <div>
     --- Claims ---<br />
@@ -22,4 +23,5 @@ Hello @(Model.UserName ?? "anonymous") @(Model.IsAuthenticated? "(Authenticated)
     Token Type: @Model.TokenType <br />
     Expires At: @Model.ExpiresAt <br />
 </div>
+
 

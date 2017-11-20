@@ -1,27 +1,24 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Identity;
+using AspNetCore.WeixinOAuth.Demo.Models;
+using AspNetCore.WeixinOAuth.Demo.Models.HomeViewModels;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.Extensions.Logging;
-using Microsoft.AspNetCore.Authentication;
-using AspNetCore.WeixinOAuth.Demo.Models;
-using AspNetCore.WeixinOAuth.Demo.Data;
-using Microsoft.AspNetCore.Authorization;
 
 namespace AspNetCore.WeixinOAuth.Demo.Controllers
 {
-    public class HomeController : BaseController
+    public class HomeController : Controller
     {
         private readonly ILogger _logger;
 
-        public HomeController(ILoggerFactory loggerFactory,
-            UserManager<AppUser> userManager)
-            : base(userManager)
+        public HomeController(ILogger<HomeController> logger)
         {
-            _logger = loggerFactory.CreateLogger<HomeController>();
+            _logger = logger;
         }
 
         public IActionResult Index()
@@ -29,10 +26,23 @@ namespace AspNetCore.WeixinOAuth.Demo.Controllers
             return View();
         }
 
-        [Authorize]
+        public IActionResult About()
+        {
+            ViewData["Message"] = "Your application description page.";
+
+            return View();
+        }
+
+        public IActionResult Contact()
+        {
+            ViewData["Message"] = "Your contact page.";
+
+            return View();
+        }
+
         public async Task<IActionResult> UserInfo()
         {
-            var model = new UserInfoModel()
+            var model = new UserInfoViewModel()
             {
                 IsAuthenticated = HttpContext.User.Identity.IsAuthenticated,
                 UserName = HttpContext.User.Identity.Name,
@@ -44,10 +54,9 @@ namespace AspNetCore.WeixinOAuth.Demo.Controllers
             };
             return View(model);
         }
-        
+
         public IActionResult Error()
         {
-            // 1.Display the remote error
             var feature = HttpContext.Features.Get<IExceptionHandlerFeature>();
             var error = feature?.Error;
 
@@ -56,8 +65,12 @@ namespace AspNetCore.WeixinOAuth.Demo.Controllers
                 _logger.LogError(error.Message, error);
             }
 
-            return View(error);
+            return View(
+                new ErrorViewModel
+                {
+                    RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier,
+                    Error = error
+                });
         }
-
     }
 }

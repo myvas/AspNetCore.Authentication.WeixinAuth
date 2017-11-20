@@ -1,1 +1,1 @@
-﻿// Add your javascript here.
+﻿// Write your JavaScript code.

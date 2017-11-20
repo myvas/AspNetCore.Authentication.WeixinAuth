@@ -3,11 +3,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using System.Reflection;
-using Microsoft.AspNetCore;
 
 namespace AspNetCore.WeixinOAuth.Demo
 {
@@ -15,17 +14,19 @@ namespace AspNetCore.WeixinOAuth.Demo
     {
         public static void Main(string[] args)
         {
-            var host = BuildWebHost(args);
-
-            host.Run();
+            BuildWebHost(args).Run();
         }
 
         public static IWebHost BuildWebHost(string[] args)
         {
-            var builder = CreateWebHostBuilder(args);
+            var hostingConfiguration = BuildConfigurationForHostingUrls();
 
-            return builder.Build();
+            return WebHost.CreateDefaultBuilder(args)
+                .UseConfiguration(hostingConfiguration)
+                .UseStartup<Startup>()
+                .Build();
         }
+
 
         private static IConfiguration BuildConfigurationForHostingUrls()
         {
@@ -34,17 +35,6 @@ namespace AspNetCore.WeixinOAuth.Demo
                 .AddJsonFile("hosting.json", optional: true); // urls
 
             return hostingConfigurationBuilder.Build();
-        }
-
-        private static IWebHostBuilder CreateWebHostBuilder(string[] args)
-        {
-            var hostingConfiguration = BuildConfigurationForHostingUrls();
-
-            var builder = WebHost.CreateDefaultBuilder()
-                .UseConfiguration(hostingConfiguration)
-                .UseStartup<Startup>();
-
-            return builder;
         }
     }
 }
