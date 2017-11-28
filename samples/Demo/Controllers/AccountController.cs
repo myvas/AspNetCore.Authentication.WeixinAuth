@@ -13,6 +13,8 @@ using Microsoft.Extensions.Options;
 using AspNetCore.WeixinOAuth.Demo.Models;
 using AspNetCore.WeixinOAuth.Demo.Models.AccountViewModels;
 using AspNetCore.WeixinOAuth.Demo.Services;
+using AspNetCore.QcloudSms;
+using Microsoft.AspNetCore.Http.Extensions;
 
 namespace AspNetCore.WeixinOAuth.Demo.Controllers
 {
@@ -20,20 +22,20 @@ namespace AspNetCore.WeixinOAuth.Demo.Controllers
     [Route("[controller]/[action]")]
     public class AccountController : Controller
     {
-        private readonly UserManager<AppUser> _userManager;
+        private readonly AppUserManager _userManager;
         private readonly SignInManager<AppUser> _signInManager;
-        private readonly IEmailSender _emailSender;
+        private readonly ISmsSender _smsSender;
         private readonly ILogger _logger;
 
         public AccountController(
-            UserManager<AppUser> userManager,
+            AppUserManager userManager,
             SignInManager<AppUser> signInManager,
-            IEmailSender emailSender,
+            ISmsSender emailSender,
             ILogger<AccountController> logger)
         {
             _userManager = userManager;
             _signInManager = signInManager;
-            _emailSender = emailSender;
+            _smsSender = emailSender;
             _logger = logger;
         }
 
@@ -56,12 +58,13 @@ namespace AspNetCore.WeixinOAuth.Demo.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(LoginViewModel model, string returnUrl = null)
         {
+            var rememberMe = true;
             ViewData["ReturnUrl"] = returnUrl;
             if (ModelState.IsValid)
             {
                 // This doesn't count login failures towards account lockout
                 // To enable password failures to trigger account lockout, set lockoutOnFailure: true
-                var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, lockoutOnFailure: false);
+                var result = await _signInManager.PasswordSignInAsync(model.PhoneNumber, model.Password, rememberMe, lockoutOnFailure: false);
                 if (result.Succeeded)
                 {
                     _logger.LogInformation("User logged in.");
@@ -69,7 +72,7 @@ namespace AspNetCore.WeixinOAuth.Demo.Controllers
                 }
                 if (result.RequiresTwoFactor)
                 {
-                    return RedirectToAction(nameof(LoginWith2fa), new { returnUrl, model.RememberMe });
+                    return RedirectToAction(nameof(LoginWith2fa), new { returnUrl, rememberMe });
                 }
                 if (result.IsLockedOut)
                 {
@@ -87,6 +90,130 @@ namespace AspNetCore.WeixinOAuth.Demo.Controllers
             return View(model);
         }
 
+        #region WaitFor ExternalLoginWithQr and SignIn it.
+        [HttpGet]
+        [AllowAnonymous]
+        public IActionResult WaitForExternalLoginWithQr(string returnUrl)
+        {
+            var qrid = ShortGuid.NewGuid().ToString();
+
+            var qrcode = Url.AbsoluteAction(nameof(ExternalLoginWithQr), "Account", new { qrid });
+            ViewData["Qrcode"] = qrcode;
+
+            var isAuthenticatedWithQrUrl = Url.AbsoluteAction(nameof(IsAuthenticatedWithQr), "Account", new { qrid });
+            ViewData["IsAuthenticatedWithQrUrl"] = isAuthenticatedWithQrUrl;
+
+            var signInWithQrUrl = Url.AbsoluteAction(nameof(SignInWithQr), "Account", new { qrid, returnUrl });
+            ViewData["SignInWithQrUrl"] = signInWithQrUrl;
+
+            ViewData["returnUrl"] = returnUrl;
+
+            return View();
+        }
+
+        [AllowAnonymous]
+        public async Task<bool> IsAuthenticatedWithQr(string qrid)
+        {
+            var loginProvider = WeixinOAuthDefaults.AuthenticationScheme;
+            var login = await _userManager.FindAuthenticatedWithQrAsync(qrid, loginProvider);
+            return (login != null);
+        }
+
+        [AllowAnonymous]
+        public async Task<IActionResult> SignInWithQr(string qrid, string returnUrl)
+        {
+            var loginProvider = WeixinOAuthDefaults.AuthenticationScheme;
+            var info = await _userManager.FindAuthenticatedWithQrAsync(qrid, loginProvider);
+            if (info == null)
+            {
+                throw new Exception("Exception! Not found data of UserExternalLogins");
+            }
+            else
+            {
+                var signInResult = await _signInManager.ExternalLoginSignInAsync(loginProvider, info.ProviderKey, true);
+                if (signInResult.Succeeded)
+                {
+                    _logger.LogInformation($"User logged in with {info.LoginProvider} provider with {info.ProviderKey}.");
+                    return RedirectToLocal(returnUrl);
+                }
+                else if (signInResult.IsLockedOut || signInResult.IsNotAllowed || signInResult.RequiresTwoFactor)
+                {
+                    throw new Exception(signInResult.ToString());
+                }
+                else
+                {
+                    throw new Exception($"Pls register and bind your weixin({info.ProviderKey}) at first!");
+                }
+            }
+        }
+        #endregion
+        #region External login with qr, on mobile device
+        [HttpGet]
+        [AllowAnonymous]
+        public async Task<ChallengeResult> ExternalLoginWithQr(string qrid, string returnUrl = null)
+        {
+            var provider = WeixinOAuthDefaults.AuthenticationScheme;
+
+            await HttpContext.SignOutAsync(provider);
+
+            var redirectUrl = Url.Action(nameof(ExternalLoginWithQrCallback), "Account", new { qrid, returnUrl });
+            var properties = _signInManager.ConfigureExternalAuthenticationProperties(provider, redirectUrl, qrid);
+            return Challenge(properties, provider);
+        }
+
+        [HttpGet]
+        [AllowAnonymous]
+        public async Task<IActionResult> ExternalLoginWithQrCallback(string qrid, string returnUrl = null, string remoteError = null)
+        {
+            if (remoteError != null)
+            {
+                ErrorMessage = $"Error from external provider: {remoteError}";
+                return RedirectToAction(nameof(Login));
+            }
+
+            var info = await _signInManager.GetExternalLoginInfoAsync(qrid);
+            if (info == null)
+            {
+                return RedirectToAction(nameof(Login));
+            }
+
+            // Sign in the user with this external login provider if the user already has a login.
+            var result = await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, isPersistent: false, bypassTwoFactor: true);
+            if (result.Succeeded)
+            {
+                _logger.LogInformation("User logged in with {Name} provider.", info.LoginProvider);
+                return RedirectToLocal(returnUrl);
+            }
+            if (result.IsLockedOut)
+            {
+                return RedirectToAction(nameof(Lockout));
+            }
+            if (result.IsNotAllowed)
+            {
+                var providerName = info.ProviderDisplayName;
+                var providerKey = info.ProviderKey;
+                ViewData["Message"] = $"ProviderName: {providerName}, ProviderKey: {providerKey}";
+                return RedirectToAction(nameof(AccessDenied));
+            }
+
+            // set this openid as signed in, to let pc signed in as the same
+            {
+                // If the user does not have an account, then ask the user to create an account.
+                await _userManager.AddAuthenticatedWithQrAsync(qrid, info);
+                _logger.LogInformation($"Add authenticated with qr: qrid={qrid}, loginProvider={info.LoginProvider}.");
+                await HttpContext.SignOutAsync();
+                return View("ExternalLoginWithQrResult");
+            }
+        }
+
+        [HttpGet]
+        [AllowAnonymous]
+        public IActionResult ExternalLoginWithQrResult()
+        {
+            return View();
+        }
+        #endregion
+
         [HttpGet]
         [AllowAnonymous]
         public async Task<IActionResult> LoginWith2fa(bool rememberMe, string returnUrl = null)
@@ -99,7 +226,7 @@ namespace AspNetCore.WeixinOAuth.Demo.Controllers
                 throw new ApplicationException($"Unable to load two-factor authentication user.");
             }
 
-            var model = new LoginWith2faViewModel { RememberMe = rememberMe };
+            var model = new LoginWith2faViewModel { };
             ViewData["ReturnUrl"] = returnUrl;
 
             return View(model);
@@ -220,7 +347,7 @@ namespace AspNetCore.WeixinOAuth.Demo.Controllers
             ViewData["ReturnUrl"] = returnUrl;
             if (ModelState.IsValid)
             {
-                var user = new AppUser { UserName = model.Email, Email = model.Email };
+                var user = new AppUser { UserName = model.PhoneNumber, PhoneNumber = model.PhoneNumber };
                 var result = await _userManager.CreateAsync(user, model.Password);
                 if (result.Succeeded)
                 {
@@ -228,7 +355,7 @@ namespace AspNetCore.WeixinOAuth.Demo.Controllers
 
                     var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
                     var callbackUrl = Url.EmailConfirmationLink(user.Id, code, Request.Scheme);
-                    await _emailSender.SendEmailConfirmationAsync(model.Email, callbackUrl);
+                    await _smsSender.SendSmsAsync(model.PhoneNumber, callbackUrl);
 
                     await _signInManager.SignInAsync(user, isPersistent: false);
                     _logger.LogInformation("User created a new account with password.");
@@ -255,9 +382,11 @@ namespace AspNetCore.WeixinOAuth.Demo.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult ExternalLogin(string provider, string returnUrl = null)
         {
+            string userId = _userManager.GetUserId(User);
+
             // Request a redirect to the external login provider.
             var redirectUrl = Url.Action(nameof(ExternalLoginCallback), "Account", new { returnUrl });
-            var properties = _signInManager.ConfigureExternalAuthenticationProperties(provider, redirectUrl);
+            var properties = _signInManager.ConfigureExternalAuthenticationProperties(provider, redirectUrl, userId);
             return Challenge(properties, provider);
         }
 
@@ -270,6 +399,7 @@ namespace AspNetCore.WeixinOAuth.Demo.Controllers
                 ErrorMessage = $"Error from external provider: {remoteError}";
                 return RedirectToAction(nameof(Login));
             }
+
             var info = await _signInManager.GetExternalLoginInfoAsync();
             if (info == null)
             {
@@ -287,13 +417,21 @@ namespace AspNetCore.WeixinOAuth.Demo.Controllers
             {
                 return RedirectToAction(nameof(Lockout));
             }
-            else
+            if (result.IsNotAllowed)
+            {
+                var providerName = info.ProviderDisplayName;
+                var providerKey = info.ProviderKey;
+                ViewData["Message"] = $"ProviderName: {providerName}, ProviderKey: {providerKey}";
+                return RedirectToAction(nameof(AccessDenied));
+            }
+
+            // try to auto bind to one exists user, with openid
             {
                 // If the user does not have an account, then ask the user to create an account.
                 ViewData["ReturnUrl"] = returnUrl;
                 ViewData["LoginProvider"] = info.LoginProvider;
                 var email = info.Principal.FindFirstValue(ClaimTypes.Email);
-                return View("ExternalLogin", new ExternalLoginViewModel { Email = email });
+                return View("ExternalLogin", new ExternalLoginViewModel { PhoneNumber = email });
             }
         }
 
@@ -310,7 +448,7 @@ namespace AspNetCore.WeixinOAuth.Demo.Controllers
                 {
                     throw new ApplicationException("Error loading external login information during confirmation.");
                 }
-                var user = new AppUser { UserName = model.Email, Email = model.Email };
+                var user = new AppUser { UserName = model.PhoneNumber, Email = model.PhoneNumber };
                 var result = await _userManager.CreateAsync(user);
                 if (result.Succeeded)
                 {
@@ -331,7 +469,7 @@ namespace AspNetCore.WeixinOAuth.Demo.Controllers
 
         [HttpGet]
         [AllowAnonymous]
-        public async Task<IActionResult> ConfirmEmail(string userId, string code)
+        public async Task<IActionResult> ConfirmPhoneNumber(string userId, string code)
         {
             if (userId == null || code == null)
             {
@@ -342,7 +480,7 @@ namespace AspNetCore.WeixinOAuth.Demo.Controllers
             {
                 throw new ApplicationException($"Unable to load user with ID '{userId}'.");
             }
-            var result = await _userManager.ConfirmEmailAsync(user, code);
+            var result = await _userManager.ConfirmPhoneNumberAsync(user, code);
             return View(result.Succeeded ? "ConfirmEmail" : "Error");
         }
 
@@ -360,7 +498,7 @@ namespace AspNetCore.WeixinOAuth.Demo.Controllers
         {
             if (ModelState.IsValid)
             {
-                var user = await _userManager.FindByEmailAsync(model.Email);
+                var user = await _userManager.FindByEmailAsync(model.PhoneNumber);
                 if (user == null || !(await _userManager.IsEmailConfirmedAsync(user)))
                 {
                     // Don't reveal that the user does not exist or is not confirmed
@@ -370,9 +508,7 @@ namespace AspNetCore.WeixinOAuth.Demo.Controllers
                 // For more information on how to enable account confirmation and password reset please
                 // visit https://go.microsoft.com/fwlink/?LinkID=532713
                 var code = await _userManager.GeneratePasswordResetTokenAsync(user);
-                var callbackUrl = Url.ResetPasswordCallbackLink(user.Id, code, Request.Scheme);
-                await _emailSender.SendEmailAsync(model.Email, "Reset Password",
-                   $"Please reset your password by clicking here: <a href='{callbackUrl}'>link</a>");
+                await _smsSender.SendSmsAsync(model.PhoneNumber, code);
                 return RedirectToAction(nameof(ForgotPasswordConfirmation));
             }
 
@@ -408,7 +544,7 @@ namespace AspNetCore.WeixinOAuth.Demo.Controllers
             {
                 return View(model);
             }
-            var user = await _userManager.FindByEmailAsync(model.Email);
+            var user = await _userManager.FindByPhoneNumberAsync(model.PhoneNumber);
             if (user == null)
             {
                 // Don't reveal that the user does not exist

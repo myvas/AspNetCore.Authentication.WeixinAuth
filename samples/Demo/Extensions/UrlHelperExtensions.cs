@@ -11,7 +11,7 @@ namespace Microsoft.AspNetCore.Mvc
         public static string EmailConfirmationLink(this IUrlHelper urlHelper, string userId, string code, string scheme)
         {
             return urlHelper.Action(
-                action: nameof(AccountController.ConfirmEmail),
+                action: nameof(AccountController.ConfirmPhoneNumber),
                 controller: "Account",
                 values: new { userId, code },
                 protocol: scheme);

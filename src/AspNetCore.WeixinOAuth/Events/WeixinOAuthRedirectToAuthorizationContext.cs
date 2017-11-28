@@ -23,7 +23,7 @@ namespace AspNetCore.WeixinOAuth.Events
             HttpContext context, 
             AuthenticationScheme scheme,
             WeixinOAuthOptions options,
-            Microsoft.AspNetCore.Authentication.AuthenticationProperties properties, 
+            AuthenticationProperties properties, 
             string redirectUri)
             : base(context,scheme, options)
         {

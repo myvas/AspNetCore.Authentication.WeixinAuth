@@ -16,7 +16,5 @@ namespace AspNetCore.WeixinOAuth.Demo.Models.AccountViewModels
 
         [Display(Name = "Remember this machine")]
         public bool RememberMachine { get; set; }
-
-        public bool RememberMe { get; set; }
     }
 }

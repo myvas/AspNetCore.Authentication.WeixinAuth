@@ -13,6 +13,7 @@ using Microsoft.Extensions.Options;
 using AspNetCore.WeixinOAuth.Demo.Models;
 using AspNetCore.WeixinOAuth.Demo.Models.ManageViewModels;
 using AspNetCore.WeixinOAuth.Demo.Services;
+using AspNetCore.QcloudSms;
 
 namespace AspNetCore.WeixinOAuth.Demo.Controllers
 {
@@ -22,7 +23,7 @@ namespace AspNetCore.WeixinOAuth.Demo.Controllers
     {
         private readonly UserManager<AppUser> _userManager;
         private readonly SignInManager<AppUser> _signInManager;
-        private readonly IEmailSender _emailSender;
+        private readonly ISmsSender _smsSender;
         private readonly ILogger _logger;
         private readonly UrlEncoder _urlEncoder;
 
@@ -31,13 +32,13 @@ namespace AspNetCore.WeixinOAuth.Demo.Controllers
         public ManageController(
           UserManager<AppUser> userManager,
           SignInManager<AppUser> signInManager,
-          IEmailSender emailSender,
+          ISmsSender emailSender,
           ILogger<ManageController> logger,
           UrlEncoder urlEncoder)
         {
             _userManager = userManager;
             _signInManager = signInManager;
-            _emailSender = emailSender;
+            _smsSender = emailSender;
             _logger = logger;
             _urlEncoder = urlEncoder;
         }
@@ -57,9 +58,8 @@ namespace AspNetCore.WeixinOAuth.Demo.Controllers
             var model = new IndexViewModel
             {
                 Username = user.UserName,
-                Email = user.Email,
                 PhoneNumber = user.PhoneNumber,
-                IsEmailConfirmed = user.EmailConfirmed,
+                IsPhoneNumberConfirmed = user.EmailConfirmed,
                 StatusMessage = StatusMessage
             };
 
@@ -80,17 +80,7 @@ namespace AspNetCore.WeixinOAuth.Demo.Controllers
             {
                 throw new ApplicationException($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
             }
-
-            var email = user.Email;
-            if (model.Email != email)
-            {
-                var setEmailResult = await _userManager.SetEmailAsync(user, model.Email);
-                if (!setEmailResult.Succeeded)
-                {
-                    throw new ApplicationException($"Unexpected error occurred setting email for user with ID '{user.Id}'.");
-                }
-            }
-
+            
             var phoneNumber = user.PhoneNumber;
             if (model.PhoneNumber != phoneNumber)
             {
@@ -106,29 +96,44 @@ namespace AspNetCore.WeixinOAuth.Demo.Controllers
         }
 
         [HttpPost]
+        public async Task<IActionResult> SendVerificationCode(string phoneNumber)
+        {
+            var user = await _userManager.GetUserAsync(HttpContext.User);
+            var code = await _userManager.GenerateChangePhoneNumberTokenAsync(user, phoneNumber);
+            await _smsSender.SendSmsAsync(phoneNumber, $"【新广州入户】{code}为您的验证码。如非本人操作，请忽略本短信。");
+            return RedirectToAction(nameof(VerifyPhoneNumber), new { PhoneNumber = phoneNumber });
+        }
+
+        [HttpGet]
+        public IActionResult VerifyPhoneNumber(string phoneNumber)
+        {
+            return View();
+        }
+
+        [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> SendVerificationEmail(IndexViewModel model)
+        public async Task<IActionResult> VerifyPhoneNumber(VerifyPhoneNumberViewModel model)
         {
             if (!ModelState.IsValid)
             {
                 return View(model);
             }
-
-            var user = await _userManager.GetUserAsync(User);
-            if (user == null)
+            var user = await _userManager.GetUserAsync(HttpContext.User);
+            if (user != null)
             {
-                throw new ApplicationException($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
+                var result = await _userManager.ChangePhoneNumberAsync(user, model.PhoneNumber, model.Code);
+                if (result.Succeeded)
+                {
+                    await _signInManager.SignInAsync(user, isPersistent: false);
+                    return RedirectToAction(nameof(Index), new { Message = "AddPhoneSuccess" });
+                }
             }
-
-            var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-            var callbackUrl = Url.EmailConfirmationLink(user.Id, code, Request.Scheme);
-            var email = user.Email;
-            await _emailSender.SendEmailConfirmationAsync(email, callbackUrl);
-
-            StatusMessage = "Verification email sent. Please check your email.";
-            return RedirectToAction(nameof(Index));
+            // If we got this far, something failed, redisplay the form
+            ModelState.AddModelError(string.Empty, "Failed to verify phone number");
+            return View(model);
         }
 
+        
         [HttpGet]
         public async Task<IActionResult> ChangePassword()
         {
@@ -304,62 +309,6 @@ namespace AspNetCore.WeixinOAuth.Demo.Controllers
             await _signInManager.SignInAsync(user, isPersistent: false);
             StatusMessage = "The external login was removed.";
             return RedirectToAction(nameof(ExternalLogins));
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> TwoFactorAuthentication()
-        {
-            var user = await _userManager.GetUserAsync(User);
-            if (user == null)
-            {
-                throw new ApplicationException($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
-            }
-
-            var model = new TwoFactorAuthenticationViewModel
-            {
-                HasAuthenticator = await _userManager.GetAuthenticatorKeyAsync(user) != null,
-                Is2faEnabled = user.TwoFactorEnabled,
-                RecoveryCodesLeft = await _userManager.CountRecoveryCodesAsync(user),
-            };
-
-            return View(model);
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> Disable2faWarning()
-        {
-            var user = await _userManager.GetUserAsync(User);
-            if (user == null)
-            {
-                throw new ApplicationException($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
-            }
-
-            if (!user.TwoFactorEnabled)
-            {
-                throw new ApplicationException($"Unexpected error occured disabling 2FA for user with ID '{user.Id}'.");
-            }
-
-            return View(nameof(Disable2fa));
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Disable2fa()
-        {
-            var user = await _userManager.GetUserAsync(User);
-            if (user == null)
-            {
-                throw new ApplicationException($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
-            }
-
-            var disable2faResult = await _userManager.SetTwoFactorEnabledAsync(user, false);
-            if (!disable2faResult.Succeeded)
-            {
-                throw new ApplicationException($"Unexpected error occured disabling 2FA for user with ID '{user.Id}'.");
-            }
-
-            _logger.LogInformation("User with ID {UserId} has disabled 2fa.", user.Id);
-            return RedirectToAction(nameof(TwoFactorAuthentication));
         }
 
         [HttpGet]

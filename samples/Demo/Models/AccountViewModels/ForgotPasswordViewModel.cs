@@ -9,7 +9,7 @@ namespace AspNetCore.WeixinOAuth.Demo.Models.AccountViewModels
     public class ForgotPasswordViewModel
     {
         [Required]
-        [EmailAddress]
-        public string Email { get; set; }
+        [ChineseMobile]
+        public string PhoneNumber { get; set; }
     }
 }

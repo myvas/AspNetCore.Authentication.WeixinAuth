@@ -10,16 +10,12 @@ namespace AspNetCore.WeixinOAuth.Demo.Models.ManageViewModels
     {
         public string Username { get; set; }
 
-        public bool IsEmailConfirmed { get; set; }
+        public bool IsPhoneNumberConfirmed { get; set; }
 
         [Required]
-        [EmailAddress]
-        public string Email { get; set; }
-
-        [Phone]
-        [Display(Name = "Phone number")]
+        [ChineseMobile]
         public string PhoneNumber { get; set; }
-
+        
         public string StatusMessage { get; set; }
     }
 }

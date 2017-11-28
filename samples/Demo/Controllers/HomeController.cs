@@ -9,6 +9,7 @@ using AspNetCore.WeixinOAuth.Demo.Models.HomeViewModels;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Authorization;
 
 namespace AspNetCore.WeixinOAuth.Demo.Controllers
 {
@@ -39,22 +40,7 @@ namespace AspNetCore.WeixinOAuth.Demo.Controllers
 
             return View();
         }
-
-        public async Task<IActionResult> UserInfo()
-        {
-            var model = new UserInfoViewModel()
-            {
-                IsAuthenticated = HttpContext.User.Identity.IsAuthenticated,
-                UserName = HttpContext.User.Identity.Name,
-                Claims = HttpContext.User.Claims,
-                AccessToken = await HttpContext.GetTokenAsync("access_token"),
-                RefreshToken = await HttpContext.GetTokenAsync("refresh_token"),
-                ExpiresAt = await HttpContext.GetTokenAsync("expires_at"),
-                TokenType = await HttpContext.GetTokenAsync("token_type"),
-            };
-            return View(model);
-        }
-
+        
         public IActionResult Error()
         {
             var feature = HttpContext.Features.Get<IExceptionHandlerFeature>();
@@ -72,5 +58,27 @@ namespace AspNetCore.WeixinOAuth.Demo.Controllers
                     Error = error
                 });
         }
+        public IActionResult ShowQrcode(string redirectUrl)
+        {
+            return View();
+        }
+
+        [Authorize]
+        public async Task<IActionResult> UserInfo()
+        {
+            var model = new UserInfoViewModel()
+            {
+                IsAuthenticated = HttpContext.User.Identity.IsAuthenticated,
+                UserName = HttpContext.User.Identity.Name,
+                Claims = HttpContext.User.Claims,
+                AccessToken = await HttpContext.GetTokenAsync("access_token"),
+                RefreshToken = await HttpContext.GetTokenAsync("refresh_token"),
+                ExpiresAt = await HttpContext.GetTokenAsync("expires_at"),
+                TokenType = await HttpContext.GetTokenAsync("token_type"),
+            };
+            return View(model);
+        }
+
+
     }
 }

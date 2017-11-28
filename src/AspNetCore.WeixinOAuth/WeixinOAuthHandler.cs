@@ -77,12 +77,12 @@ namespace AspNetCore.WeixinOAuth
         protected virtual string BuildChallengeUrl(AuthenticationProperties properties, string redirectUri)
         {
             var scope = FormatScope();
-            //TODO: state腾讯非QR方式最长只能128字节
+            //state：腾讯非QR方式最长只能128字节，所以只能设计一个correlationId指向到特定的Cookie键值，实现各参数的存取。
             //see: https://mp.weixin.qq.com/wiki?t=resource/res_main&id=mp1421140842&token=&lang=zh_CN
             var correlationId = properties.Items[CorrelationProperty];
-            var state = correlationId;//Options.StateDataFormat.Protect(propertiesMinified);
+            var state = correlationId;
 
-            //注意：参数顺序也不能乱！微信说对该链接做了正则强匹配校验，如果链接的参数顺序不对，授权页面将无法正常访问
+            //注意：参数顺序也不能乱！微信对该链接做了正则强匹配校验，如果链接的参数顺序不对，授权页面将无法正常访问
             var queryBuilder = new QueryBuilder()
             {
                 { "appid", Options.AppId },
@@ -116,7 +116,7 @@ namespace AspNetCore.WeixinOAuth
 
         public override async Task<bool> HandleRequestAsync()
         {
-            if (!await ShouldHandleRequestAsync())
+            if (!await ShouldHandleRequestAsync()) //signin-weixin-oauth
             {
                 return false;
             }
@@ -150,7 +150,6 @@ namespace AspNetCore.WeixinOAuth
             {
                 exception = ex;
             }
-
             if (exception != null)
             {
                 Logger.LogWarning($"Error on remote authentication: {exception.Message}");
@@ -238,6 +237,7 @@ namespace AspNetCore.WeixinOAuth
 
             return AuthenticateResult.Fail("Remote authentication does not directly support AuthenticateAsync");
         }
+        
         protected override Task HandleForbiddenAsync(AuthenticationProperties properties) => Context.ForbidAsync(SignInScheme);
 
         protected override async Task<HandleRequestResult> HandleRemoteAuthenticateAsync()
@@ -460,7 +460,7 @@ namespace AspNetCore.WeixinOAuth
             }
             else
             {
-                identity.AddOptionalClaim(ClaimTypes.Name, $"({openId})", this.Options.ClaimsIssuer);
+                identity.AddOptionalClaim(ClaimTypes.Name, $"[{openId}]", this.Options.ClaimsIssuer);
             }
 
             var principal = new ClaimsPrincipal(identity);

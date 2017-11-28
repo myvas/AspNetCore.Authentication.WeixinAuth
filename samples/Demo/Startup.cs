@@ -1,20 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using AspNetCore.QcloudSms;
+using AspNetCore.ViewDivertMiddleware;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http.Extensions;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using AspNetCore.WeixinOAuth.Demo.Data;
-using AspNetCore.WeixinOAuth.Demo.Models;
-using AspNetCore.WeixinOAuth.Demo.Services;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
-using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Http.Extensions;
-using AspNetCore.ViewDivertMiddleware;
+using System;
+using System.Threading.Tasks;
+using System.Web;
 
 namespace AspNetCore.WeixinOAuth.Demo
 {
@@ -35,7 +34,7 @@ namespace AspNetCore.WeixinOAuth.Demo
             Configuration = configuration;
             _logger.LogDebug($"WeixinOAuth:AppId: {Configuration["WeixinOAuth:AppId"]}");
         }
-        
+
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
@@ -48,6 +47,8 @@ namespace AspNetCore.WeixinOAuth.Demo
                 })
                 .AddEntityFrameworkStores<AppDbContext>()
                 .AddDefaultTokenProviders();
+            services.TryAddScoped<AppUserStore, AppUserStore>();
+            services.TryAddScoped<AppUserManager, AppUserManager>();
 
             services.Configure<IdentityOptions>(options =>
             {
@@ -85,63 +86,87 @@ namespace AspNetCore.WeixinOAuth.Demo
             });
 
             services.AddAuthentication(options =>
-            {
-                options.DefaultAuthenticateScheme = WeixinOAuthDefaults.AuthenticationScheme;
-                options.DefaultChallengeScheme = WeixinOAuthDefaults.AuthenticationScheme;
-            })
-                .AddWeixinOAuth(options =>
                 {
-                    options.AppId = Configuration["WeixinOAuth:AppId"];
-                    options.AppSecret = Configuration["WeixinOAuth:AppSecret"];
-                    options.Scope.Add(WeixinOAuthScopes.snsapi_base);
-                    options.Scope.Add(WeixinOAuthScopes.snsapi_userinfo);
-                    options.SaveTokens = true;
-                    options.Events = new Events.WeixinOAuthEvents()
-                    {
-                        OnCreatingTicket = async x =>
-                        {
-                            await Task.FromResult(0);
-                            _logger.LogInformation("WeixinOAuth.OnCreatingTicket");
-                        },
-                        OnRemoteFailure = async x =>
-                        {
-                            await Task.FromResult(0);
-                            _logger.LogInformation("WeixinOAuth.OnRemoteFailure");
-                        },
-                        OnTicketReceived = async context =>
-                        {
-                            await Task.FromResult(0);
-                            _logger.LogInformation($"WeixinOAuth.OnTicketReceived: {context.Scheme.Name}");
-                        },
-                        OnRedirectToAuthorizationEndpoint = async context =>
-                        {
-                            await Task.FromResult(0);
-                            _logger.LogInformation($"WeixinOAuth.OnRedirectToAuthorizationEndpoint to {context.RedirectUri}");
-                            //如果这不是Weixin客户端，则显示一个二维码，让用户打开手机微信扫码登录。
-                            if (!AgentResolver.IsMicroMessenger(context.HttpContext))
-                            {
-                                var q = new QueryBuilder();
-                                q.Add("redirectUrl", context.RedirectUri);
-                                var qrlogin = string.Concat(
-                                    context.Request.Scheme,
-                                    "://",
-                                    context.Request.Host.ToUriComponent(),
-                                    context.Request.PathBase.ToUriComponent(),
-                                     "/Account/LoginQr",
-                                      q.ToQueryString().ToUriComponent());
-                                context.Response.Redirect(qrlogin);
-                            }
-                            else
-                            {
-                                //如果这是Weixin客户端，则直接访问微信身份验证服务端。
-                                context.Response.Redirect(context.RedirectUri);
-                            }
-                        }
-                    };
-                });
+                    //options.DefaultAuthenticateScheme = WeixinOAuthDefaults.AuthenticationScheme;
+                    //options.DefaultChallengeScheme = WeixinOAuthDefaults.AuthenticationScheme;
+                    //options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
+                })
+                .AddWeixinOAuth(WeixinOAuthDefaults.AuthenticationScheme, options =>
+                 {
+                     options.AppId = Configuration["WeixinOAuth:AppId"];
+                     options.AppSecret = Configuration["WeixinOAuth:AppSecret"];
+                     options.Scope.Add(WeixinOAuthScopes.snsapi_base);
+                     options.Scope.Add(WeixinOAuthScopes.snsapi_userinfo);
+                     options.SaveTokens = true;
+                     options.Events = new Events.WeixinOAuthEvents()
+                     {
+                         OnCreatingTicket = async x =>
+                         {
+                             await Task.FromResult(0);
+                             _logger.LogInformation("WeixinOAuth.OnCreatingTicket");
+                         },
+                         OnRemoteFailure = async x =>
+                         {
+                             await Task.FromResult(0);
+                             _logger.LogInformation("WeixinOAuth.OnRemoteFailure");
+                         },
+                         OnTicketReceived = async context =>
+                         {
+                             await Task.FromResult(0);
+                             _logger.LogInformation($"WeixinOAuth.OnTicketReceived: {context.Scheme.Name}");
+                         },
+                         OnRedirectToAuthorizationEndpoint = async context =>
+                         {
+                             await Task.FromResult(0);
+                             //如果这不是Weixin客户端，则显示一个二维码，让用户打开手机微信扫码登录。
+                             if (!AgentResolver.IsMicroMessenger(context.HttpContext))
+                             {
+                                 //context.RedirectUrl: https://open.weixin.qq.com/connect/oauth2/authorize?appid=wx02056e2b2b9cc4ef&redirect_uri=http%3A%2F%2Fweixinoauth.myvas.com%2Fsignin-weixin-oauth&response_type=code&scope=snsapi_base,snsapi_userinfo&state=hlaz9Ax5dLqCgM1RIzeemjcK08SIgMeeEUYGBU4E5bk&uin=MzcyMzAzOTM3&key=acf9e0498e32d7d7fa3ffe92fa608a68dd67388b3bf82257d1041999a8846282b9c6338acbde623ef3dc37ea23982a89&pass_ticket=ySQZsimUMA6UQWWQROGDk0bQT6Kxn23KQ/o+ZLYDVdl+Lid/fZcqe9TNfBe9Q2x0im9I7M/Okr6BHeCk4Phqrg==
+                                 var authorizeUri = new Uri(context.RedirectUri);
+                                 var appid = HttpUtility.ParseQueryString(authorizeUri.Query).Get("appid");
+                                 var authorizeCallbackUrl = HttpUtility.ParseQueryString(authorizeUri.Query).Get("redirect_uri");
+                                 var state = HttpUtility.ParseQueryString(authorizeUri.Query).Get("state");
+
+                                 var q = new QueryBuilder();
+                                 q.Add("appid", appid);
+                                 q.Add("redirect_uri", authorizeCallbackUrl);
+                                 q.Add("response_type", "code");
+                                 q.Add("scope", "snsapi_login");
+                                 q.Add("state", state);
+                                 var waitForCallback = string.Concat(
+                                     "https://open.weixin.qq.com/connect/qrconnect",
+                                     q.ToQueryString().ToUriComponent(),
+                                     "#wechat_redirect");
+
+                                 //var qrid = ShortGuid.NewGuid().ToString();
+                                 //q.Add("returnUrl", string.Concat(
+                                 //    context.Request.Scheme,
+                                 //    "://",
+                                 //    context.Request.Host.ToUriComponent(),
+                                 //    context.Request.PathBase.ToUriComponent()));
+
+                                 //var waitForCallback = string.Concat(
+                                 //    context.Request.Scheme,
+                                 //    "://",
+                                 //    context.Request.Host.ToUriComponent(),
+                                 //    context.Request.PathBase.ToUriComponent(),
+                                 //     "/Account/WaitForExternalLoginWithQr",
+                                 //      q.ToQueryString().ToUriComponent());
+                                 //_logger.LogInformation($"WeixinOAuth.OnRedirectToAuthorizationEndpoint to {waitForCallback}");
+                                 context.Response.Redirect(waitForCallback);
+                             }
+                             else
+                             {
+                                 //如果这是Weixin客户端，则直接访问微信身份验证服务端。
+                                 _logger.LogInformation($"WeixinOAuth.OnRedirectToAuthorizationEndpoint to {context.RedirectUri}");
+                                 context.Response.Redirect(context.RedirectUri);
+                             }
+                         }
+                     };
+                 });
 
             // Add application services.
-            services.AddTransient<IEmailSender, EmailSender>();
+            services.AddDebugQcloudSms();
 
             services.AddMvc();
         }
