@@ -27,20 +27,6 @@ namespace AspNetCore.WeixinOAuth.Demo.Controllers
             return View();
         }
 
-        public IActionResult About()
-        {
-            ViewData["Message"] = "Your application description page.";
-
-            return View();
-        }
-
-        public IActionResult Contact()
-        {
-            ViewData["Message"] = "Your contact page.";
-
-            return View();
-        }
-
         public IActionResult Error()
         {
             var feature = HttpContext.Features.Get<IExceptionHandlerFeature>();
@@ -58,6 +44,7 @@ namespace AspNetCore.WeixinOAuth.Demo.Controllers
                     Error = error
                 });
         }
+
         public IActionResult ShowQrcode(string redirectUrl)
         {
             return View();
@@ -89,7 +76,5 @@ namespace AspNetCore.WeixinOAuth.Demo.Controllers
             };
             return View(model);
         }
-
-
     }
 }
