@@ -15,6 +15,7 @@ using AspNetCore.WeixinOAuth.Demo.Models.AccountViewModels;
 using AspNetCore.WeixinOAuth.Demo.Services;
 using AspNetCore.QcloudSms;
 using Microsoft.AspNetCore.Http.Extensions;
+using AspNetCore.ViewDivertMiddleware;
 
 namespace AspNetCore.WeixinOAuth.Demo.Controllers
 {
@@ -48,9 +49,15 @@ namespace AspNetCore.WeixinOAuth.Demo.Controllers
         {
             // Clear the existing external cookie to ensure a clean login process
             await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
-
-            ViewData["ReturnUrl"] = returnUrl;
-            return View();
+            if (AgentResolver.IsMicroMessenger(HttpContext))
+            {
+                return ExternalLogin(WeixinOAuthDefaults.AuthenticationScheme, returnUrl);
+            }
+            else
+            {
+                ViewData["ReturnUrl"] = returnUrl;
+                return View();
+            }
         }
 
         [HttpPost]
@@ -89,130 +96,6 @@ namespace AspNetCore.WeixinOAuth.Demo.Controllers
             // If we got this far, something failed, redisplay form
             return View(model);
         }
-
-        #region WaitFor ExternalLoginWithQr and SignIn it.
-        [HttpGet]
-        [AllowAnonymous]
-        public IActionResult WaitForExternalLoginWithQr(string returnUrl)
-        {
-            var qrid = ShortGuid.NewGuid().ToString();
-
-            var qrcode = Url.AbsoluteAction(nameof(ExternalLoginWithQr), "Account", new { qrid });
-            ViewData["Qrcode"] = qrcode;
-
-            var isAuthenticatedWithQrUrl = Url.AbsoluteAction(nameof(IsAuthenticatedWithQr), "Account", new { qrid });
-            ViewData["IsAuthenticatedWithQrUrl"] = isAuthenticatedWithQrUrl;
-
-            var signInWithQrUrl = Url.AbsoluteAction(nameof(SignInWithQr), "Account", new { qrid, returnUrl });
-            ViewData["SignInWithQrUrl"] = signInWithQrUrl;
-
-            ViewData["returnUrl"] = returnUrl;
-
-            return View();
-        }
-
-        [AllowAnonymous]
-        public async Task<bool> IsAuthenticatedWithQr(string qrid)
-        {
-            var loginProvider = WeixinOAuthDefaults.AuthenticationScheme;
-            var login = await _userManager.FindAuthenticatedWithQrAsync(qrid, loginProvider);
-            return (login != null);
-        }
-
-        [AllowAnonymous]
-        public async Task<IActionResult> SignInWithQr(string qrid, string returnUrl)
-        {
-            var loginProvider = WeixinOAuthDefaults.AuthenticationScheme;
-            var info = await _userManager.FindAuthenticatedWithQrAsync(qrid, loginProvider);
-            if (info == null)
-            {
-                throw new Exception("Exception! Not found data of UserExternalLogins");
-            }
-            else
-            {
-                var signInResult = await _signInManager.ExternalLoginSignInAsync(loginProvider, info.ProviderKey, true);
-                if (signInResult.Succeeded)
-                {
-                    _logger.LogInformation($"User logged in with {info.LoginProvider} provider with {info.ProviderKey}.");
-                    return RedirectToLocal(returnUrl);
-                }
-                else if (signInResult.IsLockedOut || signInResult.IsNotAllowed || signInResult.RequiresTwoFactor)
-                {
-                    throw new Exception(signInResult.ToString());
-                }
-                else
-                {
-                    throw new Exception($"Pls register and bind your weixin({info.ProviderKey}) at first!");
-                }
-            }
-        }
-        #endregion
-        #region External login with qr, on mobile device
-        [HttpGet]
-        [AllowAnonymous]
-        public async Task<ChallengeResult> ExternalLoginWithQr(string qrid, string returnUrl = null)
-        {
-            var provider = WeixinOAuthDefaults.AuthenticationScheme;
-
-            await HttpContext.SignOutAsync(provider);
-
-            var redirectUrl = Url.Action(nameof(ExternalLoginWithQrCallback), "Account", new { qrid, returnUrl });
-            var properties = _signInManager.ConfigureExternalAuthenticationProperties(provider, redirectUrl, qrid);
-            return Challenge(properties, provider);
-        }
-
-        [HttpGet]
-        [AllowAnonymous]
-        public async Task<IActionResult> ExternalLoginWithQrCallback(string qrid, string returnUrl = null, string remoteError = null)
-        {
-            if (remoteError != null)
-            {
-                ErrorMessage = $"Error from external provider: {remoteError}";
-                return RedirectToAction(nameof(Login));
-            }
-
-            var info = await _signInManager.GetExternalLoginInfoAsync(qrid);
-            if (info == null)
-            {
-                return RedirectToAction(nameof(Login));
-            }
-
-            // Sign in the user with this external login provider if the user already has a login.
-            var result = await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, isPersistent: false, bypassTwoFactor: true);
-            if (result.Succeeded)
-            {
-                _logger.LogInformation("User logged in with {Name} provider.", info.LoginProvider);
-                return RedirectToLocal(returnUrl);
-            }
-            if (result.IsLockedOut)
-            {
-                return RedirectToAction(nameof(Lockout));
-            }
-            if (result.IsNotAllowed)
-            {
-                var providerName = info.ProviderDisplayName;
-                var providerKey = info.ProviderKey;
-                ViewData["Message"] = $"ProviderName: {providerName}, ProviderKey: {providerKey}";
-                return RedirectToAction(nameof(AccessDenied));
-            }
-
-            // set this openid as signed in, to let pc signed in as the same
-            {
-                // If the user does not have an account, then ask the user to create an account.
-                await _userManager.AddAuthenticatedWithQrAsync(qrid, info);
-                _logger.LogInformation($"Add authenticated with qr: qrid={qrid}, loginProvider={info.LoginProvider}.");
-                await HttpContext.SignOutAsync();
-                return View("ExternalLoginWithQrResult");
-            }
-        }
-
-        [HttpGet]
-        [AllowAnonymous]
-        public IActionResult ExternalLoginWithQrResult()
-        {
-            return View();
-        }
-        #endregion
 
         [HttpGet]
         [AllowAnonymous]
@@ -430,42 +313,85 @@ namespace AspNetCore.WeixinOAuth.Demo.Controllers
                 // If the user does not have an account, then ask the user to create an account.
                 ViewData["ReturnUrl"] = returnUrl;
                 ViewData["LoginProvider"] = info.LoginProvider;
-                var email = info.Principal.FindFirstValue(ClaimTypes.Email);
-                return View("ExternalLogin", new ExternalLoginViewModel { PhoneNumber = email });
+                var phoneNumber = info.Principal.FindFirstValue(ClaimTypes.MobilePhone);
+                return View("ExternalLoginInputPhoneNumber", new ExternalLoginPhoneNumberViewModel { PhoneNumber = phoneNumber });
             }
         }
 
         [HttpPost]
         [AllowAnonymous]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ExternalLoginConfirmation(ExternalLoginViewModel model, string returnUrl = null)
+        public async Task<IActionResult> ExternalLoginSendVcode(ExternalLoginPhoneNumberViewModel model, string returnUrl = null)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                // Get the information about the user from the external login provider
-                var info = await _signInManager.GetExternalLoginInfoAsync();
-                if (info == null)
-                {
-                    throw new ApplicationException("Error loading external login information during confirmation.");
-                }
-                var user = new AppUser { UserName = model.PhoneNumber, Email = model.PhoneNumber };
-                var result = await _userManager.CreateAsync(user);
-                if (result.Succeeded)
-                {
-                    result = await _userManager.AddLoginAsync(user, info);
-                    if (result.Succeeded)
-                    {
-                        await _signInManager.SignInAsync(user, isPersistent: false);
-                        _logger.LogInformation("User created an account using {Name} provider.", info.LoginProvider);
-                        return RedirectToLocal(returnUrl);
-                    }
-                }
-                AddErrors(result);
+                ViewData["ReturnUrl"] = returnUrl;
+                return View("ExternalLoginInputPhoneNumber", model);
+            }
+
+            // Get the information about the user from the external login provider
+            var (user, code) = await _userManager.GenerateChangePhoneNumberTokenAsync(model.PhoneNumber);
+            if (string.IsNullOrEmpty(code))
+            {
+                throw new ApplicationException($"Error generating code to mobile phone {model.PhoneNumber}.");
+            }
+
+            var codeText = $"【新广州入户】{code}为您的验证码。如非本人操作，请忽略本短信。";
+            var sendResult = await _smsSender.SendSmsAsync(user.PhoneNumber, codeText);
+            if (!sendResult)
+            {
+                throw new ApplicationException($"Error sending code to mobile phone {user.PhoneNumber} with text: {codeText}.");
             }
 
             ViewData["ReturnUrl"] = returnUrl;
-            return View(nameof(ExternalLogin), model);
+            ViewData["PhoneNumber"] = user.PhoneNumber;
+            return View("ExternalLoginInputCode", new ExternalLoginVcodeViewModel { PhoneNumber=user.PhoneNumber});
         }
+
+        [HttpPost]
+        [AllowAnonymous]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ExternalLoginCodeVerification(ExternalLoginVcodeViewModel model, string returnUrl = null)
+        {
+            if (!ModelState.IsValid)
+            {
+                ViewData["ReturnUrl"] = returnUrl;
+                ModelState.AddModelError(string.Empty, "Model state is invalid!");
+                return View("ExternalLoginInputCode", model);
+            }
+            if (string.IsNullOrEmpty(model.PhoneNumber))
+            {
+                ViewData["ReturnUrl"] = returnUrl;
+                ModelState.AddModelError(string.Empty, "phoneNumber can not be empty!");
+                return View("ExternalLoginInputCode", model);
+            }
+            var (user, pass) = await _userManager.VerifyChangePhoneNumberTokenAsync(model.PhoneNumber, model.Code);
+            if (user == null || !pass)
+            {
+                ViewData["ReturnUrl"] = returnUrl;
+                ModelState.AddModelError(string.Empty, "Failed on verifying code!");
+                return View("ExternalLoginInputCode", model);
+            }
+
+            // Get the information about the user from the external login provider
+            var info = await _signInManager.GetExternalLoginInfoAsync();
+            if (info == null)
+            {
+                throw new ApplicationException("Error loading external login information during confirmation.");
+            }
+
+            var identityResult = await _userManager.AddLoginAsync(user, info);
+            if (identityResult.Succeeded)
+            {
+                await _signInManager.SignInAsync(user, isPersistent: false);
+                _logger.LogInformation("User created an account using {Name} provider.", info.LoginProvider);
+                return RedirectToLocal(returnUrl);
+            }
+
+            AddErrors(identityResult);
+            return View("ExternalLoginInputCode", model);
+        }
+
 
         [HttpGet]
         [AllowAnonymous]
