@@ -67,34 +67,34 @@ namespace AspNetCore.WeixinOAuth.Demo.Controllers
         {
             var rememberMe = true;
             ViewData["ReturnUrl"] = returnUrl;
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                // This doesn't count login failures towards account lockout
-                // To enable password failures to trigger account lockout, set lockoutOnFailure: true
-                var result = await _signInManager.PasswordSignInAsync(model.PhoneNumber, model.Password, rememberMe, lockoutOnFailure: false);
-                if (result.Succeeded)
-                {
-                    _logger.LogInformation("User logged in.");
-                    return RedirectToLocal(returnUrl);
-                }
-                if (result.RequiresTwoFactor)
-                {
-                    return RedirectToAction(nameof(LoginWith2fa), new { returnUrl, rememberMe });
-                }
-                if (result.IsLockedOut)
-                {
-                    _logger.LogWarning("User account locked out.");
-                    return RedirectToAction(nameof(Lockout));
-                }
-                else
-                {
-                    ModelState.AddModelError(string.Empty, "Invalid login attempt.");
-                    return View(model);
-                }
+                // If we got this far, something failed, redisplay form
+                return View(model);
             }
 
-            // If we got this far, something failed, redisplay form
-            return View(model);
+            // This doesn't count login failures towards account lockout
+            // To enable password failures to trigger account lockout, set lockoutOnFailure: true
+            var result = await _signInManager.PasswordSignInAsync(model.PhoneNumber, model.Password, rememberMe, lockoutOnFailure: false);
+            if (result.Succeeded)
+            {
+                _logger.LogInformation("User logged in.");
+                return RedirectToLocal(returnUrl);
+            }
+            if (result.RequiresTwoFactor)
+            {
+                return RedirectToAction(nameof(LoginWith2fa), new { returnUrl, rememberMe });
+            }
+            if (result.IsLockedOut)
+            {
+                _logger.LogWarning("User account locked out.");
+                return RedirectToAction(nameof(Lockout));
+            }
+            else
+            {
+                ModelState.AddModelError(string.Empty, "Invalid login attempt.");
+                return View(model);
+            }
         }
 
         [HttpGet]
@@ -314,8 +314,15 @@ namespace AspNetCore.WeixinOAuth.Demo.Controllers
                 ViewData["ReturnUrl"] = returnUrl;
                 ViewData["LoginProvider"] = info.LoginProvider;
                 var phoneNumber = info.Principal.FindFirstValue(ClaimTypes.MobilePhone);
-                return View("ExternalLoginInputPhoneNumber", new ExternalLoginPhoneNumberViewModel { PhoneNumber = phoneNumber });
+                return View(nameof(ExternalLoginInputPhoneNumber), new ExternalLoginPhoneNumberViewModel { PhoneNumber = phoneNumber });
             }
+        }
+
+        [HttpGet]
+        [AllowAnonymous]
+        public IActionResult ExternalLoginInputPhoneNumber(ExternalLoginPhoneNumberViewModel model)
+        {
+            return View(model);
         }
 
         [HttpPost]
@@ -345,7 +352,7 @@ namespace AspNetCore.WeixinOAuth.Demo.Controllers
 
             ViewData["ReturnUrl"] = returnUrl;
             ViewData["PhoneNumber"] = user.PhoneNumber;
-            return View("ExternalLoginInputCode", new ExternalLoginVcodeViewModel { PhoneNumber=user.PhoneNumber});
+            return View("ExternalLoginInputCode", new ExternalLoginVcodeViewModel { PhoneNumber = user.PhoneNumber });
         }
 
         [HttpPost]

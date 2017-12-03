@@ -33,6 +33,7 @@ namespace AspNetCore.WeixinOAuth.Demo
             var configuration = BuildConfiguration(env);
             Configuration = configuration;
             _logger.LogDebug($"WeixinOAuth:AppId: {Configuration["WeixinOAuth:AppId"]}");
+            _logger.LogDebug($"WeixinOpen:AppId: {Configuration["WeixinOpen:AppId"]}");
             _logger.LogDebug($"QcloudSms:SdkAppId: {Configuration["QcloudSms:SdkAppId"]}");
         }
 
@@ -42,10 +43,7 @@ namespace AspNetCore.WeixinOAuth.Demo
             services.AddDbContext<AppDbContext>(options =>
                 options.UseInMemoryDatabase("WeixinOAuthInMemory"));
 
-            services.AddIdentity<AppUser, IdentityRole>(config =>
-                {
-                    config.SignIn.RequireConfirmedPhoneNumber = true;
-                })
+            services.AddIdentity<AppUser, IdentityRole>()
                 .AddEntityFrameworkStores<AppDbContext>()
                 .AddDefaultTokenProviders();
             services.TryAddScoped<AppUserStore, AppUserStore>();
@@ -70,7 +68,7 @@ namespace AspNetCore.WeixinOAuth.Demo
 
                 options.User.RequireUniqueEmail = false;
 
-                options.SignIn.RequireConfirmedPhoneNumber = false;
+                options.SignIn.RequireConfirmedPhoneNumber = true;
                 options.SignIn.RequireConfirmedEmail = false;
             });
 
@@ -87,117 +85,73 @@ namespace AspNetCore.WeixinOAuth.Demo
             });
 
             services.AddAuthentication(options =>
+            {
+                //options.DefaultAuthenticateScheme = WeixinOAuthDefaults.AuthenticationScheme;
+                //options.DefaultChallengeScheme = WeixinOAuthDefaults.AuthenticationScheme;
+                //options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
+            })
+            .AddWeixinOAuth(options =>
                 {
-                    //options.DefaultAuthenticateScheme = WeixinOAuthDefaults.AuthenticationScheme;
-                    //options.DefaultChallengeScheme = WeixinOAuthDefaults.AuthenticationScheme;
-                    //options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
+                    options.AppId = Configuration["WeixinOAuth:AppId"];
+                    options.AppSecret = Configuration["WeixinOAuth:AppSecret"];
                 })
-                .AddWeixinOAuth(WeixinOAuthDefaults.AuthenticationScheme, options =>
-                 {
-                     options.AppId = Configuration["WeixinOAuth:AppId"];
-                     options.AppSecret = Configuration["WeixinOAuth:AppSecret"];
-                     options.Scope.Add(WeixinOAuthScopes.snsapi_base);
-                     options.Scope.Add(WeixinOAuthScopes.snsapi_userinfo);
-                     options.SaveTokens = true;
-                     options.Events = new Events.WeixinOAuthEvents()
-                     {
-                         OnCreatingTicket = async x =>
-                         {
-                             await Task.FromResult(0);
-                             _logger.LogInformation("WeixinOAuth.OnCreatingTicket");
-                         },
-                         OnRemoteFailure = async x =>
-                         {
-                             await Task.FromResult(0);
-                             _logger.LogInformation("WeixinOAuth.OnRemoteFailure");
-                         },
-                         OnTicketReceived = async context =>
-                         {
-                             await Task.FromResult(0);
-                             _logger.LogInformation($"WeixinOAuth.OnTicketReceived: {context.Scheme.Name}");
-                         },
-                         OnRedirectToAuthorizationEndpoint = async context =>
-                         {
-                             await Task.FromResult(0);
-                             var redirectUrl = context.RedirectUri;
-                             //如果这不是Weixin客户端，则显示一个二维码，让用户打开手机微信扫码登录。
-                             if (!AgentResolver.IsMicroMessenger(context.HttpContext))
-                             {
-                                 //context.RedirectUrl: https://open.weixin.qq.com/connect/oauth2/authorize?appid=wx02056e2b2b9cc4ef&redirect_uri=http%3A%2F%2Fweixinoauth.myvas.com%2Fsignin-weixin-oauth&response_type=code&scope=snsapi_base,snsapi_userinfo&state=hlaz9Ax5dLqCgM1RIzeemjcK08SIgMeeEUYGBU4E5bk&uin=MzcyMzAzOTM3&key=acf9e0498e32d7d7fa3ffe92fa608a68dd67388b3bf82257d1041999a8846282b9c6338acbde623ef3dc37ea23982a89&pass_ticket=ySQZsimUMA6UQWWQROGDk0bQT6Kxn23KQ/o+ZLYDVdl+Lid/fZcqe9TNfBe9Q2x0im9I7M/Okr6BHeCk4Phqrg==
-                                 var authorizeUri = new Uri(redirectUrl);
-                                 var appid = HttpUtility.ParseQueryString(authorizeUri.Query).Get("appid");
-                                 var authorizeCallbackUrl = HttpUtility.ParseQueryString(authorizeUri.Query).Get("redirect_uri");
-                                 var state = HttpUtility.ParseQueryString(authorizeUri.Query).Get("state");
-
-                                 var q = new QueryBuilder();
-                                 q.Add("appid", appid);
-                                 q.Add("redirect_uri", authorizeCallbackUrl);
-                                 q.Add("response_type", "code");
-                                 q.Add("scope", "snsapi_login");
-                                 q.Add("state", state);
-
-                                 redirectUrl = string.Concat(
-                                     "https://open.weixin.qq.com/connect/qrconnect",
-                                     q.ToQueryString().ToUriComponent(),
-                                     "#wechat_redirect");
-                             }
-
-                             _logger.LogInformation($"WeixinOAuth.OnRedirectToAuthorizationEndpoint to {redirectUrl}");
-                             context.Response.Redirect(redirectUrl);
-                         }
-                     };
-        });
+            .AddWeixinOpen(options =>
+            {
+                options.AppId = Configuration["WeixinOpen:AppId"];
+                options.AppSecret = Configuration["WeixinOpen:AppSecret"];
+            });
 
             // Add application services.
-            services.AddQcloudSms(options=> {
-                options.AppKey = Configuration["QcloudSms:AppKey"];
+            services.AddQcloudSms(options =>
+            {
                 options.SdkAppId = Configuration["QcloudSms:SdkAppId"];
+                options.AppKey = Configuration["QcloudSms:AppKey"];
             });
 
             services.AddMvc();
         }
 
-    // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-    public void Configure(IApplicationBuilder app, IHostingEnvironment env)
-    {
-        if (env.IsDevelopment())
+        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
-            app.UseDeveloperExceptionPage();
-            app.UseBrowserLink();
-            app.UseDatabaseErrorPage();
+            if (env.IsDevelopment())
+            {
+                app.UseDeveloperExceptionPage();
+                app.UseBrowserLink();
+                app.UseDatabaseErrorPage();
+            }
+            else
+            {
+                app.UseExceptionHandler("/Home/Error");
+            }
+
+            app.UseStaticFiles();
+
+            app.UseAuthentication();
+
+            app.UseMvc(routes =>
+            {
+                routes.MapRoute(
+                    name: "default",
+                    template: "{controller=Home}/{action=Index}/{id?}");
+            });
         }
-        else
+
+        #region Helpers
+        private IConfiguration BuildConfiguration(IHostingEnvironment env)
         {
-            app.UseExceptionHandler("/Home/Error");
+            var hostingConfigurationBuilder = new ConfigurationBuilder()
+                .AddEnvironmentVariables(prefix: "ASPNETCORE_")
+                //.AddEnvironmentVariables()
+                .SetBasePath(AppContext.BaseDirectory)
+                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+                .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true, reloadOnChange: true)
+                .AddJsonFile("logging.json", optional: true, reloadOnChange: true)
+                .AddJsonFile($"logging.{env.EnvironmentName}.json", optional: true, reloadOnChange: true)
+                .AddUserSecrets<Startup>(true);
+
+            return hostingConfigurationBuilder.Build();
         }
-
-        app.UseStaticFiles();
-
-        app.UseAuthentication();
-
-        app.UseMvc(routes =>
-        {
-            routes.MapRoute(
-                name: "default",
-                template: "{controller=Home}/{action=Index}/{id?}");
-        });
+        #endregion
     }
-
-    #region Helpers
-    private IConfiguration BuildConfiguration(IHostingEnvironment env)
-    {
-        var hostingConfigurationBuilder = new ConfigurationBuilder()
-            .AddEnvironmentVariables(prefix: "ASPNETCORE_")
-            //.AddEnvironmentVariables()
-            .SetBasePath(AppContext.BaseDirectory)
-            .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
-            .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true, reloadOnChange: true)
-            .AddJsonFile("logging.json", optional: true, reloadOnChange: true)
-            .AddJsonFile($"logging.{env.EnvironmentName}.json", optional: true, reloadOnChange: true)
-            .AddUserSecrets<Startup>(true);
-
-        return hostingConfigurationBuilder.Build();
-    }
-    #endregion
-}
 }
