@@ -10,7 +10,8 @@ namespace AspNetCore.WeixinOAuth.Events
     /// <summary>
     /// Context passed when a Challenge causes a redirect to authorize endpoint in the middleware.
     /// </summary>
-    public class WeixinOAuthRedirectToAuthorizationContext : BaseWeixinOAuthContext
+    public class WeixinOAuthRedirectToAuthorizationContext<TOptions> : BaseWeixinOAuthContext<TOptions>
+        where TOptions : WeixinOAuthOptions, new()
     {
         /// <summary>
         /// The Context passed when a Challenge causes a redirect to authorize endpoint in the WeixinOAuth middleware.
@@ -22,7 +23,7 @@ namespace AspNetCore.WeixinOAuth.Events
         public WeixinOAuthRedirectToAuthorizationContext(
             HttpContext context, 
             AuthenticationScheme scheme,
-            WeixinOAuthOptions options,
+            TOptions options,
             AuthenticationProperties properties, 
             string redirectUri)
             : base(context,scheme, options)

@@ -3,10 +3,40 @@ An OAuth client middleware to Tencent WeChat (AKA Weixin) Authorization Server.
 
 ## Configuration
 Configuration Files: appsettings.json or secrets.json
+
+For WeixinOAuth:
 ```csharp
 {
   "WeixinOAuth:AppId": "wx02056e2b2b9cc4ef",
   "WeixinOAuth:AppSecret": "c175a359cd383213906bc3aa346fff2f"
+}
+```
+
+For WeixinOpen
+```csharp
+{
+  "WeixinOpen:AppId": "wx................",
+  "WeixinOpen:AppSecret": "................................"
+}
+```
+
+## ConfigureServices
+
+```csharp
+services.AddAuthentication()
+//For serve with  with mp.weixin.qq.com account, to automatic challenge in WeChat built-in browser, or WeChat DevTools.
+.AddWeixinOAuth(options => 
+{
+    options.AppId = Configuration["WeixinOAuth:AppId"];
+    options.AppSecret = Configuration["WeixinOAuth:AppSecret"];
+	options.SaveTokens = true;
+}
+// For serve with open.weixin.qq.com account, to scan a WeChat QR code to sign in.
+.AddWeixinOpen(options => 
+{
+    options.AppId = Configuration["WeixinOpen:AppId"];
+    options.AppSecret = Configuration["WeixinOpen:AppSecret"];
+    options.SaveTokens = true;
 }
 ```
 

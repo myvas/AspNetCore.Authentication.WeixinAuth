@@ -16,7 +16,8 @@ namespace AspNetCore.WeixinOAuth.Events
     /// <summary>
     /// Contains information about the login session as well as the user <see cref="ClaimsIdentity"/>.
     /// </summary>
-    public class WeixinOAuthCreatingTicketContext : BaseWeixinOAuthContext
+    public class WeixinOAuthCreatingTicketContext<TOptions> : BaseWeixinOAuthContext<TOptions>
+        where TOptions : WeixinOAuthOptions, new()
     {
         /// <summary>
         /// Initializes a new <see cref="WeixinOAuthCreatingTicketContext"/>.
@@ -29,7 +30,7 @@ namespace AspNetCore.WeixinOAuth.Events
         public WeixinOAuthCreatingTicketContext(
             HttpContext context,
             AuthenticationScheme scheme,
-            WeixinOAuthOptions options,
+            TOptions options,
             HttpClient backchannel,
             AuthenticationTicket ticket,
             WeixinOAuthTokenResponse tokens)
@@ -49,7 +50,7 @@ namespace AspNetCore.WeixinOAuth.Events
         public WeixinOAuthCreatingTicketContext(
             HttpContext context,
             AuthenticationScheme scheme,
-            WeixinOAuthOptions options,
+            TOptions options,
             HttpClient backchannel,
             AuthenticationTicket ticket,
             WeixinOAuthTokenResponse tokens,

@@ -24,7 +24,8 @@ using System.Text.Encodings.Web;
 
 namespace AspNetCore.WeixinOAuth
 {
-    internal class WeixinOAuthHandler : RemoteAuthenticationHandler<WeixinOAuthOptions>
+    internal class WeixinOAuthHandler<TOptions> : RemoteAuthenticationHandler<TOptions>
+        where TOptions : WeixinOAuthOptions, new()
     {
         protected const string CorrelationPrefix = ".AspNetCore.Correlation.";
         protected const string CorrelationProperty = ".xsrf";
@@ -34,24 +35,25 @@ namespace AspNetCore.WeixinOAuth
         protected static readonly RandomNumberGenerator CryptoRandom = RandomNumberGenerator.Create();
 
         protected HttpClient Backchannel => Options.Backchannel;
+        //protected override string ClaimsIssuer => Options.ClaimsIssuer ?? Scheme.Name;
 
         /// <summary>
         /// The handler calls methods on the events which give the application control at certain points where processing is occurring. 
         /// If it is not provided a default instance is supplied which does nothing when the methods are called.
         /// </summary>
-        protected new WeixinOAuthEvents Events
+        protected new WeixinOAuthEvents<TOptions> Events
         {
-            get { return (WeixinOAuthEvents)base.Events; }
-            set { base.Events = value; }
+            get => (WeixinOAuthEvents<TOptions>)base.Events;
+            set => base.Events = value;
         }
 
         /// <summary>
         /// Creates a new instance of the events instance.
         /// </summary>
         /// <returns>A new instance of the events instance.</returns>
-        protected override Task<object> CreateEventsAsync() => Task.FromResult<object>(new WeixinOAuthEvents());
+        protected override Task<object> CreateEventsAsync() => Task.FromResult<object>(new WeixinOAuthEvents<TOptions>());
 
-        public WeixinOAuthHandler(IOptionsMonitor<WeixinOAuthOptions> options, ILoggerFactory logger, UrlEncoder encoder, ISystemClock clock)
+        public WeixinOAuthHandler(IOptionsMonitor<TOptions> options, ILoggerFactory logger, UrlEncoder encoder, ISystemClock clock)
             : base(options, logger, encoder, clock)
         { }
 
@@ -96,20 +98,28 @@ namespace AspNetCore.WeixinOAuth
 
         protected override async Task HandleChallengeAsync(AuthenticationProperties properties)
         {
+            Logger.LogDebug($"Entering WeixinOAuth/WeixinOpen challenge handler: {GetType().FullName}.");
+
+            // order for local RedirectUri
+            // 1. challenge.Properties.RedirectUri
+            // 2. CurrentUri if RedirectUri is not set
             if (string.IsNullOrEmpty(properties.RedirectUri))
             {
                 properties.RedirectUri = CurrentUri;
             }
 
+            Logger.LogDebug($"Post authentication local redirect: {properties.RedirectUri}");
+
             // OAuth2 10.12 CSRF
             GenerateCorrelationId(properties);
 
             var authorizationEndpoint = BuildChallengeUrl(properties, BuildRedirectUri(Options.CallbackPath));
-            var redirectContext = new WeixinOAuthRedirectToAuthorizationContext(
+            var redirectContext = new WeixinOAuthRedirectToAuthorizationContext<TOptions>(
                 Context, Scheme, Options,
                 properties, authorizationEndpoint);
             await Events.RedirectToAuthorizationEndpoint(redirectContext);
-            Logger.LogInformation($"Redirecting to {authorizationEndpoint}...");
+            
+            Logger.LogDebug($"Redirecting to {authorizationEndpoint}...");
         }
 
         public override Task<bool> ShouldHandleRequestAsync() => Task.FromResult(Options.CallbackPath == Request.Path);
@@ -237,138 +247,148 @@ namespace AspNetCore.WeixinOAuth
 
             return AuthenticateResult.Fail("Remote authentication does not directly support AuthenticateAsync");
         }
-        
+
         protected override Task HandleForbiddenAsync(AuthenticationProperties properties) => Context.ForbidAsync(SignInScheme);
 
         protected override async Task<HandleRequestResult> HandleRemoteAuthenticateAsync()
         {
-            Logger.LogInformation($"Handling callback from remote at {Options.CallbackPath}...");
-            AuthenticationProperties properties = null;
-            var query = Request.Query;
+            Logger.LogDebug($"Entering remote authentication handler: {GetType().FullName}...");
 
-            var error = query["error"];
-            if (!StringValues.IsNullOrEmpty(error))
+            try
             {
-                var failureMessage = new StringBuilder();
-                failureMessage.Append(error);
-                var errorDescription = query["error_description"];
-                if (!StringValues.IsNullOrEmpty(errorDescription))
+                AuthenticationProperties properties = null;
+                var query = Request.Query;
+
+                var error = query["error"];
+                if (!StringValues.IsNullOrEmpty(error))
                 {
-                    failureMessage.Append(";Description=").Append(errorDescription);
-                }
-                var errorUri = query["error_uri"];
-                if (!StringValues.IsNullOrEmpty(errorUri))
-                {
-                    failureMessage.Append(";Uri=").Append(errorUri);
-                }
-
-                return HandleRequestResult.Fail(failureMessage.ToString());
-            }
-
-            var code = query["code"];
-            var state = query["state"]; // correlationId
-
-            if (StringValues.IsNullOrEmpty(code))
-            {
-                Logger.LogWarning("Code was not found.");
-                return HandleRequestResult.Fail("Code was not found.");
-            }
-
-            if (StringValues.IsNullOrEmpty(state))
-            {
-                Logger.LogWarning("State was not found.");
-                return HandleRequestResult.Fail("State was not found.");
-            }
-
-            var stateCookieName = ConcateCookieName(state);
-            var protectedProperties = Request.Cookies[stateCookieName];
-            if (string.IsNullOrEmpty(protectedProperties))
-            {
-                var errMsg = $"'{stateCookieName}' cookie not found.";
-                Logger.LogWarning(errMsg);
-                return HandleRequestResult.Fail("Correlation failed." + errMsg);
-            }
-
-            properties = Options.StateDataFormat.Unprotect(protectedProperties);
-            if (properties == null)
-            {
-                var errMsg = "The oauth state was missing or invalid.";
-                Logger.LogWarning(errMsg);
-                return HandleRequestResult.Fail(errMsg);
-            }
-
-            // OAuth2 10.12 CSRF
-            if (!ValidateCorrelationId(properties, state))
-            {
-                var errMsg = "Correlation failed. Correlation id not valid.";
-                Logger.LogWarning(errMsg);
-                return HandleRequestResult.Fail(errMsg);
-            }
-
-            //通过code换取网页授权access_token
-            var tokens = await CustomExchangeCodeAsync(code, BuildRedirectUri(Options.CallbackPath));
-            if (tokens.Error != null)
-            {
-                Logger.LogWarning(tokens.Error.StackTrace);
-                return HandleRequestResult.Fail(tokens.Error);
-            }
-
-            if (string.IsNullOrEmpty(tokens.AccessToken))
-            {
-                Logger.LogWarning("Failed to retrieve access token.");
-                return HandleRequestResult.Fail("Failed to retrieve access token.");
-            }
-
-            var identity = new ClaimsIdentity(Options.SignInScheme);
-            if (Options.SaveTokens)
-            {
-                var authTokens = new List<AuthenticationToken>();
-
-                authTokens.Add(new AuthenticationToken { Name = WeixinAuthenticationTokenNames.access_token, Value = tokens.AccessToken });
-                if (!string.IsNullOrEmpty(tokens.RefreshToken))
-                {
-                    authTokens.Add(new AuthenticationToken { Name = WeixinAuthenticationTokenNames.refresh_token, Value = tokens.RefreshToken });
-                }
-                if (!string.IsNullOrEmpty(tokens.TokenType))
-                {
-                    authTokens.Add(new AuthenticationToken { Name = WeixinAuthenticationTokenNames.token_type, Value = tokens.TokenType });
-                }
-                if (!string.IsNullOrEmpty(tokens.OpenId))
-                {
-                    authTokens.Add(new AuthenticationToken { Name = WeixinAuthenticationTokenNames.weixin_openid, Value = tokens.OpenId });
-                }
-                if (!string.IsNullOrEmpty(tokens.Scope))
-                {
-                    authTokens.Add(new AuthenticationToken { Name = WeixinAuthenticationTokenNames.weixin_scope, Value = tokens.Scope });
-                }
-                if (!string.IsNullOrEmpty(tokens.ExpiresIn))
-                {
-                    int value;
-                    if (int.TryParse(tokens.ExpiresIn, NumberStyles.Integer, CultureInfo.InvariantCulture, out value))
+                    var failureMessage = new StringBuilder();
+                    failureMessage.Append(error);
+                    var errorDescription = query["error_description"];
+                    if (!StringValues.IsNullOrEmpty(errorDescription))
                     {
-                        // https://www.w3.org/TR/xmlschema-2/#dateTime
-                        // https://msdn.microsoft.com/en-us/library/az4se3k1(v=vs.110).aspx
-                        var expiresAt = Clock.UtcNow + TimeSpan.FromSeconds(value);
-                        authTokens.Add(new AuthenticationToken
-                        {
-                            Name = WeixinAuthenticationTokenNames.expires_at,
-                            Value = expiresAt.ToString("o", CultureInfo.InvariantCulture)
-                        });
+                        failureMessage.Append(";Description=").Append(errorDescription);
                     }
+                    var errorUri = query["error_uri"];
+                    if (!StringValues.IsNullOrEmpty(errorUri))
+                    {
+                        failureMessage.Append(";Uri=").Append(errorUri);
+                    }
+
+                    return HandleRequestResult.Fail(failureMessage.ToString());
                 }
 
-                properties.StoreTokens(authTokens); //ExternalLoginInfo.AuthenticationTokens
-            }
+                var code = query["code"];
+                var state = query["state"]; // ie. correlationId
 
-            var ticket = await CustomCreateTicketAsync(identity, properties, tokens);
-            if (ticket != null)
-            {
-                return HandleRequestResult.Success(ticket);
+                if (StringValues.IsNullOrEmpty(code))
+                {
+                    Logger.LogWarning("Code was not found.");
+                    return HandleRequestResult.Fail("Code was not found.");
+                }
+
+                if (StringValues.IsNullOrEmpty(state))
+                {
+                    Logger.LogWarning("State was not found.");
+                    return HandleRequestResult.Fail("State was not found.");
+                }
+
+                var stateCookieName = ConcateCookieName(state);
+                var protectedProperties = Request.Cookies[stateCookieName];
+                if (string.IsNullOrEmpty(protectedProperties))
+                {
+                    var errMsg = $"'{stateCookieName}' cookie not found.";
+                    Logger.LogWarning(errMsg);
+                    return HandleRequestResult.Fail("Correlation failed." + errMsg);
+                }
+
+                properties = Options.StateDataFormat.Unprotect(protectedProperties);
+                if (properties == null)
+                {
+                    var errMsg = "The oauth state was missing or invalid.";
+                    Logger.LogWarning(errMsg);
+                    return HandleRequestResult.Fail(errMsg);
+                }
+
+                // OAuth2 10.12 CSRF
+                if (!ValidateCorrelationId(properties, state))
+                {
+                    var errMsg = "Correlation failed. Correlation id not valid.";
+                    Logger.LogWarning(errMsg);
+                    return HandleRequestResult.Fail(errMsg);
+                }
+
+                //通过code换取网页授权access_token
+                var tokens = await CustomExchangeCodeAsync(code, BuildRedirectUri(Options.CallbackPath));
+                if (tokens.Error != null)
+                {
+                    Logger.LogWarning(tokens.Error.StackTrace);
+                    return HandleRequestResult.Fail(tokens.Error);
+                }
+
+                if (string.IsNullOrEmpty(tokens.AccessToken))
+                {
+                    Logger.LogWarning("Failed to retrieve access token.");
+                    return HandleRequestResult.Fail("Failed to retrieve access token.");
+                }
+
+                var identity = new ClaimsIdentity(Options.SignInScheme);
+                if (Options.SaveTokens)
+                {
+                    var authTokens = new List<AuthenticationToken>();
+
+                    authTokens.Add(new AuthenticationToken { Name = WeixinAuthenticationTokenNames.access_token, Value = tokens.AccessToken });
+                    if (!string.IsNullOrEmpty(tokens.RefreshToken))
+                    {
+                        authTokens.Add(new AuthenticationToken { Name = WeixinAuthenticationTokenNames.refresh_token, Value = tokens.RefreshToken });
+                    }
+                    if (!string.IsNullOrEmpty(tokens.TokenType))
+                    {
+                        authTokens.Add(new AuthenticationToken { Name = WeixinAuthenticationTokenNames.token_type, Value = tokens.TokenType });
+                    }
+                    if (!string.IsNullOrEmpty(tokens.OpenId))
+                    {
+                        authTokens.Add(new AuthenticationToken { Name = WeixinAuthenticationTokenNames.weixin_openid, Value = tokens.OpenId });
+                    }
+                    if (!string.IsNullOrEmpty(tokens.Scope))
+                    {
+                        authTokens.Add(new AuthenticationToken { Name = WeixinAuthenticationTokenNames.weixin_scope, Value = tokens.Scope });
+                    }
+                    if (!string.IsNullOrEmpty(tokens.ExpiresIn))
+                    {
+                        int value;
+                        if (int.TryParse(tokens.ExpiresIn, NumberStyles.Integer, CultureInfo.InvariantCulture, out value))
+                        {
+                            // https://www.w3.org/TR/xmlschema-2/#dateTime
+                            // https://msdn.microsoft.com/en-us/library/az4se3k1(v=vs.110).aspx
+                            var expiresAt = Clock.UtcNow + TimeSpan.FromSeconds(value);
+                            authTokens.Add(new AuthenticationToken
+                            {
+                                Name = WeixinAuthenticationTokenNames.expires_at,
+                                Value = expiresAt.ToString("o", CultureInfo.InvariantCulture)
+                            });
+                        }
+                    }
+
+                    properties.StoreTokens(authTokens); //ExternalLoginInfo.AuthenticationTokens
+                }
+
+                var ticket = await CustomCreateTicketAsync(identity, properties, tokens);
+                if (ticket != null)
+                {
+                    return HandleRequestResult.Success(ticket);
+                }
+                else
+                {
+                    Logger.LogWarning("Failed to retrieve user information from remote server.");
+                    return HandleRequestResult.Fail("Failed to retrieve user information from remote server.");
+                }
             }
-            else
+            catch (Exception ex)
             {
-                Logger.LogWarning("Failed to retrieve user information from remote server.");
-                return HandleRequestResult.Fail("Failed to retrieve user information from remote server.");
+                Logger.LogError(ex, ex.Message);
+
+                return HandleRequestResult.Fail(ex);
             }
         }
 
@@ -456,7 +476,7 @@ namespace AspNetCore.WeixinOAuth
 
             if (SplitScope(scope).Contains(WeixinOAuthScopes.snsapi_userinfo))
             {
-                identity = await RetrieveUserInfoAsync(tokens.AccessToken, openId, identity);
+                identity = await GetUserInformationAsync(tokens.AccessToken, openId, identity);
             }
             else
             {
@@ -465,15 +485,18 @@ namespace AspNetCore.WeixinOAuth
 
             var principal = new ClaimsPrincipal(identity);
             var ticket = new AuthenticationTicket(principal, properties, Scheme.Name);
-            var context = new WeixinOAuthCreatingTicketContext(Context, Scheme, Options, Backchannel, ticket, tokens);
+            //TODO: generic type
+            var context = new WeixinOAuthCreatingTicketContext<WeixinOAuthOptions>(Context, Scheme, Options, Backchannel, ticket, tokens);
             await Options.Events.CreatingTicket(context);
 
             return context.Ticket;
         }
 
-        private async Task<ClaimsIdentity> RetrieveUserInfoAsync(string accessToken, string openId, ClaimsIdentity identity)
+        private async Task<ClaimsIdentity> GetUserInformationAsync(string accessToken, string openId, ClaimsIdentity identity)
         {
-            //call userinfo
+            Logger.LogDebug($"Getting user information {openId}...");
+
+            //get url userinfo
             var query = new QueryBuilder();
             query.Add("access_token", accessToken);
             query.Add("openid", openId);

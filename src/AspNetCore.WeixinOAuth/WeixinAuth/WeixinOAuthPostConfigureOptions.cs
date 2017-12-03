@@ -3,21 +3,47 @@ using AspNetCore.WeixinOAuth.Messages;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.Options;
+using System;
 using System.Net.Http;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
-    public class WeixinOAuthPostConfigureOptions : IPostConfigureOptions<WeixinOAuthOptions>
+    public class WeixinOAuthPostConfigureOptions<TOptions> : IPostConfigureOptions<TOptions>
+        where TOptions : WeixinOAuthOptions, new()
     {
         private readonly IDataProtectionProvider _dp;
+        private readonly AuthenticationOptions _authOptions;
 
-        public WeixinOAuthPostConfigureOptions(IDataProtectionProvider dataProtection)
+        public WeixinOAuthPostConfigureOptions(IDataProtectionProvider dataProtection,
+            IOptions<AuthenticationOptions> authOptions)
         {
             _dp = dataProtection;
+            _authOptions = authOptions.Value;
         }
 
-        public void PostConfigure(string name, WeixinOAuthOptions options)
+        public virtual void PostConfigure(string name, TOptions options)
         {
+            if (options.GetClaimsFromUserInfoEndpoint)
+            {
+                if (!options.Scope.Contains(WeixinOAuthScopes.snsapi_userinfo))
+                {
+                    options.Scope.Add(WeixinOAuthScopes.snsapi_userinfo);
+                }
+            }
+            else
+            {
+                if (!options.Scope.Contains(WeixinOAuthScopes.snsapi_base))
+                {
+                    options.Scope.Add(WeixinOAuthScopes.snsapi_base);
+                }
+            }
+
+            options.SignInScheme = options.SignInScheme ?? _authOptions.DefaultSignInScheme ?? _authOptions.DefaultScheme;
+            if (string.Equals(options.SignInScheme, name, StringComparison.Ordinal))
+            {
+                throw new InvalidOperationException("The SignInScheme for a remote authentication handler cannot be set to itself.  If it was not explicitly set, the AuthenticationOptions.DefaultSignInScheme or DefaultScheme is used.");
+            }
+
             options.DataProtectionProvider = options.DataProtectionProvider ?? _dp;
             if (options.Backchannel == null)
             {
@@ -32,7 +58,7 @@ namespace Microsoft.Extensions.DependencyInjection
             if (options.StateDataFormat == null)
             {
                 var dataProtector = options.DataProtectionProvider.CreateProtector(
-                    typeof(WeixinOAuthHandler).FullName, name, "v1");
+                    typeof(WeixinOAuthHandler<TOptions>).FullName, name, "v1");
                 //options.StateDataFormat = new PropertiesDataFormat(dataProtector);
                 options.StateDataFormat = new SecureDataFormat<AuthenticationProperties>(
                     new AuthenticationPropertiesSerializer(),

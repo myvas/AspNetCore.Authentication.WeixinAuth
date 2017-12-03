@@ -5,9 +5,7 @@
     <AssemblyName>AspNetCore.WeixinOAuth</AssemblyName>
     <TargetFramework>netstandard2.0</TargetFramework>
     <AssetTargetFallback>$(AssetTargetFallback);portable-win8+wp8+wpa81;</AssetTargetFallback>
-    <Version>2.0.0-beta-71129</Version>
-    <VersionPrefix>2.0.0</VersionPrefix>
-    <VersionSufix>beta-71129</VersionSufix>
+    <Version>2.0.0-beta-71203</Version>
     <PackageTags>AspNetCore, WeixinOAuth</PackageTags>
     <PackageProjectUrl>https://github.com/myvas/AspNetCore.WeixinOAuth</PackageProjectUrl>   
     <Description>ASP.NET Core middleware that enables an application to support the Weixin OAuth authentication workflow.</Description>

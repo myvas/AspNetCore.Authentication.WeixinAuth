@@ -13,18 +13,15 @@ namespace AspNetCore.WeixinOAuth
     /// </summary>
     public class WeixinOAuthOptions : RemoteAuthenticationOptions
     {
-        public string AppId { get { return ClientId; } set { ClientId = value; } }
-        public string AppSecret { get { return ClientSecret; } set { ClientSecret = value; } }
-
         /// <summary>
         /// Gets or sets the provider-assigned client id.
         /// </summary>
-        public string ClientId { get; set; }
+        public string AppId { get; set; }
 
         /// <summary>
         /// Gets or sets the provider-assigned client secret.
         /// </summary>
-        public string ClientSecret { get; set; }
+        public string AppSecret { get; set; }
 
         /// <summary>
         /// Gets or sets the URI where the client will be redirected to authenticate.
@@ -46,12 +43,12 @@ namespace AspNetCore.WeixinOAuth
         /// <summary>
         /// Gets or sets the <see cref="IOAuthEvents"/> used to handle authentication events.
         /// </summary>
-        public new WeixinOAuthEvents Events
+        public new WeixinOAuthEvents<WeixinOAuthOptions> Events
         {
-            get { return (WeixinOAuthEvents)base.Events; }
-            set { base.Events = value; }
+            get => (WeixinOAuthEvents<WeixinOAuthOptions>)base.Events;
+            set => base.Events = value;
         }
-        
+
         /// <summary>
         /// A collection of claim actions used to select values from the json user data and create Claims.
         /// </summary>
@@ -73,34 +70,38 @@ namespace AspNetCore.WeixinOAuth
         /// <remarks>在拉取用户信息时用到</remarks>
         public string LanguageCode { get; set; } = "zh_CN";
 
+        /// <summary>
+        /// 是否需要获取除微信OpenId外的其他用户信息（名称，头像等）
+        /// </summary>
+        public bool GetClaimsFromUserInfoEndpoint { get; set; } = true;
+
         public WeixinOAuthOptions()
         {
-            Events = new WeixinOAuthEvents();
-            
-            CallbackPath = WeixinOAuthDefaults.CallbackPath;
+            Events = new WeixinOAuthEvents<WeixinOAuthOptions>();
 
+            ClaimsIssuer = WeixinOAuthDefaults.ClaimsIssuer;
+            CallbackPath = WeixinOAuthDefaults.CallbackPath;
             AuthorizationEndpoint = WeixinOAuthDefaults.AuthorizationEndpoint;
             TokenEndpoint = WeixinOAuthDefaults.TokenEndpoint;
             UserInformationEndpoint = WeixinOAuthDefaults.UserInformationEndpoint;
+            Scope.Add(WeixinOAuthScopes.snsapi_base);
+            if (GetClaimsFromUserInfoEndpoint) Scope.Add(WeixinOAuthScopes.snsapi_userinfo);
 
-            //Scope.Add(WeixinOAuthScopes.snsapi_login);
-            //if (Scope.Count < 1) Scope.Add(WeixinOAuthScopes.snsapi_userinfo);
-
-            ClaimsIssuer = WeixinOAuthDefaults.Issuer;
+            SaveTokens = true;
         }
 
         public override void Validate()
         {
             base.Validate();
-            
-            if (string.IsNullOrEmpty(ClientId))
+
+            if (string.IsNullOrEmpty(AppId))
             {
-                throw new ArgumentException($"{nameof(ClientId)} must be provided", nameof(ClientId));
+                throw new ArgumentException($"{nameof(AppId)} must be provided", nameof(AppId));
             }
 
-            if (string.IsNullOrEmpty(ClientSecret))
+            if (string.IsNullOrEmpty(AppSecret))
             {
-                throw new ArgumentException($"{nameof(ClientSecret)} must be provided", nameof(ClientSecret));
+                throw new ArgumentException($"{nameof(AppSecret)} must be provided", nameof(AppSecret));
             }
 
             if (string.IsNullOrEmpty(AuthorizationEndpoint))
@@ -113,7 +114,7 @@ namespace AspNetCore.WeixinOAuth
                 throw new ArgumentException($"{nameof(TokenEndpoint)} must be provided", nameof(TokenEndpoint));
             }
 
-            if (!CallbackPath.HasValue)
+            if (CallbackPath == null || !CallbackPath.HasValue)
             {
                 throw new ArgumentException($"{nameof(CallbackPath)} must be provided", nameof(CallbackPath));
             }
