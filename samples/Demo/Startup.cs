@@ -1,5 +1,7 @@
 ﻿using AspNetCore.QcloudSms;
 using AspNetCore.ViewDivertMiddleware;
+using Demo;
+using Demo.Models;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -19,94 +21,60 @@ namespace AspNetCore.WeixinOAuth.Demo
 {
     public class Startup
     {
-        private readonly ILogger _logger;
-        private IHostingEnvironment HostingEnvironment { get; }
-        private IConfiguration Configuration { get; }
+        private readonly IConfiguration _configuration;
 
-        public Startup(IHostingEnvironment env, ILoggerFactory loggerFactory)
+        public Startup(IConfiguration configuration)
         {
-            _logger = loggerFactory.CreateLogger<Startup>();
-
-            HostingEnvironment = env;
-            _logger.LogDebug($"EnvironmentName: {env.EnvironmentName}");
-
-            var configuration = BuildConfiguration(env);
-            Configuration = configuration;
-            _logger.LogDebug($"WeixinOAuth:AppId: {Configuration["WeixinOAuth:AppId"]}");
-            _logger.LogDebug($"WeixinOpen:AppId: {Configuration["WeixinOpen:AppId"]}");
-            _logger.LogDebug($"QcloudSms:SdkAppId: {Configuration["QcloudSms:SdkAppId"]}");
+            _configuration = configuration;
         }
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddDbContext<AppDbContext>(options =>
-                options.UseInMemoryDatabase("WeixinOAuthInMemory"));
+            services.AddDbContext<AppDbContext>(options => options.UseInMemoryDatabase("WeixinAuthDemo"));
 
             services.AddIdentity<AppUser, IdentityRole>()
                 .AddEntityFrameworkStores<AppDbContext>()
+                .AddUserManager<AppUserManager>()
+                .AddSignInManager<SignInManager<AppUser>>()
                 .AddDefaultTokenProviders();
-            services.TryAddScoped<AppUserStore, AppUserStore>();
-            services.TryAddScoped<AppUserManager, AppUserManager>();
-
             services.Configure<IdentityOptions>(options =>
             {
-                options.Password = new PasswordOptions()
+                options.Password = new PasswordOptions
                 {
-                    //RequiredLength = 8,
                     RequireLowercase = false,
                     RequireUppercase = false,
                     RequireNonAlphanumeric = false,
                     RequireDigit = false
                 };
-                options.Lockout = new LockoutOptions()
-                {
-                    AllowedForNewUsers = false,
-                    DefaultLockoutTimeSpan = TimeSpan.FromMinutes(30),
-                    MaxFailedAccessAttempts = 10
-                };
-
                 options.User.RequireUniqueEmail = false;
+                options.SignIn.RequireConfirmedEmail = false;
 
                 options.SignIn.RequireConfirmedPhoneNumber = true;
-                options.SignIn.RequireConfirmedEmail = false;
             });
-
             services.ConfigureApplicationCookie(options =>
             {
                 options.LoginPath = "/Account/Login";
-                options.LogoutPath = "/Account/Logout";
+                options.LogoutPath = "/Account/LogOff";
                 options.AccessDeniedPath = "/Account/AccessDenied";
-                options.ReturnUrlParameter = CookieAuthenticationDefaults.ReturnUrlParameter;
-                options.ExpireTimeSpan = TimeSpan.FromDays(150);
-                options.SlidingExpiration = true;
-                options.Cookie.HttpOnly = true;
-                options.Cookie.Expiration = TimeSpan.FromDays(150);
             });
 
-            services.AddAuthentication(options =>
-            {
-                //options.DefaultAuthenticateScheme = WeixinOAuthDefaults.AuthenticationScheme;
-                //options.DefaultChallengeScheme = WeixinOAuthDefaults.AuthenticationScheme;
-                //options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
-            })
-            .AddWeixinOAuth(options =>
-                {
-                    options.AppId = Configuration["WeixinOAuth:AppId"];
-                    options.AppSecret = Configuration["WeixinOAuth:AppSecret"];
+            services.AddAuthentication()
+                .AddWeixinOpen(options => {
+                    options.AppId = _configuration["WeixinOpen:AppId"];
+                    options.AppSecret = _configuration["WeixinOpen:AppSecret"];
                 })
-            .AddWeixinOpen(options =>
-            {
-                options.AppId = Configuration["WeixinOpen:AppId"];
-                options.AppSecret = Configuration["WeixinOpen:AppSecret"];
-            });
-
-            // Add application services.
+                .AddWeixinOAuth(options =>
+                {
+                    options.AppId = _configuration["WeixinAuth:AppId"];
+                    options.AppSecret = _configuration["WeixinAuth:AppSecret"];
+                });
             services.AddQcloudSms(options =>
             {
-                options.SdkAppId = Configuration["QcloudSms:SdkAppId"];
-                options.AppKey = Configuration["QcloudSms:AppKey"];
+                options.SdkAppId = _configuration["QcloudSms:SdkAppId"];
+                options.AppKey = _configuration["QcloudSms:AppKey"];
             });
+            services.AddViewDivert();
 
             services.AddMvc();
         }
@@ -118,7 +86,6 @@ namespace AspNetCore.WeixinOAuth.Demo
             {
                 app.UseDeveloperExceptionPage();
                 app.UseBrowserLink();
-                app.UseDatabaseErrorPage();
             }
             else
             {
@@ -136,22 +103,5 @@ namespace AspNetCore.WeixinOAuth.Demo
                     template: "{controller=Home}/{action=Index}/{id?}");
             });
         }
-
-        #region Helpers
-        private IConfiguration BuildConfiguration(IHostingEnvironment env)
-        {
-            var hostingConfigurationBuilder = new ConfigurationBuilder()
-                .AddEnvironmentVariables(prefix: "ASPNETCORE_")
-                //.AddEnvironmentVariables()
-                .SetBasePath(AppContext.BaseDirectory)
-                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
-                .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true, reloadOnChange: true)
-                .AddJsonFile("logging.json", optional: true, reloadOnChange: true)
-                .AddJsonFile($"logging.{env.EnvironmentName}.json", optional: true, reloadOnChange: true)
-                .AddUserSecrets<Startup>(true);
-
-            return hostingConfigurationBuilder.Build();
-        }
-        #endregion
     }
 }

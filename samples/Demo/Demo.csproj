@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp2.0</TargetFramework>
     <UserSecretsId>aspnetcore-weixinoauth-demo</UserSecretsId>
-    <RootNamespace>AspNetCore.WeixinOAuth.Demo</RootNamespace>
+    <RootNamespace>Demo</RootNamespace>
     <AssemblyName>AspNetCore.WeixinOAuth.Demo</AssemblyName>
   </PropertyGroup>
 

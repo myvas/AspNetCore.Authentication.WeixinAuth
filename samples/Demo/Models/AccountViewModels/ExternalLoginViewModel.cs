@@ -4,13 +4,15 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace AspNetCore.WeixinOAuth.Demo.Models.AccountViewModels
+namespace Demo.Models
 {
-    public class ExternalLoginPhoneNumberViewModel
+    public class ExternalLoginPhoneNumberViewModel : ReturnableViewModel
     {
         [Required]
         [ChineseMobile]
         public string PhoneNumber { get; set; }
+
+        public string LoginProvider { get; set; }
     }
 
     public class ExternalLoginVcodeViewModel

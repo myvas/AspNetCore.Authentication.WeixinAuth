@@ -1,0 +1,87 @@
+﻿@inject SignInManager<AppUser> SignInManager
+
+@model LoginViewModel
+
+@{
+    ViewData["Title"] = "登录";
+}
+
+<div class="text-center col-xs-offset-2 col-xs-8 col-sm-offset-3 col-sm-6 col-md-offset-4 col-md-4">
+    <section>
+        <form asp-controller="Account" asp-action="Login" method="post" class="form-horizontal">
+            @Html.HiddenFor(x => x.ReturnUrl)
+            <div class="text-center">
+                <span class="fa-stack fa-3x text-muted">
+                    <i class="fa fa-circle fa-stack-2x"></i>
+                    <i class="fa fa-user fa-stack-2x fa-inverse"></i>
+                </span>
+                <span class="help-block small">请输入帐号密码或微信扫码登录</></span>
+            </div>
+
+            <div class="form-group">
+                <div class="input-group">
+                    <span class="input-group-addon"><i class="glyphicon glyphicon-user text-success"></i></span>
+                    <input type="text" asp-for="PhoneNumberOrEmailOrUserName" placeholder="手机号码或邮箱或用户名" class="form-control" />
+                </div>
+                <span asp-validation-for="PhoneNumberOrEmailOrUserName" class="text-danger text-left"></span>
+            </div>
+
+            <div class="form-group">
+                <div class="input-group">
+                    <span class="input-group-addon"><i class="glyphicon glyphicon-lock text-warning"></i></span>
+                    <input class="form-control" type="password" asp-for="Password" placeholder="密码" />
+                    @*<a href="#" class="btn btn-link input-group-addon"><i class="glyphicon glyphicon-eye-close"></i></a>*@
+                </div>
+                <span asp-validation-for="Password" class="text-danger text-left"></span>
+            </div>
+
+            <div class="form-group">
+                <button type="submit" class="btn btn-success btn-block">登录</button>
+            </div>
+            <div asp-validation-summary="ModelOnly" class="text-danger text-left"></div>
+            <div class="form-group">
+                <p class="pull-left">
+                    <a asp-action="RegisterMobile" asp-route-returnurl="@Model.ReturnUrl">快速注册新用户</a>
+                </p>
+                <p class="pull-right">
+                    <a asp-action="ForgotPassword" asp-route-returnurl="@Model.ReturnUrl">忘记密码?</a>
+                </p>
+            </div>
+        </form>
+    </section>
+    <section>
+        <form asp-action="ExternalLogin" asp-route-returnurl="@Model.ReturnUrl" method="post" class="form-horizontal">
+            <div id="@AspNetCore.WeixinOAuth.WeixinOpenDefaults.AuthenticationScheme" class="form-group">
+                <div class="text-center">- OR -</div>
+                <button type="submit" class="btn btn-primary btn-block" name="provider" value="@AspNetCore.WeixinOAuth.WeixinOpenDefaults.AuthenticationScheme" title="使用微信扫码登录">微信扫码登录</button>
+            </div>
+        </form>
+    </section>
+</div>
+
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+
+    <script>
+        $(document).ready(function () {
+            AddAntiForgeryToken = function (data) {
+                data.__RequestVerificationToken = $('input[name=__RequestVerificationToken]').val();
+                return data;
+            };
+
+            function isWeixinBrowser() {
+                var ua = navigator.userAgent.toLowerCase();
+                if (ua.match(/MicroMessenger/i) == "micromessenger") {
+                    return true;
+                }
+                else {
+                    return false;
+                }
+            };
+
+            if (isWeixinBrowser()) {
+                $('div[id=@AspNetCore.WeixinOAuth.WeixinOpenDefaults.AuthenticationScheme]').hide();
+            }
+        });
+    </script>
+}

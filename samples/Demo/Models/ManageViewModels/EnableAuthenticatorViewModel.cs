@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace AspNetCore.WeixinOAuth.Demo.Models.ManageViewModels
+namespace Demo.Models
 {
     public class EnableAuthenticatorViewModel
     {

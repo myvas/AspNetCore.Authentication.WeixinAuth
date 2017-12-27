@@ -1,19 +1,19 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text.Encodings.Web;
-using System.Threading.Tasks;
-using AspNetCore.WeixinOAuth.Demo.Services;
 using AspNetCore.QcloudSms;
+using System.Threading.Tasks;
 
-namespace AspNetCore.WeixinOAuth.Demo.Services
+namespace Demo
 {
-    public static class SmsSenderExtensions
+    public static class QcloudSmsSenderExtensions
     {
-        public static Task SendSmsConfirmationAsync(this ISmsSender smsSender, string mobile, string code)
+        /// <summary>
+        /// 发送验证码短信
+        /// </summary>
+        /// <param name="_smsSender"></param>
+        /// <param name="vcode"></param>
+        public static async Task<bool> SendVcodeAsync(this ISmsSender _smsSender, string mobile, string vcode)
         {
-            var content = $"your verification code is {code}";
-            return smsSender.SendSmsAsync(mobile, content);
+            var codeText = $"【新广州入户】{vcode}为您的验证码。如非本人操作，请忽略本短信。";
+            return await _smsSender.SendSmsAsync(mobile, codeText);
         }
     }
 }

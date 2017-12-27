@@ -1,6 +1,6 @@
 using System;
 
-namespace AspNetCore.WeixinOAuth.Demo.Models
+namespace Demo.Models
 {
     public class ErrorViewModel
     {

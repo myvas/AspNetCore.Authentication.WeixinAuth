@@ -4,7 +4,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 
-namespace AspNetCore.WeixinOAuth.Demo.Models.HomeViewModels
+namespace Demo.Models
 {
     public class UserInfoViewModel
     {

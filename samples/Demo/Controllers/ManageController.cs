@@ -1,21 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.Encodings.Web;
-using System.Threading.Tasks;
+﻿using AspNetCore.QcloudSms;
+using Demo.Models;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using AspNetCore.WeixinOAuth.Demo.Models;
-using AspNetCore.WeixinOAuth.Demo.Models.ManageViewModels;
-using AspNetCore.WeixinOAuth.Demo.Services;
-using AspNetCore.QcloudSms;
+using System;
+using System.Linq;
+using System.Text;
+using System.Text.Encodings.Web;
+using System.Threading.Tasks;
 
-namespace AspNetCore.WeixinOAuth.Demo.Controllers
+namespace Demo.Controllers
 {
     [Authorize]
     [Route("[controller]/[action]")]

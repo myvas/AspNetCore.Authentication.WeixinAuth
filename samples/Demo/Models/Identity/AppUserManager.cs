@@ -1,23 +1,17 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
-using System.Threading;
+using System.Linq;
 using System.Threading.Tasks;
 
-namespace Microsoft.AspNetCore.Identity
+namespace Demo.Models
 {
-    public class AppUserManager : UserManager<AppUser>, IDisposable
+    public class AppUserManager : UserManager<AppUser>
     {
-        private readonly CancellationToken _cancel;
-
-        protected override CancellationToken CancellationToken => _cancel;
-
-        public AppUserManager(
-            AppUserStore store,
+        public AppUserManager(IUserStore<AppUser> store,
             IOptions<IdentityOptions> optionsAccessor,
             IPasswordHasher<AppUser> passwordHasher,
             IEnumerable<IUserValidator<AppUser>> userValidators,
@@ -25,47 +19,39 @@ namespace Microsoft.AspNetCore.Identity
             ILookupNormalizer keyNormalizer,
             IdentityErrorDescriber errors,
             IServiceProvider services,
-            ILogger<AppUserManager> logger)
-            : base(store, optionsAccessor, passwordHasher, userValidators, passwordValidators,
-                  keyNormalizer, errors, services, logger)
+            ILogger<UserManager<AppUser>> logger)
+            : base(store, optionsAccessor, passwordHasher, userValidators, passwordValidators, keyNormalizer, errors, services, logger)
         {
-            _cancel = services?.GetService<IHttpContextAccessor>()?.HttpContext?.RequestAborted ?? CancellationToken.None;
-            Store = store;
         }
 
+        public virtual async Task<AppUser> FindByPhoneNumberAsync(string phoneNumber)
+        {
+            return await Users.FirstOrDefaultAsync(x => x.PhoneNumber == phoneNumber);
+        }
 
-        public virtual async Task<bool> ChangeUserNameAsync(AppUser user, string newUserName)
+        public virtual async Task<IdentityResult> VerifyAndConfirmPhoneNumberAsync(AppUser user, string code)
         {
             if (user == null)
             {
                 throw new ArgumentNullException(nameof(user));
             }
-            if (string.IsNullOrEmpty(newUserName))
+
+            if (!await VerifyUserTokenAsync(user, Options.Tokens.ChangePhoneNumberTokenProvider, ChangePhoneNumberTokenPurpose + ":" + user.PhoneNumber, code))
             {
-                throw new ArgumentNullException(nameof(user));
+                return IdentityResult.Failed(ErrorDescriber.InvalidToken());
             }
 
-            user.UserName = newUserName;
-            var identityResult = await UpdateAsync(user);
-            if (!identityResult.Succeeded)
-            {
-                var errMsg = "";
-                foreach (var err in identityResult.Errors)
-                {
-                    errMsg += $"[{err.Code}]{err.Description}";
-                }
-                throw new ApplicationException($"Failed on updating a user.{errMsg}");
-            }
-            return true;
+            user.PhoneNumberConfirmed = true;
+            return await UpdateAsync(user);
         }
 
         public virtual async Task<(AppUser user, string code)> GenerateChangePhoneNumberTokenAsync(string phoneNumber)
         {
-            var user = FindByPhoneNumberAsync(phoneNumber).Result;
+            var user = await FindByPhoneNumberAsync(phoneNumber);
             if (user == null)
             {
                 user = new AppUser { UserName = phoneNumber, PhoneNumber = phoneNumber };
-                var identityResult = CreateAsync(user).Result;
+                var identityResult = await CreateAsync(user);
                 if (!identityResult.Succeeded)
                 {
                     var errMsg = "";
@@ -77,11 +63,12 @@ namespace Microsoft.AspNetCore.Identity
                 }
             }
 
-            var code = GenerateChangePhoneNumberTokenAsync(user, phoneNumber).Result;
-            return await Task.FromResult((user, code));
+            var code = await GenerateChangePhoneNumberTokenAsync(user, phoneNumber);
+            return (user, code);
         }
 
-        public virtual async Task<(AppUser user, bool result)> VerifyChangePhoneNumberTokenAsync(string phoneNumber, string token)
+
+        public virtual async Task<(AppUser user, IdentityResult result)> VerifyChangePhoneNumberTokenAsync(string phoneNumber, string token)
         {
             if (string.IsNullOrEmpty(phoneNumber))
             {
@@ -91,80 +78,16 @@ namespace Microsoft.AspNetCore.Identity
             {
                 throw new ArgumentNullException(nameof(token));
             }
-            var user = FindByPhoneNumberAsync(phoneNumber).Result;
+            var user = await FindByPhoneNumberAsync(phoneNumber);
             if (user == null)
             {
                 throw new ArgumentNullException($"User associated with phone number {phoneNumber} not exists!");
             }
 
             // Make sure the token is valid and the stamp matches
-            var result = VerifyUserTokenAsync(user, Options.Tokens.ChangePhoneNumberTokenProvider, ChangePhoneNumberTokenPurpose + ":" + phoneNumber, token).Result;
-            return await Task.FromResult((user, result));
-        }
-
-
-        public virtual Task<AppUser> FindByPhoneNumberAsync(string phoneNumber)
-        {
-            ThrowIfDisposed();
-            var store = Store as AppUserStore;
-            if (store == null)
-            {
-                throw new NotSupportedException("Store does not implement AppUserStore.");
-            }
-            return store.FindByPhoneNumberAsync(phoneNumber, CancellationToken);
-        }
-
-        public virtual async Task<IdentityResult> ConfirmPhoneNumberAsync(AppUser user, string code)
-        {
-            ThrowIfDisposed();
-            var store = Store as AppUserStore;
-            if (user == null)
-            {
-                throw new ArgumentNullException(nameof(user));
-            }
-
-            if (!await VerifyUserTokenAsync(user, Options.Tokens.EmailConfirmationTokenProvider, ConfirmEmailTokenPurpose, code))
-            {
-                return IdentityResult.Failed(ErrorDescriber.InvalidToken());
-            }
-            await store.SetPhoneNumberConfirmedAsync(user, true, CancellationToken);
-            return await UpdateAsync(user);
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="loginProvider"></param>
-        /// <param name="qrid">An uuid associated with qrcode scan</param>
-        /// <returns></returns>
-        public virtual async Task AddAuthenticatedWithQrAsync(string qrid, UserLoginInfo login)
-        {
-            ThrowIfDisposed();
-            var store = Store as AppUserStore;
-            if (qrid == null)
-            {
-                throw new ArgumentNullException(nameof(qrid));
-            }
-
-            await store.AddAuthenticatedWithQrAsync(qrid, login, CancellationToken);
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="loginProvider"></param>
-        /// <param name="qrid">An uuid associated with qrcode scan</param>
-        /// <returns></returns>
-        public virtual async Task<IdentityUserExternalLogin> FindAuthenticatedWithQrAsync(string qrid, string loginProvider)
-        {
-            ThrowIfDisposed();
-            var store = Store as AppUserStore;
-            if (qrid == null)
-            {
-                throw new ArgumentNullException(nameof(qrid));
-            }
-
-            return await store.FindAuthenticatedWithQrAsync(qrid, loginProvider, CancellationToken);
+            //var result = VerifyUserTokenAsync(user, Options.Tokens.ChangePhoneNumberTokenProvider, ChangePhoneNumberTokenPurpose + ":" + phoneNumber, token).Result;
+            var result = await VerifyAndConfirmPhoneNumberAsync(user, token);
+            return (user, result);
         }
     }
 }

@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 
-namespace AspNetCore.WeixinOAuth.Demo.Models.ManageViewModels
+namespace Demo.Models
 {
     public class ExternalLoginsViewModel
     {

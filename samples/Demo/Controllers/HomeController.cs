@@ -1,17 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using AspNetCore.WeixinOAuth.Demo.Models;
-using AspNetCore.WeixinOAuth.Demo.Models.HomeViewModels;
+﻿using Demo.Models;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Diagnostics;
-using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using System.Diagnostics;
+using System.Threading.Tasks;
 
-namespace AspNetCore.WeixinOAuth.Demo.Controllers
+namespace Demo.Controllers
 {
     public class HomeController : Controller
     {
