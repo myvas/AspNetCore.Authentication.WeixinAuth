@@ -5,6 +5,11 @@
     <UserSecretsId>aspnetcore-weixinoauth-demo</UserSecretsId>
     <RootNamespace>Demo</RootNamespace>
     <AssemblyName>AspNetCore.WeixinOAuth.Demo</AssemblyName>
+    <OutputType>Exe</OutputType>
+    <SelfContained>false</SelfContained>
+    <MvcRazorCompileOnPublish>true</MvcRazorCompileOnPublish>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <PublishWithAspNetCoreTargetManifest>true</PublishWithAspNetCoreTargetManifest>
   </PropertyGroup>
 
   <ItemGroup>
@@ -29,10 +34,6 @@
   <ItemGroup>
     <None Include="bower.json" />
     <None Include="bundleconfig.json" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Services\" />
   </ItemGroup>
 
   <ItemGroup>
