@@ -1,18 +1,26 @@
 # AspNetCore.WeixinOAuth
 An OAuth client middleware to Tencent WeChat (AKA Weixin) Authorization Server.
 
-## Configuration
-Configuration Files: appsettings.json or secrets.json
+# Demo
+http://weixinoauth.myvas.com
 
-For WeixinOAuth:
+## NuGet/MyGet
+```csharp
+dotnet add package AspNetCore.Weixin --version 2.0.0-alpha-71217 --source https://www.myget.org/F/myvas/api/v3/index.json
+```
+
+## Configuration
+Configuration Files: appsettings.json > secrets.json > appsettings.{EnvironmentName}.json
+
+For WeixinAuth/mp.weixin.qq.com:
 ```csharp
 {
-  "WeixinOAuth:AppId": "wx02056e2b2b9cc4ef",
-  "WeixinOAuth:AppSecret": "c175a359cd383213906bc3aa346fff2f"
+  "WeixinAuth:AppId": "wx................",
+  "WeixinAuth:AppSecret": "................................"
 }
 ```
 
-For WeixinOpen
+For WeixinOpen/open.weixin.qq.com
 ```csharp
 {
   "WeixinOpen:AppId": "wx................",
@@ -27,8 +35,8 @@ services.AddAuthentication()
 //For serve with  with mp.weixin.qq.com account, to automatic challenge in WeChat built-in browser, or WeChat DevTools.
 .AddWeixinOAuth(options => 
 {
-    options.AppId = Configuration["WeixinOAuth:AppId"];
-    options.AppSecret = Configuration["WeixinOAuth:AppSecret"];
+    options.AppId = Configuration["WeixinAuth:AppId"];
+    options.AppSecret = Configuration["WeixinAuth:AppSecret"];
 	options.SaveTokens = true;
 }
 // For serve with open.weixin.qq.com account, to scan a WeChat QR code to sign in.

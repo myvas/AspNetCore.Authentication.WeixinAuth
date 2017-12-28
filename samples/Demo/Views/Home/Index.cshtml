@@ -7,7 +7,7 @@
 <p>Demo for <a href="https://github.com/myvas/AspNetCore.WeixinOAuth">AspNetCore.WeixinOAuth</a></p>
 
 <h3>部署环境</h3>
-<p>本程序部署在Debian 8服务器上。</p>
+<p>本程序部署在Debian.8-x64服务器上。</p>
 <p><strong>注意：</strong>本程序必须部署公网服务器80端口上，并在相应微信公众号上配置好“网页服务/网页授权获取用户基本信息”才能正常工作。</p>
 
 <h3>一些插件</h3>
@@ -18,7 +18,33 @@
     <dd>检测微信客户端：在Account/Login中检测客户端，如果是微信客户端则直接使用WeixinOAuth身份验证，否则用标准Identity登录</dd>
 </dl>
 
-<h3>测试</h3>
+<h3>触发身份验证</h3>
 <p>点击<a asp-action="UserInfo">UserInfo</a>触发Challenge。</p>
 <p>--- 或 ---</p>
 <p>或点击<a asp-action="ShowQrcode" asp-route-redirectUrl="@Url.AbsoluteAction("UserInfo","Home")">UserInfo</a>展示二维码，然后用手机微信扫码进入。</p>
+
+<h3>测试微信扫码登录</h3>
+<p>此方式<strong>无须</strong>用户预先关注您的微信公众号。</p>
+<p>通常的应用场景是：<br />
+    1.用户在PC或平板电脑上打开您的网站上某个需要身份验证的网页；<br />
+    2.网站系统[Authorize]发现该用户尚未登录，于是显示登录页面；<br />
+    3.用户选择扫码方式登录，掏出手机扫码；<br />
+    4.网站系统继续打开目标网页，显示给用户。
+</p>
+<p>在登录页面，选择【Weixin-Open】方式登录。</p>
+
+<h3>测试微信内登录</h3>
+<p>此方式<strong>必须</strong>用户预先关注您的微信号。</p>
+<p>通常的应用场景是：<br />
+    0.用户已经关注了您的微信公众号；<br />
+    1.用户使用手机微信进入您的微信公众号，点击某菜单；<br />
+    2.微信公众号服务程序[Authorize]发现该用户尚未登录，于是跳转到登录页面；<br />
+    3.登录页面发现用户终端是微信客户端，于是直接执行ExternalLogin方法Challenge：WeixinOAuth身份验证；<br />
+    4*.腾讯服务器要求手机微信响应是否允许；（options.scope默认不附加snsapi_userinfo，因此默认情况下，此步不出现）<br />
+    5.腾讯服务器回调ExternalLoginCallback方法，微信公众号服务程序匹配系统用户，身份验证通过，将目标网页显示给用户。</p>
+<p class="help-block">您可以用微信扫描以下二维码，关注测试公众号，并进行相关测试。</p>
+<img src="~/img/mp-test.jpg" height="200" />
+<p class="help-block">注：本测试公众号的菜单在另一个github开源组件<a href="https://github.com/myvas/AspNetCore.Weixin">AspNetCore.Weixin</a>的<a href="http://weixin.myvas.com">Demo程序</a>中可以修改。</p>
+
+<h3>Demo程序源代码说明</h3>
+<p>请查阅github源代码库中的README</p>
