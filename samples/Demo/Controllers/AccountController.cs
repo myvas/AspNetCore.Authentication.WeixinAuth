@@ -152,12 +152,12 @@ namespace Demo.Controllers
         }
 
         [HttpPost, ActionName("LogOff")]
-        [ValidateAntiForgeryToken]
         public async Task<IActionResult> LogOff_Post()
         {
             await _signInManager.SignOutAsync();
+
             _logger.LogInformation("User logged out.");
-            return RedirectToAction(DefaultReturnUrl);
+            return RedirectToLocal(DefaultReturnUrl);
         }
 
         [HttpPost]
