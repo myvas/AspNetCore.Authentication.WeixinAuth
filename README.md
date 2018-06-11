@@ -4,9 +4,9 @@ An OAuth client middleware to Tencent WeChat (AKA Weixin) Authorization Server.
 # Demo
 http://weixinoauth.myvas.com
 
-## NuGet/MyGet
+## NuGet
 ```csharp
-> dotnet add package AspNetCore.Weixin
+> dotnet add package AspNetCore.WeixinOAuth
 ```
 
 ## Configuration
