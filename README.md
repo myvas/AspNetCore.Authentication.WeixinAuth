@@ -37,7 +37,7 @@ services.AddAuthentication()
 {
     options.AppId = Configuration["WeixinAuth:AppId"];
     options.AppSecret = Configuration["WeixinAuth:AppSecret"];
-	options.SaveTokens = true;
+    options.SaveTokens = true;
 }
 // For serve with open.weixin.qq.com account, to scan a WeChat QR code to sign in.
 .AddWeixinOpen(options => 
