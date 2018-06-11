@@ -6,12 +6,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Demo
+namespace Microsoft.AspNetCore.Mvc
 {
     /// <summary>
     /// <see cref="IUrlHelper"/> extension methods.
     /// </summary>
-    public static class AbsoluteUrlHelperExtensions
+    internal static class UrlHelperExtensions
     {
         public static string GetAbsoluteUri(this HttpRequest request)
         {

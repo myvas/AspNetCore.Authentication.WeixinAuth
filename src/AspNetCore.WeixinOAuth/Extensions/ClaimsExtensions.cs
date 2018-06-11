@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace AspNetCore.WeixinOAuth.Extensions
 {
-    public static class ClaimsExtensions
+    internal static class ClaimsExtensions
     {
         public static ClaimsIdentity AddOptionalClaim(this ClaimsIdentity identity,
             string type, string value, string issuer)

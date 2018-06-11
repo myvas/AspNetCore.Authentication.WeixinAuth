@@ -24,9 +24,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UnitTests", "test\UnitTests
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Demo", "samples\Demo\Demo.csproj", "{6F343D69-D804-46F0-B4A6-F6C1C5C99282}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WeixinOpen.Demo", "samples\WeixinOpen.Demo\WeixinOpen.Demo.csproj", "{BFBC81E0-1219-4AFF-89FC-7296B7B511BF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WeixinOpen.Demo", "samples\WeixinOpen.Demo\WeixinOpen.Demo.csproj", "{BFBC81E0-1219-4AFF-89FC-7296B7B511BF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WeixinAuth.Demo", "samples\WeixinAuth.Demo\WeixinAuth.Demo.csproj", "{6D06CB5D-94B7-419C-8B0F-73136439CE92}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WeixinAuth.Demo", "samples\WeixinAuth.Demo\WeixinAuth.Demo.csproj", "{6D06CB5D-94B7-419C-8B0F-73136439CE92}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

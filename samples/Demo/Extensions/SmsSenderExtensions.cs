@@ -1,9 +1,9 @@
 using AspNetCore.QcloudSms;
 using System.Threading.Tasks;
 
-namespace Demo
+namespace AspNetCore.QcloudSms
 {
-    public static class QcloudSmsSenderExtensions
+    internal static class QcloudSmsSenderExtensions
     {
         /// <summary>
         /// 发送验证码短信

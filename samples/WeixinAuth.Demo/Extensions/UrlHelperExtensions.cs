@@ -5,12 +5,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace WeixinAuth.Demo.Extensions
+namespace Microsoft.AspNetCore.Mvc
 {
     /// <summary>
     /// <see cref="IUrlHelper"/> extension methods.
     /// </summary>
-    public static class UrlHelperExtensions
+    internal static class UrlHelperExtensions
     {
         public static string GetAbsoluteUri(this HttpRequest request)
         {
