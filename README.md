@@ -10,7 +10,8 @@ dotnet add package AspNetCore.Weixin --version 2.0.0-alpha-71217 --source https:
 ```
 
 ## Configuration
-Configuration Files: appsettings.json > secrets.json > appsettings.{EnvironmentName}.json
+Configuration Files: appsettings.json -> secrets.json -> appsettings.{EnvironmentName}.json
+"A -> B" means "values in A will be replaced by B with the same key"
 
 For WeixinAuth/mp.weixin.qq.com:
 ```csharp
