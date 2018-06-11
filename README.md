@@ -32,14 +32,14 @@ For WeixinOpen/open.weixin.qq.com
 
 ```csharp
 services.AddAuthentication()
-//For serve with  with mp.weixin.qq.com account, to automatic challenge in WeChat built-in browser, or WeChat DevTools.
+//For mp.weixin.qq.com account, a common use case is to automatic challenge in WeChat built-in browser or WeChat DevTools.
 .AddWeixinOAuth(options => 
 {
     options.AppId = Configuration["WeixinAuth:AppId"];
     options.AppSecret = Configuration["WeixinAuth:AppSecret"];
     options.SaveTokens = true;
 }
-// For serve with open.weixin.qq.com account, to scan a WeChat QR code to sign in.
+// For open.weixin.qq.com account, a common use case is to scan a WeChat QR code to sign in.
 .AddWeixinOpen(options => 
 {
     options.AppId = Configuration["WeixinOpen:AppId"];
