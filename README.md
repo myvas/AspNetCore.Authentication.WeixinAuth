@@ -62,7 +62,7 @@ services.AddAuthentication()
 ## Demo
 - Deploy on a debian.8-x64 server: http://weixinoauth.myvas.com
 
-- QrCode: http://mmbiz.qpic.cn/mmbiz_jpg/lPe5drS9euRQR1eCK5cGXaibHYL6vBR4pGLB34ju2hXCiaMQiayOU8w5GMfEH7WZsVNTnhLTpnzAC9xfdWuTT89OA/0
+- QrCode: ![alt QrCode](http://mmbiz.qpic.cn/mmbiz_jpg/lPe5drS9euRQR1eCK5cGXaibHYL6vBR4pGLB34ju2hXCiaMQiayOU8w5GMfEH7WZsVNTnhLTpnzAC9xfdWuTT89OA/0)
 
 All users must be subscribers for that Open WeChat Service Account.
 
