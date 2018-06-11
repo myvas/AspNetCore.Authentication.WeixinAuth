@@ -6,13 +6,13 @@ http://weixinoauth.myvas.com
 
 ## NuGet/MyGet
 ```csharp
-dotnet add package AspNetCore.Weixin --version 2.0.0-alpha-71217 --source https://www.myget.org/F/myvas/api/v3/index.json
+> dotnet add package AspNetCore.Weixin
 ```
 
 ## Configuration
 Configuration Files: appsettings.json -> secrets.json -> appsettings.{EnvironmentName}.json
 
-"A -> B" means "values in A will be replaced by B with the same key"
+Here "A -> B" means "values in A will be replaced by B with the same key"
 
 For WeixinAuth/mp.weixin.qq.com:
 ```csharp
