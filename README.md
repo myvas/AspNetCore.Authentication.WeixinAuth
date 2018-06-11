@@ -67,7 +67,7 @@ services.AddAuthentication()
 All users must be subscribers for that Open WeChat Service Account.
 
 ## IDE & Dev Tools
-* [微信开发者工具 v1.01.1711160](https://mp.weixin.qq.com/debug/wxadoc/dev/devtools/download.html)
+* [微信开发者工具 v1.02.1806080](https://mp.weixin.qq.com/debug/wxadoc/dev/devtools/download.html)
 
 - IDE
-Visual Studio 2017 version 15.3 and aspnetcore 2.0
+Visual Studio 2017 version 15.7.3 and aspnetcore 2.1
