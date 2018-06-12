@@ -1,10 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Routing;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Microsoft.AspNetCore.Mvc
 {
@@ -16,12 +11,12 @@ namespace Microsoft.AspNetCore.Mvc
         public static string GetAbsoluteUri(this HttpRequest request)
         {
             return string.Concat(
-request.Scheme,
-"://",
-request.Host.ToUriComponent(),
-request.PathBase.ToUriComponent(),
-request.Path.ToUriComponent(),
-request.QueryString.ToUriComponent());
+                request.Scheme,
+                "://",
+                request.Host.ToUriComponent(),
+                request.PathBase.ToUriComponent(),
+                request.Path.ToUriComponent(),
+                request.QueryString.ToUriComponent());
         }
 
         /// <summary>

@@ -5,17 +5,7 @@
     <UserSecretsId>aspnetcore-weixinoauth-demo</UserSecretsId>
     <RootNamespace>Demo</RootNamespace>
     <AssemblyName>AspNetCore.WeixinOAuth.Demo</AssemblyName>
-    <OutputType>Exe</OutputType>
-    <SelfContained>false</SelfContained>
-    <MvcRazorCompileOnPublish>true</MvcRazorCompileOnPublish>
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
-    <PublishWithAspNetCoreTargetManifest>true</PublishWithAspNetCoreTargetManifest>
   </PropertyGroup>
-
-  <ItemGroup>
-    <Content Remove="bower.json" />
-    <Content Remove="bundleconfig.json" />
-  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="AspNetCore.QcloudSmsService" Version="2.0.0" />
@@ -27,11 +17,6 @@
 
   <ItemGroup>
     <DotNetCliToolReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Tools" Version="2.0.1" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Include="bower.json" />
-    <None Include="bundleconfig.json" />
   </ItemGroup>
 
   <ItemGroup>
