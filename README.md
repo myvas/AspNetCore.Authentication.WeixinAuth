@@ -4,13 +4,15 @@ An OAuth client middleware to Tencent WeChat (AKA Weixin) Authorization Server.
 # Demo
 http://weixinoauth.myvas.com
 
-## NuGet/MyGet
+## NuGet
 ```csharp
-dotnet add package AspNetCore.Weixin --version 2.0.0-alpha-71217 --source https://www.myget.org/F/myvas/api/v3/index.json
+> dotnet add package AspNetCore.WeixinOAuth
 ```
 
 ## Configuration
-Configuration Files: appsettings.json > secrets.json > appsettings.{EnvironmentName}.json
+Configuration Files: appsettings.json -> secrets.json -> appsettings.{EnvironmentName}.json
+
+Here "A -> B" means "values in A will be replaced by B with the same key"
 
 For WeixinAuth/mp.weixin.qq.com:
 ```csharp
@@ -32,14 +34,14 @@ For WeixinOpen/open.weixin.qq.com
 
 ```csharp
 services.AddAuthentication()
-//For serve with  with mp.weixin.qq.com account, to automatic challenge in WeChat built-in browser, or WeChat DevTools.
+//For mp.weixin.qq.com account, a common use case is to automatic challenge in WeChat built-in browser or WeChat DevTools.
 .AddWeixinOAuth(options => 
 {
     options.AppId = Configuration["WeixinAuth:AppId"];
     options.AppSecret = Configuration["WeixinAuth:AppSecret"];
-	options.SaveTokens = true;
+    options.SaveTokens = true;
 }
-// For serve with open.weixin.qq.com account, to scan a WeChat QR code to sign in.
+// For open.weixin.qq.com account, a common use case is to scan a WeChat QR code to sign in.
 .AddWeixinOpen(options => 
 {
     options.AppId = Configuration["WeixinOpen:AppId"];
@@ -62,12 +64,16 @@ services.AddAuthentication()
 ## Demo
 - Deploy on a debian.8-x64 server: http://weixinoauth.myvas.com
 
-- QrCode: http://mmbiz.qpic.cn/mmbiz_jpg/lPe5drS9euRQR1eCK5cGXaibHYL6vBR4pGLB34ju2hXCiaMQiayOU8w5GMfEH7WZsVNTnhLTpnzAC9xfdWuTT89OA/0
+- QrCode: ![alt QrCode](http://mmbiz.qpic.cn/mmbiz_jpg/lPe5drS9euRQR1eCK5cGXaibHYL6vBR4pGLB34ju2hXCiaMQiayOU8w5GMfEH7WZsVNTnhLTpnzAC9xfdWuTT89OA/0)
 
 All users must be subscribers for that Open WeChat Service Account.
 
 ## IDE & Dev Tools
-* [微信开发者工具 v1.01.1711160](https://mp.weixin.qq.com/debug/wxadoc/dev/devtools/download.html)
+* [微信开发者工具 v1.02.1806080](https://mp.weixin.qq.com/debug/wxadoc/dev/devtools/download.html)
 
 - IDE
+<<<<<<< HEAD
 Visual Studio 2017 and aspnetcore 2.0
+=======
+Visual Studio 2017 version 15.7.3 and aspnetcore 2.1
+>>>>>>> 30668a0388b957d912dcd2cd10c213b52b2ddcc7
