@@ -72,8 +72,4 @@ All users must be subscribers for that Open WeChat Service Account.
 * [微信开发者工具 v1.02.1806080](https://mp.weixin.qq.com/debug/wxadoc/dev/devtools/download.html)
 
 - IDE
-<<<<<<< HEAD
-Visual Studio 2017 and aspnetcore 2.0
-=======
 Visual Studio 2017 version 15.7.3 and aspnetcore 2.1
->>>>>>> 30668a0388b957d912dcd2cd10c213b52b2ddcc7
