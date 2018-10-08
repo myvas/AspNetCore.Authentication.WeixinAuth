@@ -1,10 +1,8 @@
-using AspNetCore.QcloudSms;
-using AspNetCore.TencentSms;
 using System.Threading.Tasks;
 
-namespace AspNetCore.QcloudSms
+namespace AspNetCore.TencentSms
 {
-    internal static class QcloudSmsSenderExtensions
+    internal static class TencentSmsSenderExtensions
     {
         /// <summary>
         /// 发送验证码短信

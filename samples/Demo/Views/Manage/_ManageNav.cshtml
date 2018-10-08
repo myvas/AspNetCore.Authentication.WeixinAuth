@@ -1,5 +1,4 @@
-﻿@using AspNetCore.WeixinOAuth.Demo.Views.Manage
-@inject SignInManager<AppUser> SignInManager
+﻿@inject SignInManager<AppUser> SignInManager
 @{
     var hasExternalLogins = (await SignInManager.GetExternalAuthenticationSchemesAsync()).Any();
 }

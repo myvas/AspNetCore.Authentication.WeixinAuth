@@ -55,8 +55,8 @@ namespace Demo
             services.AddAuthentication()
                 .AddQQConnect(options =>
                 {
-                    options.AppId = _configuration["QQOAuth:AppId"];
-                    options.AppKey = _configuration["QQOAuth:AppKey"];
+                    options.AppId = _configuration["QQConnect:AppId"];
+                    options.AppKey = _configuration["QQConnect:AppKey"];
 
                     QQConnectScopes.TryAdd(options.Scope,
                         QQConnectScopes.Items.get_user_info,

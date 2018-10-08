@@ -1,4 +1,5 @@
-﻿using AspNetCore.TencentSms;
+﻿using AspNetCore.Authentication.QQConnect;
+using AspNetCore.TencentSms;
 using Demo;
 using Demo.Models;
 using Microsoft.AspNetCore.Builder;
@@ -8,7 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace AspNetCore.WeixinOAuth.Demo
+namespace Demo
 {
     public class Startup
     {
@@ -64,8 +65,14 @@ namespace AspNetCore.WeixinOAuth.Demo
                 })
                 .AddQQConnect(options =>
                 {
-                    options.AppId = _configuration["QQ:AppId"];
-                    options.AppKey = _configuration["QQ:AppKey"];
+                    options.AppId = _configuration["QQConnect:AppId"];
+                    options.AppKey = _configuration["QQConnect:AppKey"];
+
+                    QQConnectScopes.TryAdd(options.Scope,
+                        QQConnectScopes.Items.get_user_info,
+                        QQConnectScopes.Items.list_album,
+                        QQConnectScopes.Items.upload_pic,
+                        QQConnectScopes.Items.do_like);
                 });
 
             services.AddTencentSms(options =>

@@ -1,5 +1,4 @@
-﻿using AspNetCore.QcloudSms;
-using AspNetCore.TencentSms;
+﻿using AspNetCore.TencentSms;
 using Demo.Models;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
