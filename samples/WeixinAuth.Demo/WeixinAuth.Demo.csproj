@@ -13,7 +13,9 @@
     <DotNetCliToolReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Tools" Version="2.0.1" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\src\AspNetCore.Authentication.WeixinAuth\AspNetCore.Authentication.WeixinAuth.csproj" />
+    <ProjectReference Include="..\..\src\WeixinAuth\AspNetCore.Authentication.WeixinAuth.csproj" />
+    <ProjectReference Include="..\..\src\WeixinOpen\AspNetCore.Authentication.WeixinOpen.csproj" />
+    <ProjectReference Include="..\..\src\QQConnect\AspNetCore.Authentication.QQConnect.csproj" />
   </ItemGroup>
 
   <Target Name="PrecompileScript" BeforeTargets="BeforeBuild">

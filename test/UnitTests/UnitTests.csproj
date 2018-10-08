@@ -4,12 +4,7 @@
     <TargetFramework>netcoreapp2.1</TargetFramework>
     <AssemblyName>test</AssemblyName>
     <OutputType>Library</OutputType>
-    <PackageId>test</PackageId>
-    <AssetTargetFallback>$(AssetTargetFallback);portable-net45+win8+wpa81+wp8</AssetTargetFallback>
-    <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
-    <ApplicationIcon />
     <OutputTypeEx>library</OutputTypeEx>
-    <StartupObject />
   </PropertyGroup>
 
   <ItemGroup>
@@ -28,8 +23,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\AspNetCore.Authentication.WeixinAuth\AspNetCore.Authentication.WeixinAuth.csproj" />
-    <ProjectReference Include="..\..\src\AspNetCore.Authentication.WeixinOpen\AspNetCore.Authentication.WeixinOpen.csproj" />
+    <ProjectReference Include="..\..\src\QQConnect\AspNetCore.Authentication.QQConnect.csproj" />
+    <ProjectReference Include="..\..\src\WeixinAuth\AspNetCore.Authentication.WeixinAuth.csproj" />
+    <ProjectReference Include="..\..\src\WeixinOpen\AspNetCore.Authentication.WeixinOpen.csproj" />
   </ItemGroup>
 
   <ItemGroup>
