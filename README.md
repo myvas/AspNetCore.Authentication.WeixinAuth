@@ -1,8 +1,8 @@
 # AspNetCore.Authentication
 An serials of OAuth2.0 client middlewares to OAuth2.0 Servers.
-- Tencent Weixin Open (open.weixin.qq.com)
-- Tencent Weixin Auth (mp.weixin.qq.com)
-- Tencent QQ Connect (connect.qq.com)
+- Weixin Open (open.weixin.qq.com)
+- Weixin Auth (mp.weixin.qq.com)
+- QQ Connect (connect.qq.com)
 
 ## Demo Online
 - http://demo.auth.myvas.com (debian.8-x64)
@@ -15,7 +15,7 @@ An serials of OAuth2.0 client middlewares to OAuth2.0 Servers.
 ### NuGet
 https://www.nuget.org/packages/AspNetCore.Authentication.WeixinAuth
 https://www.nuget.org/packages/AspNetCore.Authentication.WeixinOpen
-https://www.nuget.org/packages/AspNetCore.Authentication.QQ
+https://www.nuget.org/packages/AspNetCore.Authentication.QQConnect
 
 ### Startup/ConfigureServices()
 ```csharp
@@ -36,10 +36,10 @@ services.AddAuthentication()
         options.SaveTokens = true;
     }
     // 腾讯QQ登录：须connect.qq.com账号网站应用接入，用户点击“QQ登录”图标按钮后使用QQ账号登入网站。
-    .AddQQ(options => 
+    .AddQQConnect(options => 
     {
-        options.AppId = Configuration["QQ:AppId"];
-        options.AppKey = Configuration["QQ:AppSecret"];
+        options.AppId = Configuration["QQConnect:AppId"];
+        options.AppKey = Configuration["QQConnect:AppKey"];
     };
 ```
 

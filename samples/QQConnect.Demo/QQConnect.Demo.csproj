@@ -19,7 +19,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\AspNetCore.Authentication.QQ\AspNetCore.Authentication.QQConnect.csproj" />
     <ProjectReference Include="..\..\src\AspNetCore.Authentication.WeixinAuth\AspNetCore.Authentication.WeixinAuth.csproj" />
     <ProjectReference Include="..\..\src\AspNetCore.Authentication.WeixinOpen\AspNetCore.Authentication.WeixinOpen.csproj" />
   </ItemGroup>
