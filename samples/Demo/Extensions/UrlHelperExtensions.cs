@@ -6,7 +6,7 @@ namespace Microsoft.AspNetCore.Mvc
     /// <summary>
     /// <see cref="IUrlHelper"/> extension methods.
     /// </summary>
-    internal static class UrlHelperExtensions
+    public static class UrlHelperExtensions
     {
         public static string GetAbsoluteUri(this HttpRequest request)
         {

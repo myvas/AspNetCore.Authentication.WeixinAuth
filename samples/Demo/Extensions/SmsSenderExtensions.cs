@@ -1,4 +1,5 @@
 using AspNetCore.QcloudSms;
+using AspNetCore.TencentSms;
 using System.Threading.Tasks;
 
 namespace AspNetCore.QcloudSms

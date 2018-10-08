@@ -1,14 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using AspNetCore.ViewDivertMiddleware;
-using AspNetCore.WeixinOAuth;
+﻿using AspNetCore.Authentication.WeixinAuth;
+using AspNetCore.ViewDivert;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using System;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using WeixinAuth.Demo.Data;
 using WeixinAuth.Demo.Models;
 
@@ -42,7 +41,7 @@ namespace WeixinAuth.Demo.Controllers
             //如果不需要Identity，则可以直接用ExternalLogin中的方法，直接Challenge。
             if (AgentResolver.IsMicroMessenger(HttpContext))
             {
-                return ExternalLogin(WeixinOAuthDefaults.AuthenticationScheme, returnUrl);
+                return ExternalLogin(WeixinAuthDefaults.AuthenticationScheme, returnUrl);
             }
 
             var vm = new LoginViewModel();

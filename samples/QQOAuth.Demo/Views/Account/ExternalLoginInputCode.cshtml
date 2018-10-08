@@ -1,0 +1,32 @@
+﻿@model ExternalLoginVcodeViewModel
+@{
+    ViewData["Title"] = "Code Verification";
+}
+
+<h2>@ViewData["Title"]</h2>
+<h4>Verify your mobile phone number @ViewData["PhoneNumber"].</h4>
+<hr />
+
+<p class="text-info">
+    Please enter the code in the text you should received just now on your mobile phone <strong>@ViewData["PhoneNumber"]</strong> and click the Verify button to finish
+    code verification.
+</p>
+
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="ExternalLoginCodeVerification" asp-route-returnurl="@ViewData["ReturnUrl"]" method="post">
+            <input asp-for="PhoneNumber" type="hidden" />
+            <div asp-validation-summary="All" class="text-danger"></div>
+            <div class="form-group">
+                <label asp-for="Code"></label>
+                <input asp-for="Code" class="form-control" />
+                <span asp-validation-for="Code" class="text-danger"></span>
+            </div>
+            <button type="submit" class="btn btn-default">Verify</button>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+}

@@ -51,9 +51,9 @@
     </section>
     <section>
         <form asp-action="ExternalLogin" asp-route-returnurl="@Model.ReturnUrl" method="post" class="form-horizontal">
-            <div id="@AspNetCore.WeixinOAuth.WeixinOpenDefaults.AuthenticationScheme" class="form-group">
+            <div id="@AspNetCore.Authentication.WeixinOpen.WeixinOpenDefaults.AuthenticationScheme" class="form-group">
                 <div class="text-center">- OR -</div>
-                <button type="submit" class="btn btn-primary btn-block" name="provider" value="@AspNetCore.WeixinOAuth.WeixinOpenDefaults.AuthenticationScheme" title="使用微信扫码登录">微信扫码登录</button>
+                <button type="submit" class="btn btn-primary btn-block" name="provider" value="@AspNetCore.Authentication.WeixinOpen.WeixinOpenDefaults.AuthenticationScheme" title="使用微信扫码登录">微信扫码登录</button>
             </div>
         </form>
     </section>
@@ -80,7 +80,7 @@
             };
 
             if (isWeixinBrowser()) {
-                $('div[id=@AspNetCore.WeixinOAuth.WeixinOpenDefaults.AuthenticationScheme]').hide();
+                $('div[id=@AspNetCore.Authentication.WeixinOpen.WeixinOpenDefaults.AuthenticationScheme]').hide();
             }
         });
     </script>

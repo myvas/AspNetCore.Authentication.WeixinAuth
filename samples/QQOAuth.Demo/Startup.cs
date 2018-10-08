@@ -1,0 +1,103 @@
+﻿using Demo;
+using Demo.Models;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using AspNetCore.TencentSms;
+using AspNetCore.Authentication.QQ;
+
+namespace Demo
+{
+    public class Startup
+    {
+        private readonly IConfiguration _configuration;
+
+        public Startup(IConfiguration configuration)
+        {
+            _configuration = configuration;
+        }
+
+        // This method gets called by the runtime. Use this method to add services to the container.
+        public void ConfigureServices(IServiceCollection services)
+        {
+            //services.AddDbContext<AppDbContext>(options => options.UseInMemoryDatabase("WeixinAuthDemo"));
+            services.AddDbContext<AppDbContext>(options => options.UseSqlite(_configuration.GetConnectionString("DefaultConnection")));
+
+            services.AddIdentity<AppUser, IdentityRole>()
+                .AddEntityFrameworkStores<AppDbContext>()
+                .AddUserManager<AppUserManager>()
+                .AddSignInManager<SignInManager<AppUser>>()
+                .AddDefaultTokenProviders();
+            services.Configure<IdentityOptions>(options =>
+            {
+                options.Password = new PasswordOptions
+                {
+                    RequireLowercase = false,
+                    RequireUppercase = false,
+                    RequireNonAlphanumeric = false,
+                    RequireDigit = false
+                };
+                options.User.RequireUniqueEmail = false;
+                options.SignIn.RequireConfirmedEmail = false;
+
+                options.SignIn.RequireConfirmedPhoneNumber = true;
+            });
+            services.ConfigureApplicationCookie(options =>
+            {
+                options.LoginPath = "/Account/Login";
+                options.LogoutPath = "/Account/LogOff";
+                options.AccessDeniedPath = "/Account/AccessDenied";
+            });
+
+            services.AddAuthentication()
+                .AddQQOAuth(options =>
+                {
+                    options.AppId = _configuration["QQOAuth:AppId"];
+                    options.AppKey = _configuration["QQOAuth:AppKey"];
+
+                    QQOAuthScopes.TryAdd(options.Scope,
+                        QQOAuthScopes.Items.get_user_info,
+                        QQOAuthScopes.Items.list_album,
+                        QQOAuthScopes.Items.upload_pic,
+                        QQOAuthScopes.Items.do_like);
+                });
+
+            services.AddTencentSms(options =>
+            {
+                options.SdkAppId = _configuration["TencentSms:SdkAppId"];
+                options.AppKey = _configuration["TencentSms:AppKey"];
+            });
+            services.AddViewDivert();
+
+            services.AddMvc();
+        }
+
+        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        {
+            if (env.IsDevelopment())
+            {
+                app.UseDeveloperExceptionPage();
+                app.UseBrowserLink();
+            }
+            else
+            {
+                app.UseExceptionHandler("/Home/Error");
+            }
+
+            app.UseStaticFiles();
+
+            app.UseAuthentication();
+
+            app.UseMvc(routes =>
+            {
+                routes.MapRoute(
+                    name: "default",
+                    template: "{controller=Home}/{action=Index}/{id?}");
+            });
+        }
+    }
+}

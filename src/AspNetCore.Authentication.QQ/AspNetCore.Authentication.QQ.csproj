@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <Authors>AspNetCore</Authors>
+    <Version>2.1.406</Version>
+    <Description>ASP.NET Core 2.x Authentication middleware that enables an application to support the QQ OAuth2.0 workflow. （https://connect.qq.com, 腾讯QQ互联@网站应用接入）</Description>
+    <PackageProjectUrl>https://github.com/myvas/AspNetCore.Authentication</PackageProjectUrl>
+    <PackageTags>AspNetCore, Authentication, OAuth, QQ, Tencent, Myvas</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.OAuth" Version="2.1.2" />
+  </ItemGroup>
+
+</Project>

@@ -8,11 +8,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AspNetCore.QcloudSmsService" Version="2.0.0" />
-    <PackageReference Include="AspNetCore.ViewDivert" Version="2.0.0-alpha-70820" />
-    <PackageReference Include="Microsoft.AspNetCore.All" Version="2.1.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="2.1.0" PrivateAssets="All" />
-    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="2.1.0" PrivateAssets="All" />
+    <PackageReference Include="AspNetCore.TencentSms" Version="2.1.403" />
+    <PackageReference Include="AspNetCore.ViewDivert" Version="2.1.404" />
+    <PackageReference Include="Microsoft.AspNetCore.All" Version="2.1.5" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="2.1.4" PrivateAssets="all">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="2.1.5" PrivateAssets="All" />
   </ItemGroup>
 
   <ItemGroup>
@@ -20,7 +22,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\AspNetCore.WeixinOAuth\AspNetCore.WeixinOAuth.csproj" />
+    <ProjectReference Include="..\..\src\AspNetCore.Authentication.QQ\AspNetCore.Authentication.QQ.csproj" />
+    <ProjectReference Include="..\..\src\AspNetCore.Authentication.WeixinAuth\AspNetCore.Authentication.WeixinAuth.csproj" />
+    <ProjectReference Include="..\..\src\AspNetCore.Authentication.WeixinOpen\AspNetCore.Authentication.WeixinOpen.csproj" />
   </ItemGroup>
 
   <Target Name="PrecompileScript" BeforeTargets="BeforeBuild">

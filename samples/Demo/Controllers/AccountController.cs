@@ -1,6 +1,6 @@
-﻿using AspNetCore.QcloudSms;
-using AspNetCore.ViewDivertMiddleware;
-using AspNetCore.WeixinOAuth;
+﻿using AspNetCore.Authentication.WeixinAuth;
+using AspNetCore.TencentSms;
+using AspNetCore.ViewDivert;
 using Demo.Models;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
@@ -37,7 +37,7 @@ namespace Demo.Controllers
 
             if (AgentResolver.IsMicroMessenger(HttpContext))
             {
-                return ExternalLogin(WeixinOAuthDefaults.AuthenticationScheme, returnUrl);
+                return ExternalLogin(WeixinAuthDefaults.AuthenticationScheme, returnUrl);
             }
 
             var vm = new LoginViewModel();

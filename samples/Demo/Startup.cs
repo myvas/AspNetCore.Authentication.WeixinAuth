@@ -1,21 +1,12 @@
-﻿using AspNetCore.QcloudSms;
-using AspNetCore.ViewDivertMiddleware;
+﻿using AspNetCore.TencentSms;
 using Demo;
 using Demo.Models;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.Extensions.Logging;
-using System;
-using System.Threading.Tasks;
-using System.Web;
 
 namespace AspNetCore.WeixinOAuth.Demo
 {
@@ -61,20 +52,28 @@ namespace AspNetCore.WeixinOAuth.Demo
             });
 
             services.AddAuthentication()
-                .AddWeixinOpen(options => {
+                .AddWeixinOpen(options =>
+                {
                     options.AppId = _configuration["WeixinOpen:AppId"];
                     options.AppSecret = _configuration["WeixinOpen:AppSecret"];
                 })
-                .AddWeixinOAuth(options =>
+                .AddWeixinAuth(options =>
                 {
                     options.AppId = _configuration["WeixinAuth:AppId"];
                     options.AppSecret = _configuration["WeixinAuth:AppSecret"];
+                })
+                .AddQQOAuth(options =>
+                {
+                    options.AppId = _configuration["QQ:AppId"];
+                    options.AppKey = _configuration["QQ:AppKey"];
                 });
-            services.AddQcloudSms(options =>
+
+            services.AddTencentSms(options =>
             {
-                options.SdkAppId = _configuration["QcloudSms:SdkAppId"];
-                options.AppKey = _configuration["QcloudSms:AppKey"];
+                options.SdkAppId = _configuration["TencentSms:SdkAppId"];
+                options.AppKey = _configuration["TencentSms:AppKey"];
             });
+
             services.AddViewDivert();
 
             services.AddMvc();

@@ -54,7 +54,7 @@ namespace WeixinAuth.Demo
             });
 
             services.AddAuthentication()
-                .AddWeixinOAuth(options =>
+                .AddWeixinAuth(options =>
                 {
                     options.AppId = _configuration["WeixinAuth:AppId"];
                     options.AppSecret = _configuration["WeixinAuth:AppSecret"];
