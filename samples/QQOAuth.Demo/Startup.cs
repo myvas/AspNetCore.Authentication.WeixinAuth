@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using AspNetCore.TencentSms;
-using AspNetCore.Authentication.QQ;
+using AspNetCore.Authentication.QQConnect;
 
 namespace Demo
 {
@@ -53,16 +53,16 @@ namespace Demo
             });
 
             services.AddAuthentication()
-                .AddQQOAuth(options =>
+                .AddQQConnect(options =>
                 {
                     options.AppId = _configuration["QQOAuth:AppId"];
                     options.AppKey = _configuration["QQOAuth:AppKey"];
 
-                    QQOAuthScopes.TryAdd(options.Scope,
-                        QQOAuthScopes.Items.get_user_info,
-                        QQOAuthScopes.Items.list_album,
-                        QQOAuthScopes.Items.upload_pic,
-                        QQOAuthScopes.Items.do_like);
+                    QQConnectScopes.TryAdd(options.Scope,
+                        QQConnectScopes.Items.get_user_info,
+                        QQConnectScopes.Items.list_album,
+                        QQConnectScopes.Items.upload_pic,
+                        QQConnectScopes.Items.do_like);
                 });
 
             services.AddTencentSms(options =>

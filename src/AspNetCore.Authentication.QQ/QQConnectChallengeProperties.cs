@@ -3,9 +3,9 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace AspNetCore.Authentication.QQ
+namespace AspNetCore.Authentication.QQConnect
 {
-    public class QQOAuthChallengeProperties : OAuthChallengeProperties
+    public class QQConnectChallengeProperties : OAuthChallengeProperties
     {
         /// <summary>
         /// The parameter key for the "display" argument being used for a challenge request.
@@ -33,14 +33,14 @@ namespace AspNetCore.Authentication.QQ
             set => SetParameter(LoginHintKey, value);
         }
 
-        public QQOAuthChallengeProperties()
+        public QQConnectChallengeProperties()
         { }
 
-        public QQOAuthChallengeProperties(IDictionary<string, string> items)
+        public QQConnectChallengeProperties(IDictionary<string, string> items)
             : base(items)
         { }
 
-        public QQOAuthChallengeProperties(IDictionary<string, string> items, IDictionary<string, object> parameters)
+        public QQConnectChallengeProperties(IDictionary<string, string> items, IDictionary<string, object> parameters)
             : base(items, parameters)
         { }
     }

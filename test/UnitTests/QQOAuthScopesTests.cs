@@ -1,4 +1,4 @@
-﻿using AspNetCore.Authentication.QQ;
+﻿using AspNetCore.Authentication.QQConnect;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -28,13 +28,13 @@ namespace UnitTests
             test.Scope.Add("1");
             Assert.Equal("1", test.ToString());
 
-            QQOAuthScopes.TryAdd(test.Scope, "2".Split(","));
+            QQConnectScopes.TryAdd(test.Scope, "2".Split(","));
             Assert.Equal("1,2", test.ToString());
 
-            QQOAuthScopes.TryAdd(test.Scope, "3,4".Split(","));
+            QQConnectScopes.TryAdd(test.Scope, "3,4".Split(","));
             Assert.Equal("1,2,3,4", test.ToString());
 
-            QQOAuthScopes.TryAdd(test.Scope, "2,3,5,6".Split(","));
+            QQConnectScopes.TryAdd(test.Scope, "2,3,5,6".Split(","));
             Assert.Equal("1,2,3,4,5,6", test.ToString());
         }
 
@@ -51,26 +51,26 @@ namespace UnitTests
             test.Scope.Add(origin);
             Debug.WriteLine(test.ToString());
 
-            QQOAuthScopes.TryAdd(test.Scope, values);
+            QQConnectScopes.TryAdd(test.Scope, values);
             Debug.WriteLine(test.ToString());
 
             Assert.Equal(expected, test.ToString());
         }
 
         [Theory]
-        [InlineData("get_user_info", QQOAuthScopes.Items.get_user_info)]
-        [InlineData("get_user_info,list_album", QQOAuthScopes.Items.get_user_info, QQOAuthScopes.Items.list_album)]
-        [InlineData("get_user_info,list_album,upload_pic", QQOAuthScopes.Items.get_user_info, QQOAuthScopes.Items.list_album, QQOAuthScopes.Items.upload_pic)]
-        [InlineData("get_user_info,list_album,upload_pic,do_like", QQOAuthScopes.Items.get_user_info, QQOAuthScopes.Items.list_album, QQOAuthScopes.Items.upload_pic, QQOAuthScopes.Items.do_like)]
-        [InlineData("get_user_info,list_album,upload_pic,do_like", QQOAuthScopes.Items.get_user_info, QQOAuthScopes.Items.get_user_info, QQOAuthScopes.Items.list_album, QQOAuthScopes.Items.upload_pic, QQOAuthScopes.Items.do_like)]
-        public void Scope_TryAdd_Enum_Test(string expected, QQOAuthScopes.Items origin, params QQOAuthScopes.Items[] values)
+        [InlineData("get_user_info", QQConnectScopes.Items.get_user_info)]
+        [InlineData("get_user_info,list_album", QQConnectScopes.Items.get_user_info, QQConnectScopes.Items.list_album)]
+        [InlineData("get_user_info,list_album,upload_pic", QQConnectScopes.Items.get_user_info, QQConnectScopes.Items.list_album, QQConnectScopes.Items.upload_pic)]
+        [InlineData("get_user_info,list_album,upload_pic,do_like", QQConnectScopes.Items.get_user_info, QQConnectScopes.Items.list_album, QQConnectScopes.Items.upload_pic, QQConnectScopes.Items.do_like)]
+        [InlineData("get_user_info,list_album,upload_pic,do_like", QQConnectScopes.Items.get_user_info, QQConnectScopes.Items.get_user_info, QQConnectScopes.Items.list_album, QQConnectScopes.Items.upload_pic, QQConnectScopes.Items.do_like)]
+        public void Scope_TryAdd_Enum_Test(string expected, QQConnectScopes.Items origin, params QQConnectScopes.Items[] values)
         {
             var test = new ScopeTester();
 
             test.Scope.Add(origin.ToString());
             Debug.WriteLine(test.ToString());
 
-            QQOAuthScopes.TryAdd(test.Scope, values);
+            QQConnectScopes.TryAdd(test.Scope, values);
             Debug.WriteLine(test.ToString());
 
             Assert.Equal(expected, test.ToString());

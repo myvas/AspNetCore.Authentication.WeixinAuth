@@ -62,7 +62,7 @@ namespace AspNetCore.WeixinOAuth.Demo
                     options.AppId = _configuration["WeixinAuth:AppId"];
                     options.AppSecret = _configuration["WeixinAuth:AppSecret"];
                 })
-                .AddQQOAuth(options =>
+                .AddQQConnect(options =>
                 {
                     options.AppId = _configuration["QQ:AppId"];
                     options.AppKey = _configuration["QQ:AppKey"];

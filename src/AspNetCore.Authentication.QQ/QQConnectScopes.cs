@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace AspNetCore.Authentication.QQ
+namespace AspNetCore.Authentication.QQConnect
 {
-    public class QQOAuthScopes
+    public class QQConnectScopes
     {
         //public const string get_user_info = "get_user_info";
         //public const string list_album = "list_album";

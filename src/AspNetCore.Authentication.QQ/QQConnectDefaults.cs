@@ -1,6 +1,6 @@
-﻿namespace AspNetCore.Authentication.QQ
+﻿namespace AspNetCore.Authentication.QQConnect
 {
-    public static class QQOAuthDefaults
+    public static class QQConnectDefaults
     {
         /// <summary>
         /// QQ

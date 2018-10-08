@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace AspNetCore.Authentication.QQ.Models
+namespace AspNetCore.Authentication.QQConnect.Models
 {
     public class ErrorJson
     {

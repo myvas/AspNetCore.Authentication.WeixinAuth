@@ -1,13 +1,13 @@
-﻿using AspNetCore.Authentication.QQ;
+﻿using AspNetCore.Authentication.QQConnect;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.OAuth;
 using Microsoft.AspNetCore.Http;
 using System;
 using System.Security.Claims;
 
-namespace AspNetCore.Authentication.QQ
+namespace AspNetCore.Authentication.QQConnect
 {
-    public class QQOAuthOptions : OAuthOptions
+    public class QQConnectOptions : OAuthOptions
     {
         public string OpenIdEndpoint { get; set; }
 
@@ -21,16 +21,16 @@ namespace AspNetCore.Authentication.QQ
         public string AppId { get => ClientId; set => ClientId = value; }
         public string AppKey { get => ClientSecret; set => ClientSecret = value; }
 
-        public QQOAuthOptions()
+        public QQConnectOptions()
         {
-            OpenIdEndpoint = QQOAuthDefaults.OpenIdEndpoint;
+            OpenIdEndpoint = QQConnectDefaults.OpenIdEndpoint;
 
-            CallbackPath = new PathString(QQOAuthDefaults.CallbackPath);
-            AuthorizationEndpoint = QQOAuthDefaults.AuthorizationEndpoint;
-            TokenEndpoint = QQOAuthDefaults.TokenEndpoint;
-            UserInformationEndpoint = QQOAuthDefaults.UserInformationEndpoint;
+            CallbackPath = new PathString(QQConnectDefaults.CallbackPath);
+            AuthorizationEndpoint = QQConnectDefaults.AuthorizationEndpoint;
+            TokenEndpoint = QQConnectDefaults.TokenEndpoint;
+            UserInformationEndpoint = QQConnectDefaults.UserInformationEndpoint;
 
-            Scope.Add(QQOAuthScopes.Items.get_user_info.ToString());
+            Scope.Add(QQConnectScopes.Items.get_user_info.ToString());
             //QQOAuthScopes.TryAdd(Scope,
             //    QQOAuthScopes.Items.get_user_info,
             //    QQOAuthScopes.Items.list_album,
@@ -39,7 +39,7 @@ namespace AspNetCore.Authentication.QQ
 
             DisplayStyle = "";//mobile, default for Desktop Web Style.
 
-            ClaimsIssuer = QQOAuthDefaults.ClaimsIssuer;
+            ClaimsIssuer = QQConnectDefaults.ClaimsIssuer;
 
             ClaimActions.MapJsonKey(ClaimTypes.NameIdentifier, "openid");
             ClaimActions.MapJsonKey(ClaimTypes.Name, "nickname");

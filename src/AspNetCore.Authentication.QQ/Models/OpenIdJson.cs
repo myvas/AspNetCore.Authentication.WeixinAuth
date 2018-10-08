@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace AspNetCore.Authentication.QQ.Models
+namespace AspNetCore.Authentication.QQConnect.Models
 {
     /// <summary>
     /// PC网站接入时，获取到用户OpenID，返回包如下：

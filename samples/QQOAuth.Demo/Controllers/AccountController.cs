@@ -1,4 +1,4 @@
-﻿using AspNetCore.Authentication.QQ;
+﻿using AspNetCore.Authentication.QQConnect;
 using AspNetCore.TencentSms;
 using AspNetCore.ViewDivert;
 using Demo.Models;
@@ -37,7 +37,7 @@ namespace Demo.Controllers
 
             if (AgentResolver.IsMicroMessenger(HttpContext))
             {
-                return ExternalLogin(QQOAuthDefaults.AuthenticationScheme, returnUrl);
+                return ExternalLogin(QQConnectDefaults.AuthenticationScheme, returnUrl);
             }
 
             var vm = new LoginViewModel();

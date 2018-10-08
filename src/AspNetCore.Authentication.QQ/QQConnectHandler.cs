@@ -13,18 +13,18 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Text;
 
-namespace AspNetCore.Authentication.QQ
+namespace AspNetCore.Authentication.QQConnect
 {
-    public class QQOAuthHandler : OAuthHandler<QQOAuthOptions>
+    public class QQConnectHandler : OAuthHandler<QQConnectOptions>
     {
-        ILogger<QQOAuthHandler> _logger;
+        ILogger<QQConnectHandler> _logger;
 
-        public QQOAuthHandler(
-            IOptionsMonitor<QQOAuthOptions> options,
+        public QQConnectHandler(
+            IOptionsMonitor<QQConnectOptions> options,
             ILoggerFactory loggerFactory, UrlEncoder encoder, ISystemClock clock)
             : base(options, loggerFactory, encoder, clock)
         {
-            _logger = loggerFactory.CreateLogger<QQOAuthHandler>();
+            _logger = loggerFactory.CreateLogger<QQConnectHandler>();
         }
 
         protected override async Task<AuthenticationTicket> CreateTicketAsync(
@@ -84,12 +84,12 @@ namespace AspNetCore.Authentication.QQ
             queryStrings.Add("client_id", Options.ClientId);
             queryStrings.Add("redirect_uri", redirectUri);
 
-            AddQueryString(queryStrings, properties, QQOAuthChallengeProperties.ScopeKey, FormatScope, Options.Scope);
+            AddQueryString(queryStrings, properties, QQConnectChallengeProperties.ScopeKey, FormatScope, Options.Scope);
             //if (string.Compare(Options.DisplayStyle, "mobile", true) == 0)
             {
-                AddQueryString(queryStrings, properties, QQOAuthChallengeProperties.DisplayStyleKey, Options.DisplayStyle);
+                AddQueryString(queryStrings, properties, QQConnectChallengeProperties.DisplayStyleKey, Options.DisplayStyle);
             }
-            AddQueryString(queryStrings, properties, QQOAuthChallengeProperties.LoginHintKey);
+            AddQueryString(queryStrings, properties, QQConnectChallengeProperties.LoginHintKey);
 
             var state = Options.StateDataFormat.Protect(properties);
             queryStrings.Add("state", state);
