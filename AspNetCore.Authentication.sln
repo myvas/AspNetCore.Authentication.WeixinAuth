@@ -26,7 +26,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WeixinOpen.Demo", "samples\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WeixinAuth.Demo", "samples\WeixinAuth.Demo\WeixinAuth.Demo.csproj", "{6D06CB5D-94B7-419C-8B0F-73136439CE92}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QQOAuth.Demo", "samples\QQOAuth.Demo\QQOAuth.Demo.csproj", "{A48AECA7-025F-468B-983E-89FD5E5C9086}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QQ.Demo", "samples\QQOAuth.Demo\QQ.Demo.csproj", "{A48AECA7-025F-468B-983E-89FD5E5C9086}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AspNetCore.Authentication.QQ", "src\AspNetCore.Authentication.QQ\AspNetCore.Authentication.QQ.csproj", "{2471337D-7A3B-4135-8653-EC3FFB11B296}"
 EndProject

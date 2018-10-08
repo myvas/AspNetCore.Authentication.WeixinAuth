@@ -2,7 +2,9 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp2.1</TargetFramework>
-    <UserSecretsId>3859c316-12d6-4de4-b920-5c94458d83c1</UserSecretsId>
+    <UserSecretsId>AspNetCore.Authentication.WeixinOpen.demo</UserSecretsId>
+    <RootNamespace>Demo</RootNamespace>
+    <AssemblyName>Demo</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
@@ -18,4 +20,7 @@
     <ProjectReference Include="..\..\src\AspNetCore.Authentication.WeixinOpen\AspNetCore.Authentication.WeixinOpen.csproj" />
   </ItemGroup>
 
+  <Target Name="PrecompileScript" BeforeTargets="BeforeBuild">
+    <Exec Command="bower install --allow-root" />
+  </Target>
 </Project>

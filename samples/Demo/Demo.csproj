@@ -2,9 +2,9 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp2.1</TargetFramework>
-    <UserSecretsId>aspnetcore-weixinoauth-demo</UserSecretsId>
+    <UserSecretsId>AspNetCore.Authentication.Demo</UserSecretsId>
     <RootNamespace>Demo</RootNamespace>
-    <AssemblyName>AspNetCore.WeixinOAuth.Demo</AssemblyName>
+    <AssemblyName>Demo</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>

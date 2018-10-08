@@ -2,7 +2,7 @@
   "directory": "wwwroot/lib",
   "registry": {
     "search": [
-      "https://register.bower.io"
+      "https://registry.bower.io"
     ]
   }
 }
