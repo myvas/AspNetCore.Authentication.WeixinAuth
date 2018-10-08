@@ -8,6 +8,7 @@ An serials of OAuth2.0 client middlewares to OAuth2.0 Servers.
 - http://demo.auth.myvas.com (debian.8-x64)
 
 - Qrcode to enter the demo weixin service account:
+
 ![alt QrCode](http://mmbiz.qpic.cn/mmbiz_jpg/lPe5drS9euRQR1eCK5cGXaibHYL6vBR4pGLB34ju2hXCiaMQiayOU8w5GMfEH7WZsVNTnhLTpnzAC9xfdWuTT89OA/0)
 
 ## How to Use
