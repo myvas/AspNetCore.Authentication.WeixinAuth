@@ -7,31 +7,24 @@ namespace AspNetCore.Authentication.QQConnect
 {
     public class QQConnectChallengeProperties : OAuthChallengeProperties
     {
+        public class Displays
+        {
+            public const string pc = "pc";
+            public const string mobile = "mobile";
+        }
+
         /// <summary>
         /// The parameter key for the "display" argument being used for a challenge request.
         /// </summary>
-        /// <remarks>用于展示的样式。(1)不传则默认展示为PC下的样式。(2)如果传入“mobile”，则展示为mobile端下的样式。</remarks>
+        /// <remarks>用于展示的样式。(1)不传则默认展示为"pc"样式。(2)另一个样式是“mobile”。</remarks>
         public static readonly string DisplayStyleKey = "display";
-        
-        public string DisplayStyle
+
+        public string Display
         {
             get => GetParameter<string>(DisplayStyleKey);
             set => SetParameter(DisplayStyleKey, value);
         }
 
-        /// <summary>
-        /// The parameter key for the "login_hint" argument being used for a challenge request.
-        /// </summary>
-        public static readonly string LoginHintKey = "login_hint";
-
-        /// <summary>
-        /// The "login_hint" parameter value being used for a challenge request.
-        /// </summary>
-        public string LoginHint
-        {
-            get => GetParameter<string>(LoginHintKey);
-            set => SetParameter(LoginHintKey, value);
-        }
 
         public QQConnectChallengeProperties()
         { }

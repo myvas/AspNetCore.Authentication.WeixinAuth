@@ -7,7 +7,7 @@ using Xunit;
 
 namespace UnitTests
 {
-    public class QQOAuthScopesTests
+    public class QQConnectScopesTests
     {
         private class ScopeTester
         {

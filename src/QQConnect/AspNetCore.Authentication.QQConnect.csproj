@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp2.1</TargetFramework>
     <Authors>AspNetCore</Authors>
-    <Version>2.1.406</Version>
+    <Version>2.1.407</Version>
     <Description>ASP.NET Core 2.x Authentication middleware that enables an application to support the QQ Connect OAuth2.0 workflow. （https://connect.qq.com, 腾讯QQ互联@网站应用QQ登录）</Description>
     <PackageProjectUrl>https://github.com/myvas/AspNetCore.Authentication</PackageProjectUrl>
     <PackageTags>AspNetCore, Authentication, OAuth, QQ Connect, Tencent, Myvas</PackageTags>

@@ -24,10 +24,10 @@ namespace AspNetCore.Authentication.WeixinOpen
         public WeixinOpenHandler(
             IWeixinOpenApi api,
             IOptionsMonitor<WeixinOpenOptions> options,
-            ILoggerFactory logger,
+            ILoggerFactory loggerFactory,
             UrlEncoder encoder,
             ISystemClock clock)
-            : base(options, logger, encoder, clock)
+            : base(options, loggerFactory, encoder, clock)
         {
             _api = api ?? throw new ArgumentNullException(nameof(api));
         }
@@ -54,17 +54,12 @@ namespace AspNetCore.Authentication.WeixinOpen
         /// <returns></returns>
         protected override string BuildChallengeUrl(AuthenticationProperties properties, string redirectUri)
         {
-            //注意：参数顺序也不能乱！微信对该链接做了正则强匹配校验，如果链接的参数顺序不对，授权页面将无法正常访问 
+            //注意：参数只有五个，顺序不能改变！微信对该链接做了正则强匹配校验，如果链接的参数顺序不对，授权页面将无法正常访问!!!
             var queryStrings = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             queryStrings.Add("appid", Options.AppId);
             queryStrings.Add("redirect_uri", redirectUri);
             queryStrings.Add("response_type", "code");
-            AddQueryString(queryStrings, properties, WeixinOpenChallengeProperties.ScopeKey, FormatScope, Options.Scope);
-            AddQueryString(queryStrings, properties, WeixinOpenChallengeProperties.AccessTypeKey);
-            //AddQueryString(queryStrings, properties, WeixinOpenChallengeProperties.LoginHintKey);
-            //AddQueryString(queryStrings, properties, WeixinOpenChallengeProperties.UnionIdKey);
-            //AddQueryString(queryStrings, properties, WeixinOpenChallengeProperties.OpenIdKey);
-            //AddQueryString(queryStrings, properties, WeixinOpenChallengeProperties.LocalUserIdKey);
+            AddQueryString(queryStrings, properties, "scope", FormatScope, Options.Scope);
             queryStrings.Add("state", Options.StateDataFormat.Protect(properties));
 
             var authorizationUrl = QueryHelpers.AddQueryString(Options.AuthorizationEndpoint, queryStrings);

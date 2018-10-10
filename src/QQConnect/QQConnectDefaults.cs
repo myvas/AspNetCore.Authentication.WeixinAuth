@@ -5,22 +5,22 @@
         /// <summary>
         /// QQ
         /// </summary>
-        public const string AuthenticationScheme = "QQ";
+        public const string AuthenticationScheme = "QQConnect";
 
         /// <summary>
         /// QQ
         /// </summary>
-        public const string DisplayName = "QQ";
+        public const string DisplayName = "QQConnect";
 
         /// <summary>
         /// QQ
         /// </summary>
-        public const string ClaimsIssuer = "QQ";
+        public const string ClaimsIssuer = "QQConnect";
 
         /// <summary>
         /// /signin-qq
         /// </summary>
-        public const string CallbackPath = "/signin-qq";
+        public const string CallbackPath = "/signin-qqconnect";
 
         public static readonly string AuthorizationEndpoint = "https://graph.qq.com/oauth2.0/authorize";
 

@@ -1,4 +1,4 @@
-﻿using AspNetCore.Authentication.WeixinOpen;
+﻿using AspNetCore.Authentication.QQConnect;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Facebook;
 using Microsoft.AspNetCore.Authentication.OAuth;
@@ -26,13 +26,13 @@ using Xunit;
 
 namespace UnitTests
 {
-    public class WeixinOpenTests
+    public class QQConnectTests
     {
-        private void ConfigureDefaults(WeixinOpenOptions o)
+        private void ConfigureDefaults(QQConnectOptions o)
         {
             o.AppId = "Test Id";
-            o.AppSecret = "Test Secret";
-            //o.SignInScheme = "auth1";//WeixinOpenDefaults.AuthenticationScheme;
+            o.AppKey = "Test Secret";
+            //o.SignInScheme = "auth1";//QQConnectDefaults.AuthenticationScheme;
         }
 
         [Fact]
@@ -42,10 +42,10 @@ namespace UnitTests
 
             services.AddAuthentication(o =>
             {
-                o.DefaultScheme = WeixinOpenDefaults.AuthenticationScheme;
+                o.DefaultScheme = QQConnectDefaults.AuthenticationScheme;
                 o.AddScheme<TestHandler>("auth1", "auth1");
             })
-            .AddWeixinOpen(o =>
+            .AddQQConnect(o =>
             {
                 ConfigureDefaults(o);
                 o.SignInScheme = "auth1";
@@ -86,11 +86,11 @@ namespace UnitTests
 
             services.AddAuthentication(o =>
             {
-                o.DefaultScheme = WeixinOpenDefaults.AuthenticationScheme;
+                o.DefaultScheme = QQConnectDefaults.AuthenticationScheme;
                 o.AddScheme<TestHandler2>("auth1", "auth1");
                 o.AddScheme<TestHandler>("specific", "specific");
             })
-            .AddWeixinOpen(o =>
+            .AddQQConnect(o =>
             {
                 ConfigureDefaults(o);
                 o.ForwardDefault = "auth1";
@@ -117,11 +117,11 @@ namespace UnitTests
 
             services.AddAuthentication(o =>
             {
-                o.DefaultScheme = WeixinOpenDefaults.AuthenticationScheme;
+                o.DefaultScheme = QQConnectDefaults.AuthenticationScheme;
                 o.AddScheme<TestHandler2>("auth1", "auth1");
                 o.AddScheme<TestHandler>("specific", "specific");
             })
-            .AddWeixinOpen(o =>
+            .AddQQConnect(o =>
             {
                 ConfigureDefaults(o);
                 o.ForwardDefault = "auth1";
@@ -148,11 +148,11 @@ namespace UnitTests
 
             services.AddAuthentication(o =>
             {
-                o.DefaultScheme = WeixinOpenDefaults.AuthenticationScheme;
+                o.DefaultScheme = QQConnectDefaults.AuthenticationScheme;
                 o.AddScheme<TestHandler2>("auth1", "auth1");
                 o.AddScheme<TestHandler>("specific", "specific");
             })
-            .AddWeixinOpen(o =>
+            .AddQQConnect(o =>
             {
                 ConfigureDefaults(o);
                 o.SignInScheme = "auth1"; //Important!
@@ -191,11 +191,11 @@ namespace UnitTests
 
             services.AddAuthentication(o =>
             {
-                o.DefaultScheme = WeixinOpenDefaults.AuthenticationScheme;
+                o.DefaultScheme = QQConnectDefaults.AuthenticationScheme;
                 o.AddScheme<TestHandler2>("auth1", "auth1");
                 o.AddScheme<TestHandler>("specific", "specific");
             })
-            .AddWeixinOpen(o =>
+            .AddQQConnect(o =>
             {
                 ConfigureDefaults(o);
                 o.SignInScheme = "auth1"; //Important!
@@ -232,11 +232,11 @@ namespace UnitTests
             var services = new ServiceCollection().AddLogging();
             services.AddAuthentication(o =>
             {
-                o.DefaultScheme = WeixinOpenDefaults.AuthenticationScheme;
+                o.DefaultScheme = QQConnectDefaults.AuthenticationScheme;
                 o.AddScheme<TestHandler>("specific", "specific");
                 o.AddScheme<TestHandler2>("auth1", "auth1");
             })
-            .AddWeixinOpen(o =>
+            .AddQQConnect(o =>
             {
                 ConfigureDefaults(o);
                 o.SignInScheme = "auth1"; //Important!
@@ -273,12 +273,12 @@ namespace UnitTests
             var services = new ServiceCollection().AddLogging();
             services.AddAuthentication(o =>
             {
-                o.DefaultScheme = WeixinOpenDefaults.AuthenticationScheme;
+                o.DefaultScheme = QQConnectDefaults.AuthenticationScheme;
                 o.AddScheme<TestHandler2>("auth1", "auth1");
                 o.AddScheme<TestHandler3>("selector", "selector");
                 o.AddScheme<TestHandler>("specific", "specific");
             })
-            .AddWeixinOpen(o =>
+            .AddQQConnect(o =>
             {
                 ConfigureDefaults(o);
                 o.SignInScheme = "auth1"; //Important!
@@ -327,12 +327,12 @@ namespace UnitTests
             var services = new ServiceCollection().AddLogging();
             services.AddAuthentication(o =>
             {
-                o.DefaultScheme = WeixinOpenDefaults.AuthenticationScheme;
+                o.DefaultScheme = QQConnectDefaults.AuthenticationScheme;
                 o.AddScheme<TestHandler2>("auth1", "auth1");
                 o.AddScheme<TestHandler3>("selector", "selector");
                 o.AddScheme<TestHandler>("specific", "specific");
             })
-            .AddWeixinOpen(o =>
+            .AddQQConnect(o =>
             {
                 ConfigureDefaults(o);
                 o.SignInScheme = "auth1"; //Important!
@@ -381,12 +381,12 @@ namespace UnitTests
             var services = new ServiceCollection().AddLogging();
             services.AddAuthentication(o =>
             {
-                o.DefaultScheme = WeixinOpenDefaults.AuthenticationScheme;
+                o.DefaultScheme = QQConnectDefaults.AuthenticationScheme;
                 o.AddScheme<TestHandler2>("auth1", "auth1");
                 o.AddScheme<TestHandler3>("selector", "selector");
                 o.AddScheme<TestHandler>("specific", "specific");
             })
-            .AddWeixinOpen(o =>
+            .AddQQConnect(o =>
             {
                 ConfigureDefaults(o);
                 o.SignInScheme = "auth1"; //Important!
@@ -440,7 +440,7 @@ namespace UnitTests
             var server = CreateServer(o =>
             {
                 ConfigureDefaults(o);
-                o.SignInScheme = WeixinOpenDefaults.AuthenticationScheme;
+                o.SignInScheme = QQConnectDefaults.AuthenticationScheme;
             });
             var error = await Assert.ThrowsAsync<InvalidOperationException>(() => server.SendAsync("https://example.com/challenge"));
             Assert.Contains("cannot be set to itself", error.Message);
@@ -450,13 +450,13 @@ namespace UnitTests
         public async Task VerifySchemeDefaults()
         {
             var services = new ServiceCollection();
-            services.AddAuthentication().AddWeixinOpen();
+            services.AddAuthentication().AddQQConnect();
             var sp = services.BuildServiceProvider();
             var schemeProvider = sp.GetRequiredService<IAuthenticationSchemeProvider>();
-            var scheme = await schemeProvider.GetSchemeAsync(WeixinOpenDefaults.AuthenticationScheme);
+            var scheme = await schemeProvider.GetSchemeAsync(QQConnectDefaults.AuthenticationScheme);
             Assert.NotNull(scheme);
-            Assert.Equal("WeixinOpenHandler", scheme.HandlerType.Name);
-            Assert.Equal(WeixinOpenDefaults.AuthenticationScheme, scheme.DisplayName);
+            Assert.Equal("QQConnectHandler", scheme.HandlerType.Name);
+            Assert.Equal(QQConnectDefaults.AuthenticationScheme, scheme.DisplayName);
         }
 
         [Fact]
@@ -470,12 +470,12 @@ namespace UnitTests
             var transaction = await server.SendAsync("https://example.com/challenge");
             Assert.Equal(HttpStatusCode.Redirect, transaction.Response.StatusCode);
             var location = transaction.Response.Headers.Location.ToString();
-            Assert.Contains("https://open.weixin.qq.com/connect/qrconnect?appid=", location);
+            Assert.Contains(QQConnectDefaults.AuthorizationEndpoint, location);
+            Assert.Contains("response_type=code", location);
+            Assert.Contains("client_id=", location);
             Assert.Contains("&redirect_uri=", location);
-            Assert.Contains("&response_type=code", location);
             Assert.Contains("&scope=", location);
             Assert.Contains("&state=", location);
-            Assert.Contains("#wechat_redirect", location);
 
             Assert.DoesNotContain("access_type=", location);
             Assert.DoesNotContain("prompt=", location);
@@ -536,7 +536,7 @@ namespace UnitTests
                 ConfigureDefaults(o);
             });
             var transaction = await server.SendAsync("https://example.com/challenge");
-            Assert.Contains(transaction.SetCookie, cookie => cookie.StartsWith(".AspNetCore.Correlation.WeixinOpen."));
+            Assert.Contains(transaction.SetCookie, cookie => cookie.StartsWith(".AspNetCore.Correlation.QQConnect."));
         }
 
         [Fact]
@@ -549,13 +549,13 @@ namespace UnitTests
             var transaction = await server.SendAsync("https://example.com/challenge");
             Assert.Equal(HttpStatusCode.Redirect, transaction.Response.StatusCode);
             var query = transaction.Response.Headers.Location.Query;
-            Assert.Contains("&scope=" + UrlEncoder.Default.Encode("snsapi_login"), query);
+            Assert.Contains("&scope=" + UrlEncoder.Default.Encode(QQConnectScopes.Items.get_user_info.ToString()), query);
         }
 
         [Fact]
         public async Task ChallengeWillUseAuthenticationPropertiesParametersAsQueryArguments()
         {
-            var stateFormat = new PropertiesDataFormat(new EphemeralDataProtectionProvider(NullLoggerFactory.Instance).CreateProtector("WeixinOpenTest"));
+            var stateFormat = new PropertiesDataFormat(new EphemeralDataProtectionProvider(NullLoggerFactory.Instance).CreateProtector("QQConnectTest"));
             var server = CreateServer(o =>
             {
                 ConfigureDefaults(o);
@@ -567,9 +567,10 @@ namespace UnitTests
                 var res = context.Response;
                 if (req.Path == new PathString("/challenge2"))
                 {
-                    return context.ChallengeAsync("WeixinOpen", new OAuthChallengeProperties
+                    return context.ChallengeAsync("QQConnect", new QQConnectChallengeProperties
                     {
-                        Scope = new string[] { "snsapi_login", "https://www.googleapis.com/auth/plus.login" },
+                        Scope = new string[] { QQConnectScopes.Items.get_user_info.ToString(), "https://www.googleapis.com/auth/plus.login" },
+                        //LoginHint = "test@example.com",
                     });
                 }
 
@@ -580,7 +581,7 @@ namespace UnitTests
 
             // verify query arguments
             var query = QueryHelpers.ParseQuery(transaction.Response.Headers.Location.Query);
-            Assert.Equal("snsapi_login,https://www.googleapis.com/auth/plus.login", query["scope"]);
+            Assert.Equal(QQConnectScopes.Items.get_user_info.ToString() + "," + "https://www.googleapis.com/auth/plus.login", query["scope"]);
             //Assert.Equal("test@example.com", query["login_hint"]);
 
             // verify that the passed items were not serialized
@@ -592,7 +593,7 @@ namespace UnitTests
         [Fact]
         public async Task ChallengeWillUseAuthenticationPropertiesItemsAsParameters()
         {
-            var stateFormat = new PropertiesDataFormat(new EphemeralDataProtectionProvider(NullLoggerFactory.Instance).CreateProtector("WeixinOpenTest"));
+            var stateFormat = new PropertiesDataFormat(new EphemeralDataProtectionProvider(NullLoggerFactory.Instance).CreateProtector("QQConnectTest"));
             var server = CreateServer(o =>
             {
                 ConfigureDefaults(o);
@@ -604,7 +605,7 @@ namespace UnitTests
                 var res = context.Response;
                 if (req.Path == new PathString("/challenge2"))
                 {
-                    return context.ChallengeAsync("WeixinOpen", new AuthenticationProperties(new Dictionary<string, string>()
+                    return context.ChallengeAsync("QQConnect", new AuthenticationProperties(new Dictionary<string, string>()
                     {
                         { "scope", "https://www.googleapis.com/auth/plus.login" },
                         //{ "login_hint", "test@example.com" },
@@ -619,16 +620,18 @@ namespace UnitTests
             // verify query arguments
             var query = QueryHelpers.ParseQuery(transaction.Response.Headers.Location.Query);
             Assert.Equal("https://www.googleapis.com/auth/plus.login", query["scope"]);
+            //Assert.Equal("test@example.com", query["login_hint"]);
 
             // verify that the passed items were not serialized
             var stateProperties = stateFormat.Unprotect(query["state"]);
             Assert.DoesNotContain("scope", stateProperties.Items.Keys);
+            //Assert.DoesNotContain("login_hint", stateProperties.Items.Keys);
         }
 
         [Fact]
         public async Task ChallengeWillUseAuthenticationPropertiesItemsAsQueryArgumentsButParametersWillOverwrite()
         {
-            var stateFormat = new PropertiesDataFormat(new EphemeralDataProtectionProvider(NullLoggerFactory.Instance).CreateProtector("WeixinOpenTest"));
+            var stateFormat = new PropertiesDataFormat(new EphemeralDataProtectionProvider(NullLoggerFactory.Instance).CreateProtector("QQConnectTest"));
             var server = CreateServer(o =>
             {
                 ConfigureDefaults(o);
@@ -640,7 +643,10 @@ namespace UnitTests
                 var res = context.Response;
                 if (req.Path == new PathString("/challenge2"))
                 {
-                    return context.ChallengeAsync("WeixinOpen", new OAuthChallengeProperties() { Scope = new string[] { "https://www.googleapis.com/auth/plus.login" } });
+                    return context.ChallengeAsync("QQConnect", new QQConnectChallengeProperties(new Dictionary<string, string>
+                    {
+                        [QQConnectChallengeProperties.ScopeKey] = "https://www.googleapis.com/auth/plus.login",
+                    }));
                 }
 
                 return Task.FromResult<object>(null);
@@ -650,13 +656,17 @@ namespace UnitTests
 
             // verify query arguments
             var query = QueryHelpers.ParseQuery(transaction.Response.Headers.Location.Query);
-            Assert.Equal("https://www.googleapis.com/auth/plus.login", query[OAuthChallengeProperties.ScopeKey]);
+            Assert.Equal("https://www.googleapis.com/auth/plus.login", query[QQConnectChallengeProperties.ScopeKey]);
+            //Assert.Equal("test@example.com", query[QQConnectChallengeProperties.LoginHintKey]);
+            //Assert.Equal("Test Local User ID", query[QQConnectChallengeProperties.LocalUserIdKey]);
+            //Assert.Equal("Test User ID", query[QQConnectChallengeProperties.UnionIdKey]);
+            //Assert.Equal("Test Open ID", query[QQConnectChallengeProperties.OpenIdKey]);
 
             // verify that the passed items were not serialized
             var stateProperties = stateFormat.Unprotect(query["state"]);
             Assert.Contains(".redirect", stateProperties.Items.Keys);
             Assert.Contains(".xsrf", stateProperties.Items.Keys);
-            Assert.DoesNotContain(OAuthChallengeProperties.ScopeKey, stateProperties.Items.Keys);
+            Assert.DoesNotContain(QQConnectChallengeProperties.ScopeKey, stateProperties.Items.Keys);
         }
 
         [Fact]
@@ -699,7 +709,7 @@ namespace UnitTests
                 var res = context.Response;
                 if (req.Path == new PathString("/auth"))
                 {
-                    var result = await context.AuthenticateAsync("WeixinOpen");
+                    var result = await context.AuthenticateAsync("QQConnect");
                     Assert.NotNull(result.Failure);
                 }
             });
@@ -714,7 +724,7 @@ namespace UnitTests
             {
                 ConfigureDefaults(o);
             });
-            var error = await Assert.ThrowsAnyAsync<Exception>(() => server.SendAsync("https://example.com/signin-weixinopen?code=TestCode"));
+            var error = await Assert.ThrowsAnyAsync<Exception>(() => server.SendAsync($"https://example.com{QQConnectDefaults.CallbackPath}?code=TestCode"));
             Assert.Equal("The oauth state was missing or invalid.", error.GetBaseException().Message);
         }
 
@@ -737,8 +747,8 @@ namespace UnitTests
                     }
                 } : new OAuthEvents();
             });
-            var sendTask = server.SendAsync("https://example.com/signin-weixinopen?error=OMG&error_description=SoBad&error_uri=foobar&state=protected_state",
-                ".AspNetCore.Correlation.WeixinOpen.corrilationId=N");
+            var sendTask = server.SendAsync($"https://example.com{QQConnectDefaults.CallbackPath}?error=OMG&error_description=SoBad&error_uri=foobar&state=protected_state",
+                ".AspNetCore.Correlation.QQConnect.corrilationId=N");
             if (redirect)
             {
                 var transaction = await sendTask;
@@ -757,7 +767,7 @@ namespace UnitTests
         [InlineData("CustomIssuer")]
         public async Task ReplyPathWillAuthenticateValidAuthorizeCodeAndState(string claimsIssuer)
         {
-            var stateFormat = new PropertiesDataFormat(new EphemeralDataProtectionProvider(NullLoggerFactory.Instance).CreateProtector("WeixinOpenTest"));
+            var stateFormat = new PropertiesDataFormat(new EphemeralDataProtectionProvider(NullLoggerFactory.Instance).CreateProtector("QQConnectTest"));
             var server = CreateServer(o =>
             {
                 ConfigureDefaults(o);
@@ -777,18 +787,18 @@ namespace UnitTests
             properties.RedirectUri = "/me";
             var state = stateFormat.Protect(properties);
             var transaction = await server.SendAsync(
-                "https://example.com/signin-weixinopen?code=TestCode&state=" + UrlEncoder.Default.Encode(state),
-                $".AspNetCore.Correlation.WeixinOpen.{correlationValue}=N");
+                $"https://example.com{QQConnectDefaults.CallbackPath}?code=TestCode&state=" + UrlEncoder.Default.Encode(state),
+                $".AspNetCore.Correlation.QQConnect.{correlationValue}=N");
             Assert.Equal(HttpStatusCode.Redirect, transaction.Response.StatusCode);
             Assert.Equal("/me", transaction.Response.Headers.GetValues("Location").First());
             Assert.Equal(2, transaction.SetCookie.Count);
-            Assert.Contains($".AspNetCore.Correlation.WeixinOpen.{correlationValue}", transaction.SetCookie[0]);
+            Assert.Contains($".AspNetCore.Correlation.QQConnect.{correlationValue}", transaction.SetCookie[0]);
             Assert.Contains(".AspNetCore." + TestExtensions.CookieAuthenticationScheme, transaction.SetCookie[1]);
 
             var authCookie = transaction.AuthenticationCookieValue;
             transaction = await server.SendAsync("https://example.com/me", authCookie);
             Assert.Equal(HttpStatusCode.OK, transaction.Response.StatusCode);
-            var expectedIssuer = claimsIssuer ?? WeixinOpenDefaults.AuthenticationScheme;
+            var expectedIssuer = claimsIssuer ?? QQConnectDefaults.AuthenticationScheme;
             Assert.Equal("Test Name", transaction.FindClaimValue(ClaimTypes.Name, expectedIssuer));
             Assert.Equal("Test User ID", transaction.FindClaimValue(ClaimTypes.NameIdentifier, expectedIssuer));
 
@@ -808,7 +818,7 @@ namespace UnitTests
         [InlineData(false)]
         public async Task ReplyPathWillThrowIfCodeIsInvalid(bool redirect)
         {
-            var stateFormat = new PropertiesDataFormat(new EphemeralDataProtectionProvider(NullLoggerFactory.Instance).CreateProtector("WeixinOpenTest"));
+            var stateFormat = new PropertiesDataFormat(new EphemeralDataProtectionProvider(NullLoggerFactory.Instance).CreateProtector("QQConnectTest"));
             var server = CreateServer(o =>
             {
                 ConfigureDefaults(o);
@@ -839,8 +849,8 @@ namespace UnitTests
 
             var state = stateFormat.Protect(properties);
             var sendTask = server.SendAsync(
-                "https://example.com/signin-weixinopen?code=TestCode&state=" + UrlEncoder.Default.Encode(state),
-                $".AspNetCore.Correlation.WeixinOpen.{correlationValue}=N");
+                $"https://example.com{QQConnectDefaults.CallbackPath}?code=TestCode&state=" + UrlEncoder.Default.Encode(state),
+                $".AspNetCore.Correlation.QQConnect.{correlationValue}=N");
             if (redirect)
             {
                 var transaction = await sendTask;
@@ -861,7 +871,7 @@ namespace UnitTests
         [InlineData(false)]
         public async Task ReplyPathWillRejectIfAccessTokenIsMissing(bool redirect)
         {
-            var stateFormat = new PropertiesDataFormat(new EphemeralDataProtectionProvider(NullLoggerFactory.Instance).CreateProtector("WeixinOpenTest"));
+            var stateFormat = new PropertiesDataFormat(new EphemeralDataProtectionProvider(NullLoggerFactory.Instance).CreateProtector("QQConnectTest"));
             var server = CreateServer(o =>
             {
                 ConfigureDefaults(o);
@@ -890,26 +900,26 @@ namespace UnitTests
             properties.RedirectUri = "/me";
             var state = stateFormat.Protect(properties);
             var sendTask = server.SendAsync(
-                "https://example.com/signin-weixinopen?code=TestCode&state=" + UrlEncoder.Default.Encode(state),
-                $".AspNetCore.Correlation.WeixinOpen.{correlationValue}=N");
+                $"https://example.com{QQConnectDefaults.CallbackPath}?code=TestCode&state=" + UrlEncoder.Default.Encode(state),
+                $".AspNetCore.Correlation.QQConnect.{correlationValue}=N");
             if (redirect)
             {
                 var transaction = await sendTask;
                 Assert.Equal(HttpStatusCode.Redirect, transaction.Response.StatusCode);
-                Assert.Equal("/error?FailureMessage=" + UrlEncoder.Default.Encode("Failed to retrieve access token."),
+                Assert.Equal("/error?FailureMessage=" + UrlEncoder.Default.Encode("Failed on parsing the callback string: {}"),
                     transaction.Response.Headers.GetValues("Location").First());
             }
             else
             {
                 var error = await Assert.ThrowsAnyAsync<Exception>(() => sendTask);
-                Assert.Equal("Failed to retrieve access token.", error.GetBaseException().Message);
+                Assert.Equal("Failed on parsing the callback string: {}", error.GetBaseException().Message);
             }
         }
 
         [Fact]
         public async Task AuthenticatedEventCanGetRefreshToken()
         {
-            var stateFormat = new PropertiesDataFormat(new EphemeralDataProtectionProvider(NullLoggerFactory.Instance).CreateProtector("WeixinOpenTest"));
+            var stateFormat = new PropertiesDataFormat(new EphemeralDataProtectionProvider(NullLoggerFactory.Instance).CreateProtector("QQConnectTest"));
             var server = CreateServer(o =>
             {
                 ConfigureDefaults(o);
@@ -920,7 +930,7 @@ namespace UnitTests
                     OnCreatingTicket = context =>
                     {
                         var refreshToken = context.RefreshToken;
-                        context.Principal.AddIdentity(new ClaimsIdentity(new Claim[] { new Claim("RefreshToken", refreshToken, ClaimValueTypes.String, "WeixinOpen") }, "WeixinOpen"));
+                        context.Principal.AddIdentity(new ClaimsIdentity(new Claim[] { new Claim("RefreshToken", refreshToken, ClaimValueTypes.String, "QQConnect") }, "QQConnect"));
                         return Task.FromResult(0);
                     }
                 };
@@ -932,12 +942,12 @@ namespace UnitTests
             properties.RedirectUri = "/me";
             var state = stateFormat.Protect(properties);
             var transaction = await server.SendAsync(
-                "https://example.com/signin-weixinopen?code=TestCode&state=" + UrlEncoder.Default.Encode(state),
-                $".AspNetCore.Correlation.WeixinOpen.{correlationValue}=N");
+                $"https://example.com{QQConnectDefaults.CallbackPath}?code=TestCode&state=" + UrlEncoder.Default.Encode(state),
+                $".AspNetCore.Correlation.QQConnect.{correlationValue}=N");
             Assert.Equal(HttpStatusCode.Redirect, transaction.Response.StatusCode);
             Assert.Equal("/me", transaction.Response.Headers.GetValues("Location").First());
             Assert.Equal(2, transaction.SetCookie.Count);
-            Assert.Contains($".AspNetCore.Correlation.WeixinOpen.{correlationValue}", transaction.SetCookie[0]);
+            Assert.Contains($".AspNetCore.Correlation.QQConnect.{correlationValue}", transaction.SetCookie[0]);
             Assert.Contains(".AspNetCore." + TestExtensions.CookieAuthenticationScheme, transaction.SetCookie[1]);
 
             var authCookie = transaction.AuthenticationCookieValue;
@@ -949,7 +959,7 @@ namespace UnitTests
         [Fact]
         public async Task NullRedirectUriWillRedirectToSlash()
         {
-            var stateFormat = new PropertiesDataFormat(new EphemeralDataProtectionProvider(NullLoggerFactory.Instance).CreateProtector("WeixinOpenTest"));
+            var stateFormat = new PropertiesDataFormat(new EphemeralDataProtectionProvider(NullLoggerFactory.Instance).CreateProtector("QQConnectTest"));
             var server = CreateServer(o =>
             {
                 ConfigureDefaults(o);
@@ -970,19 +980,19 @@ namespace UnitTests
             properties.Items.Add(correlationKey, correlationValue);
             var state = stateFormat.Protect(properties);
             var transaction = await server.SendAsync(
-                "https://example.com/signin-weixinopen?code=TestCode&state=" + UrlEncoder.Default.Encode(state),
-                $".AspNetCore.Correlation.WeixinOpen.{correlationValue}=N");
+                $"https://example.com{QQConnectDefaults.CallbackPath}?code=TestCode&state=" + UrlEncoder.Default.Encode(state),
+                $".AspNetCore.Correlation.QQConnect.{correlationValue}=N");
             Assert.Equal(HttpStatusCode.Redirect, transaction.Response.StatusCode);
             Assert.Equal("/", transaction.Response.Headers.GetValues("Location").First());
             Assert.Equal(2, transaction.SetCookie.Count);
-            Assert.Contains($".AspNetCore.Correlation.WeixinOpen.{correlationValue}", transaction.SetCookie[0]);
+            Assert.Contains($".AspNetCore.Correlation.QQConnect.{correlationValue}", transaction.SetCookie[0]);
             Assert.Contains(".AspNetCore." + TestExtensions.CookieAuthenticationScheme, transaction.SetCookie[1]);
         }
 
         [Fact]
         public async Task ValidateAuthenticatedContext()
         {
-            var stateFormat = new PropertiesDataFormat(new EphemeralDataProtectionProvider(NullLoggerFactory.Instance).CreateProtector("WeixinOpenTest"));
+            var stateFormat = new PropertiesDataFormat(new EphemeralDataProtectionProvider(NullLoggerFactory.Instance).CreateProtector("QQConnectTest"));
             var server = CreateServer(o =>
             {
                 ConfigureDefaults(o);
@@ -998,7 +1008,7 @@ namespace UnitTests
                         Assert.Equal(TimeSpan.FromSeconds(3600), context.ExpiresIn);
                         Assert.Equal("Test User ID", context.Identity.FindFirst(ClaimTypes.NameIdentifier)?.Value);
                         Assert.Equal("Test Name", context.Identity.FindFirst(ClaimTypes.Name)?.Value);
-                        Assert.Equal("Test Open ID", context.Identity.FindFirst(WeixinOpenClaimTypes.OpenId)?.Value);
+                        Assert.Equal("Test User ID", context.Identity.FindFirst(QQConnectClaimTypes.OpenId)?.Value);
                         return Task.FromResult(0);
                     }
                 };
@@ -1012,11 +1022,10 @@ namespace UnitTests
             properties.RedirectUri = "/foo";
             var state = stateFormat.Protect(properties);
 
-            //Post a message to the WeixinOpen middleware
+            //Post a message to the QQConnect middleware
             var transaction = await server.SendAsync(
-                //"https://open.weixin.qq.com/connect/qrconnect?appid=Test Id&redirect_uri=https%3A%2F%2Fexample.com%2Fsignin-weixinopen&response_type=code&scope=snsapi_login&state=" + UrlEncoder.Default.Encode(state) + "#wechat_redirect",
-                "https://example.com/signin-weixinopen?code=TestCode&state=" + UrlEncoder.Default.Encode(state),
-                $".AspNetCore.Correlation.WeixinOpen.{correlationValue}=N");
+                $"https://example.com{QQConnectDefaults.CallbackPath}?code=TestCode&state=" + UrlEncoder.Default.Encode(state),
+                $".AspNetCore.Correlation.{QQConnectDefaults.AuthenticationScheme}.{correlationValue}=N");
 
             Assert.Equal(HttpStatusCode.Redirect, transaction.Response.StatusCode);
             Assert.Equal("/foo", transaction.Response.Headers.GetValues("Location").First());
@@ -1030,8 +1039,8 @@ namespace UnitTests
                 ConfigureDefaults(o);
             });
 
-            //Post a message to the WeixinOpen middleware
-            var error = await Assert.ThrowsAnyAsync<Exception>(() => server.SendAsync("https://example.com/signin-weixinopen"));
+            //Post a message to the QQConnect middleware
+            var error = await Assert.ThrowsAnyAsync<Exception>(() => server.SendAsync($"https://example.com{QQConnectDefaults.CallbackPath}"));
             Assert.Equal("The oauth state was missing or invalid.", error.GetBaseException().Message);
         }
 
@@ -1043,15 +1052,15 @@ namespace UnitTests
                 ConfigureDefaults(o);
             });
 
-            //Post a message to the WeixinOpen middleware
-            var error = await Assert.ThrowsAnyAsync<Exception>(() => server.SendAsync("https://example.com/signin-weixinopen?state=TestState"));
+            //Post a message to the QQConnect middleware
+            var error = await Assert.ThrowsAnyAsync<Exception>(() => server.SendAsync($"https://example.com{QQConnectDefaults.CallbackPath}?state=TestState"));
             Assert.Equal("The oauth state was missing or invalid.", error.GetBaseException().Message);
         }
 
         [Fact]
         public async Task StateCorrelationMissingCauseException()
         {
-            var stateFormat = new PropertiesDataFormat(new EphemeralDataProtectionProvider(NullLoggerFactory.Instance).CreateProtector("WeixinOpenTest"));
+            var stateFormat = new PropertiesDataFormat(new EphemeralDataProtectionProvider(NullLoggerFactory.Instance).CreateProtector("QQConnectTest"));
             var server = CreateServer(o =>
             {
                 ConfigureDefaults(o);
@@ -1066,14 +1075,14 @@ namespace UnitTests
 
             var error3 = await Assert.ThrowsAnyAsync<Exception>(()
                 => server.SendAsync(
-                    "https://example.com/signin-weixinopen?state=" + UrlEncoder.Default.Encode(state)));
+                    $"https://example.com{QQConnectDefaults.CallbackPath}?state=" + UrlEncoder.Default.Encode(state)));
             Assert.Equal("Correlation failed.", error3.GetBaseException().Message);
         }
 
         [Fact]
         public async Task StateCorrelationMarkerWrongCauseException()
         {
-            var stateFormat = new PropertiesDataFormat(new EphemeralDataProtectionProvider(NullLoggerFactory.Instance).CreateProtector("WeixinOpenTest"));
+            var stateFormat = new PropertiesDataFormat(new EphemeralDataProtectionProvider(NullLoggerFactory.Instance).CreateProtector("QQConnectTest"));
             var server = CreateServer(o =>
             {
                 ConfigureDefaults(o);
@@ -1088,15 +1097,15 @@ namespace UnitTests
 
             var error = await Assert.ThrowsAnyAsync<Exception>(()
                 => server.SendAsync(
-                    "https://example.com/signin-weixinopen?state=" + UrlEncoder.Default.Encode(state),
-                    $".AspNetCore.Correlation.{WeixinOpenDefaults.AuthenticationScheme}.{correlationValue}=HERE_MUST_BE_N"));
+                    $"https://example.com{QQConnectDefaults.CallbackPath}?state=" + UrlEncoder.Default.Encode(state),
+                    $".AspNetCore.Correlation.{QQConnectDefaults.AuthenticationScheme}.{correlationValue}=HERE_MUST_BE_N"));
             Assert.Equal("Correlation failed.", error.GetBaseException().Message);
         }
 
         [Fact]
         public async Task StateCorrelationSuccessCodeMissing()
         {
-            var stateFormat = new PropertiesDataFormat(new EphemeralDataProtectionProvider(NullLoggerFactory.Instance).CreateProtector("WeixinOpenTest"));
+            var stateFormat = new PropertiesDataFormat(new EphemeralDataProtectionProvider(NullLoggerFactory.Instance).CreateProtector("QQConnectTest"));
             var server = CreateServer(o =>
             {
                 ConfigureDefaults(o);
@@ -1111,15 +1120,15 @@ namespace UnitTests
 
             var error2 = await Assert.ThrowsAnyAsync<Exception>(()
                 => server.SendAsync(
-                    "https://example.com/signin-weixinopen?state=" + UrlEncoder.Default.Encode(state),
-                    $".AspNetCore.Correlation.{WeixinOpenDefaults.AuthenticationScheme}.{correlationValue}=N"));
+                    $"https://example.com{QQConnectDefaults.CallbackPath}?state=" + UrlEncoder.Default.Encode(state),
+                    $".AspNetCore.Correlation.{QQConnectDefaults.AuthenticationScheme}.{correlationValue}=N"));
             Assert.Equal("Code was not found.", error2.GetBaseException().Message);
         }
 
         [Fact]
         public async Task CodeInvalidCauseException()
         {
-            var stateFormat = new PropertiesDataFormat(new EphemeralDataProtectionProvider(NullLoggerFactory.Instance).CreateProtector("WeixinOpenTest"));
+            var stateFormat = new PropertiesDataFormat(new EphemeralDataProtectionProvider(NullLoggerFactory.Instance).CreateProtector("QQConnectTest"));
             var server = CreateServer(o =>
             {
                 ConfigureDefaults(o);
@@ -1130,20 +1139,20 @@ namespace UnitTests
             var correlationKey = ".xsrf";
             var correlationValue = "TestCorrelationId";
             properties.Items.Add(correlationKey, correlationValue);
+            properties.RedirectUri = "/ExternalLoginCallback";
             var state = stateFormat.Protect(properties);
 
-            var error3 = await Assert.ThrowsAnyAsync<Exception>(()
-                => server.SendAsync(
-                    "https://example.com/signin-weixinopen?code=TestCode&state=" + UrlEncoder.Default.Encode(state),
-                    $".AspNetCore.Correlation.{WeixinOpenDefaults.AuthenticationScheme}.{correlationValue}=N"));
-            Assert.StartsWith("OAuth token endpoint failure: ", error3.GetBaseException().Message);
-            Assert.Contains("invalid appid", error3.GetBaseException().Message);
+            var transaction = await server.SendAsync(
+                    $"https://example.com{QQConnectDefaults.CallbackPath}?code=TestCode&state=" + UrlEncoder.Default.Encode(state),
+                    $".AspNetCore.Correlation.{QQConnectDefaults.AuthenticationScheme}.{correlationValue}=N");
+            Assert.Equal(HttpStatusCode.Redirect, transaction.Response.StatusCode);
+            Assert.Equal("/ExternalLoginCallback", transaction.Response.Headers.GetValues("Location").First());
         }
 
         [Fact]
         public async Task CodeMockValid()
         {
-            var stateFormat = new PropertiesDataFormat(new EphemeralDataProtectionProvider(NullLoggerFactory.Instance).CreateProtector("WeixinOpenTest"));
+            var stateFormat = new PropertiesDataFormat(new EphemeralDataProtectionProvider(NullLoggerFactory.Instance).CreateProtector("QQConnectTest"));
             var server = CreateServer(o =>
             {
                 ConfigureDefaults(o);
@@ -1172,8 +1181,8 @@ namespace UnitTests
             var state = stateFormat.Protect(properties);
 
             var transaction = await server.SendAsync(
-                    "https://example.com/signin-weixinopen?code=TestCode&state=" + UrlEncoder.Default.Encode(state),
-                    $".AspNetCore.Correlation.{WeixinOpenDefaults.AuthenticationScheme}.{correlationValue}=N");
+                    $"https://example.com{QQConnectDefaults.CallbackPath}?code=TestCode&state=" + UrlEncoder.Default.Encode(state),
+                    $".AspNetCore.Correlation.{QQConnectDefaults.AuthenticationScheme}.{correlationValue}=N");
             Assert.Equal(HttpStatusCode.Redirect, transaction.Response.StatusCode);
             Assert.Equal("/ExternalLoginCallback", transaction.Response.Headers.GetValues("Location").First());
         }
@@ -1181,7 +1190,7 @@ namespace UnitTests
         [Fact]
         public async Task CanRedirectOnError()
         {
-            var stateFormat = new PropertiesDataFormat(new EphemeralDataProtectionProvider(NullLoggerFactory.Instance).CreateProtector("WeixinOpenTest"));
+            var stateFormat = new PropertiesDataFormat(new EphemeralDataProtectionProvider(NullLoggerFactory.Instance).CreateProtector("QQConnectTest"));
             var server = CreateServer(o =>
             {
                 ConfigureDefaults(o);
@@ -1196,9 +1205,9 @@ namespace UnitTests
                 };
             });
 
-            //Post a message to the WeixinOpen middleware
+            //Post a message to the QQConnect middleware
             var transaction = await server.SendAsync(
-                "https://example.com/signin-weixinopen?code=TestCode");
+                $"https://example.com{QQConnectDefaults.CallbackPath}?code=TestCode");
 
             Assert.Equal(HttpStatusCode.Redirect, transaction.Response.StatusCode);
             Assert.Equal("/error?FailureMessage=" + UrlEncoder.Default.Encode("The oauth state was missing or invalid."),
@@ -1208,7 +1217,7 @@ namespace UnitTests
         [Fact]
         public async Task AuthenticateAutomaticWhenAlreadySignedInSucceeds()
         {
-            var stateFormat = new PropertiesDataFormat(new EphemeralDataProtectionProvider(NullLoggerFactory.Instance).CreateProtector("WeixinOpenTest"));
+            var stateFormat = new PropertiesDataFormat(new EphemeralDataProtectionProvider(NullLoggerFactory.Instance).CreateProtector("QQConnectTest"));
             var server = CreateServer(o =>
             {
                 ConfigureDefaults(o);
@@ -1227,12 +1236,12 @@ namespace UnitTests
             properties.RedirectUri = "/me";
             var state = stateFormat.Protect(properties);
             var transaction = await server.SendAsync(
-                "https://example.com/signin-weixinopen?code=TestCode&state=" + UrlEncoder.Default.Encode(state),
-                $".AspNetCore.Correlation.WeixinOpen.{correlationValue}={correlationMarker}");
+                $"https://example.com{QQConnectDefaults.CallbackPath}?code=TestCode&state=" + UrlEncoder.Default.Encode(state),
+                $".AspNetCore.Correlation.QQConnect.{correlationValue}={correlationMarker}");
             Assert.Equal(HttpStatusCode.Redirect, transaction.Response.StatusCode);
             Assert.Equal("/me", transaction.Response.Headers.GetValues("Location").First());
             Assert.Equal(2, transaction.SetCookie.Count);
-            Assert.Contains($".AspNetCore.Correlation.WeixinOpen.{correlationValue}", transaction.SetCookie[0]); // Delete
+            Assert.Contains($".AspNetCore.Correlation.QQConnect.{correlationValue}", transaction.SetCookie[0]); // Delete
             Assert.Contains(".AspNetCore." + TestExtensions.CookieAuthenticationScheme, transaction.SetCookie[1]);
 
             var authCookie = transaction.AuthenticationCookieValue;
@@ -1246,9 +1255,9 @@ namespace UnitTests
         }
 
         [Fact]
-        public async Task AuthenticateWeixinOpenWhenAlreadySignedInSucceeds()
+        public async Task AuthenticateQQConnectWhenAlreadySignedInSucceeds()
         {
-            var stateFormat = new PropertiesDataFormat(new EphemeralDataProtectionProvider(NullLoggerFactory.Instance).CreateProtector("WeixinOpenTest"));
+            var stateFormat = new PropertiesDataFormat(new EphemeralDataProtectionProvider(NullLoggerFactory.Instance).CreateProtector("QQConnectTest"));
             var server = CreateServer(o =>
             {
                 ConfigureDefaults(o);
@@ -1266,16 +1275,16 @@ namespace UnitTests
             properties.RedirectUri = "/me";
             var state = stateFormat.Protect(properties);
             var transaction = await server.SendAsync(
-                "https://example.com/signin-weixinopen?code=TestCode&state=" + UrlEncoder.Default.Encode(state),
-                $".AspNetCore.Correlation.WeixinOpen.{correlationValue}=N");
+                $"https://example.com{QQConnectDefaults.CallbackPath}?code=TestCode&state=" + UrlEncoder.Default.Encode(state),
+                $".AspNetCore.Correlation.QQConnect.{correlationValue}=N");
             Assert.Equal(HttpStatusCode.Redirect, transaction.Response.StatusCode);
             Assert.Equal("/me", transaction.Response.Headers.GetValues("Location").First());
             Assert.Equal(2, transaction.SetCookie.Count);
-            Assert.Contains($".AspNetCore.Correlation.WeixinOpen.{correlationValue}", transaction.SetCookie[0]); // Delete
+            Assert.Contains($".AspNetCore.Correlation.QQConnect.{correlationValue}", transaction.SetCookie[0]); // Delete
             Assert.Contains(".AspNetCore." + TestExtensions.CookieAuthenticationScheme, transaction.SetCookie[1]);
 
             var authCookie = transaction.AuthenticationCookieValue;
-            transaction = await server.SendAsync("https://example.com/authenticate-weixinopen", authCookie);
+            transaction = await server.SendAsync("https://example.com/authenticate-QQConnect", authCookie);
             Assert.Equal(HttpStatusCode.OK, transaction.Response.StatusCode);
             Assert.Equal("Test Name", transaction.FindClaimValue(ClaimTypes.Name));
             Assert.Equal("Test User ID", transaction.FindClaimValue(ClaimTypes.NameIdentifier));
@@ -1285,9 +1294,9 @@ namespace UnitTests
         }
 
         [Fact]
-        public async Task AuthenticateFacebookWhenAlreadySignedWithWeixinOpenReturnsNull()
+        public async Task AuthenticateFacebookWhenAlreadySignedWithQQConnectReturnsNull()
         {
-            var stateFormat = new PropertiesDataFormat(new EphemeralDataProtectionProvider(NullLoggerFactory.Instance).CreateProtector("WeixinOpenTest"));
+            var stateFormat = new PropertiesDataFormat(new EphemeralDataProtectionProvider(NullLoggerFactory.Instance).CreateProtector("QQConnectTest"));
             var server = CreateServer(o =>
             {
                 ConfigureDefaults(o);
@@ -1305,12 +1314,12 @@ namespace UnitTests
             properties.RedirectUri = "/me";
             var state = stateFormat.Protect(properties);
             var transaction = await server.SendAsync(
-                "https://example.com/signin-weixinopen?code=TestCode&state=" + UrlEncoder.Default.Encode(state),
-                $".AspNetCore.Correlation.WeixinOpen.{correlationValue}=N");
+                $"https://example.com{QQConnectDefaults.CallbackPath}?code=TestCode&state=" + UrlEncoder.Default.Encode(state),
+                $".AspNetCore.Correlation.QQConnect.{correlationValue}=N");
             Assert.Equal(HttpStatusCode.Redirect, transaction.Response.StatusCode);
             Assert.Equal("/me", transaction.Response.Headers.GetValues("Location").First());
             Assert.Equal(2, transaction.SetCookie.Count);
-            Assert.Contains($".AspNetCore.Correlation.WeixinOpen.{correlationValue}", transaction.SetCookie[0]); // Delete
+            Assert.Contains($".AspNetCore.Correlation.QQConnect.{correlationValue}", transaction.SetCookie[0]); // Delete
             Assert.Contains(".AspNetCore." + TestExtensions.CookieAuthenticationScheme, transaction.SetCookie[1]);
 
             var authCookie = transaction.AuthenticationCookieValue;
@@ -1320,9 +1329,9 @@ namespace UnitTests
         }
 
         [Fact]
-        public async Task ChallengeFacebookWhenAlreadySignedWithWeixinOpenSucceeds()
+        public async Task ChallengeFacebookWhenAlreadySignedWithQQConnectSucceeds()
         {
-            var stateFormat = new PropertiesDataFormat(new EphemeralDataProtectionProvider(NullLoggerFactory.Instance).CreateProtector("WeixinOpenTest"));
+            var stateFormat = new PropertiesDataFormat(new EphemeralDataProtectionProvider(NullLoggerFactory.Instance).CreateProtector("QQConnectTest"));
             var server = CreateServer(o =>
             {
                 ConfigureDefaults(o);
@@ -1340,12 +1349,12 @@ namespace UnitTests
             properties.RedirectUri = "/me";
             var state = stateFormat.Protect(properties);
             var transaction = await server.SendAsync(
-                "https://example.com/signin-weixinopen?code=TestCode&state=" + UrlEncoder.Default.Encode(state),
-                $".AspNetCore.Correlation.WeixinOpen.{correlationValue}=N");
+                $"https://example.com{QQConnectDefaults.CallbackPath}?code=TestCode&state=" + UrlEncoder.Default.Encode(state),
+                $".AspNetCore.Correlation.QQConnect.{correlationValue}=N");
             Assert.Equal(HttpStatusCode.Redirect, transaction.Response.StatusCode);
             Assert.Equal("/me", transaction.Response.Headers.GetValues("Location").First());
             Assert.Equal(2, transaction.SetCookie.Count);
-            Assert.Contains($".AspNetCore.Correlation.WeixinOpen.{correlationValue}", transaction.SetCookie[0]); // Delete
+            Assert.Contains($".AspNetCore.Correlation.QQConnect.{correlationValue}", transaction.SetCookie[0]); // Delete
             Assert.Contains(".AspNetCore." + TestExtensions.CookieAuthenticationScheme, transaction.SetCookie[1]);
 
             var authCookie = transaction.AuthenticationCookieValue;
@@ -1360,7 +1369,7 @@ namespace UnitTests
             {
                 Sender = req =>
                 {
-                    //if (req.RequestUri.AbsoluteUri.StartsWith("https://open.weixin.qq.com/connect/qrconnect"))
+                    //if (req.RequestUri.AbsoluteUri.StartsWith(QQConnectDefaults.AuthorizationEndpoint))
                     //{
                     //    var origin = System.Web.HttpUtility.ParseQueryString(req.RequestUri.Query);
                     //    var redirect_uri = (string)origin?.GetValues("redirect_uri")?.GetValue(0);
@@ -1376,42 +1385,68 @@ namespace UnitTests
                     //    return res;
                     //}
                     //else
-                    if (req.RequestUri.AbsoluteUri.StartsWith("https://api.weixin.qq.com/sns/oauth2/access_token"))
+                    if (req.RequestUri.AbsoluteUri.StartsWith(QQConnectDefaults.TokenEndpoint))
                     {
-                        return ReturnJsonResponse(new
+                        return ReturnCallbackJsonResponse(new
                         {
                             access_token = "Test Access Token",
                             expires_in = 3600,
-                            refresh_token = "Test Refresh Token",
-                            openid = "Test Open ID",
-                            scope = "Test Scope",
-                            unionid = "Test User ID"
-                            //token_type = "Bearer"
+                            refresh_token = "Test Refresh Token"
                         });
                     }
-                    else if (req.RequestUri.GetComponents(UriComponents.SchemeAndServer | UriComponents.Path, UriFormat.UriEscaped) == "https://api.weixin.qq.com/sns/userinfo")
+                    else if (req.RequestUri.AbsoluteUri.StartsWith(QQConnectDefaults.OpenIdEndpoint))
                     {
-                        return ReturnJsonResponse(new
+                        return ReturnCallbackJsonResponse(new
                         {
-                            openid = "Test Open ID",
+                            client_id = "Test Client ID",
+                            openid = "Test User ID"
+                        });
+                    }
+                    else if (req.RequestUri.AbsoluteUri.StartsWith(QQConnectDefaults.UserInformationEndpoint))
+                    {
+                        return ReturnCallbackJsonResponse(new
+                        {
+                            ret = 0,
+                            msg = "",
                             nickname = "Test Name",
-                            sex = 1,
-                            province = "Test Province",
-                            city = "Test City",
-                            country = "Test Country",
-                            headimgurl = "http://wx.qlogo.cn/mmopen/g3MonUZtNHkdmzicIlibx6iaFqAc56vxLSUfpb6n5WKSYVY0ChQKkiaJSgQ1dZuTOgvLLrhJbERQQ4eMsv84eavHiaiceqxibJxCfHe/0",
-                            privilege = new[]
-                                {
-                                    "PRIVILEGE1",
-                                    "PRIVILEGE2"
-                                },
-                            unionid = "Test User ID"
+                            figureurl = "http://qzapp.qlogo.cn/qzapp/111111/942FEA70050EEAFBD4DCE2C1FC775E56/30",
+                            figureurl_1 = "http://qzapp.qlogo.cn/qzapp/111111/942FEA70050EEAFBD4DCE2C1FC775E56/50",
+                            figureurl_2 = "http://qzapp.qlogo.cn/qzapp/111111/942FEA70050EEAFBD4DCE2C1FC775E56/100",
+                            figureurl_qq_1 = "http://q.qlogo.cn/qqapp/100312990/DE1931D5330620DBD07FB4A5422917B6/40",
+                            figureurl_qq_2 = "http://q.qlogo.cn/qqapp/100312990/DE1931D5330620DBD07FB4A5422917B6/100",
+                            gender = "男",
+                            is_yellow_vip = "1",
+                            vip = "1",
+                            yellow_vip_level = "7",
+                            level = "7",
+                            is_yellow_year_vip = "1"
                         });
                     }
 
                     throw new NotImplementedException(req.RequestUri.AbsoluteUri);
                 }
             };
+        }
+
+        private static HttpResponseMessage ReturnFormResponse((string access_token, int expires_in, string refresh_token) content, HttpStatusCode code = HttpStatusCode.OK)
+        {
+            var res = new HttpResponseMessage(code);
+            var text = $"{content.access_token}&{content.expires_in}&{content.refresh_token}";
+            res.Content = new StringContent(text, Encoding.UTF8);
+            return res;
+        }
+
+        private static HttpResponseMessage ReturnCallbackJsonResponse(object content, HttpStatusCode code = HttpStatusCode.OK)
+        {
+            var json = JsonConvert.SerializeObject(content);
+            return ReturnStringResponse($"callback( {json} );");
+        }
+
+        private static HttpResponseMessage ReturnStringResponse(string content, HttpStatusCode code = HttpStatusCode.OK)
+        {
+            var res = new HttpResponseMessage(code);
+            res.Content = new StringContent(content, Encoding.UTF8);
+            return res;
         }
 
         private static HttpResponseMessage ReturnJsonResponse(object content, HttpStatusCode code = HttpStatusCode.OK)
@@ -1436,7 +1471,7 @@ namespace UnitTests
             }
         }
 
-        private static TestServer CreateServer(Action<WeixinOpenOptions> configureOptions, Func<HttpContext, Task> testpath = null)
+        private static TestServer CreateServer(Action<QQConnectOptions> configureOptions, Func<HttpContext, Task> testpath = null)
         {
             var builder = new WebHostBuilder()
                 .Configure(app =>
@@ -1454,9 +1489,13 @@ namespace UnitTests
                         {
                             await context.ChallengeAsync(FacebookDefaults.AuthenticationScheme);
                         }
-                        else if (req.Path == new PathString("/challenge-weixinopen"))
+                        else if (req.Path == new PathString("/challenge-QQConnect"))
                         {
-                            await context.ChallengeAsync(WeixinOpenDefaults.AuthenticationScheme);
+                            await context.ChallengeAsync(QQConnectDefaults.AuthenticationScheme);
+                        }
+                        else if (req.Path == new PathString("/qq")) //http://demo.auth.myvas.com/qq
+                        {
+                            await context.ChallengeAsync(QQConnectDefaults.AuthenticationScheme);
                         }
                         else if (req.Path == new PathString("/tokens"))
                         {
@@ -1473,9 +1512,9 @@ namespace UnitTests
                             var result = await context.AuthenticateAsync(TestExtensions.CookieAuthenticationScheme);
                             res.Describe(result.Principal);
                         }
-                        else if (req.Path == new PathString("/authenticate-weixinopen"))
+                        else if (req.Path == new PathString("/authenticate-QQConnect"))
                         {
-                            var result = await context.AuthenticateAsync(WeixinOpenDefaults.AuthenticationScheme);
+                            var result = await context.AuthenticateAsync(QQConnectDefaults.AuthenticationScheme);
                             res.Describe(result?.Principal);
                         }
                         else if (req.Path == new PathString("/authenticate-facebook"))
@@ -1490,25 +1529,25 @@ namespace UnitTests
                         else if (req.Path == new PathString("/unauthorized"))
                         {
                             // Simulate Authorization failure
-                            var result = await context.AuthenticateAsync(WeixinOpenDefaults.AuthenticationScheme);
-                            await context.ChallengeAsync(WeixinOpenDefaults.AuthenticationScheme);
+                            var result = await context.AuthenticateAsync(QQConnectDefaults.AuthenticationScheme);
+                            await context.ChallengeAsync(QQConnectDefaults.AuthenticationScheme);
                         }
                         else if (req.Path == new PathString("/unauthorized-auto"))
                         {
-                            var result = await context.AuthenticateAsync(WeixinOpenDefaults.AuthenticationScheme);
-                            await context.ChallengeAsync(WeixinOpenDefaults.AuthenticationScheme);
+                            var result = await context.AuthenticateAsync(QQConnectDefaults.AuthenticationScheme);
+                            await context.ChallengeAsync(QQConnectDefaults.AuthenticationScheme);
                         }
                         else if (req.Path == new PathString("/signin"))
                         {
-                            await Assert.ThrowsAsync<InvalidOperationException>(() => context.SignInAsync(WeixinOpenDefaults.AuthenticationScheme, new ClaimsPrincipal()));
+                            await Assert.ThrowsAsync<InvalidOperationException>(() => context.SignInAsync(QQConnectDefaults.AuthenticationScheme, new ClaimsPrincipal()));
                         }
                         else if (req.Path == new PathString("/signout"))
                         {
-                            await Assert.ThrowsAsync<InvalidOperationException>(() => context.SignOutAsync(WeixinOpenDefaults.AuthenticationScheme));
+                            await Assert.ThrowsAsync<InvalidOperationException>(() => context.SignOutAsync(QQConnectDefaults.AuthenticationScheme));
                         }
                         else if (req.Path == new PathString("/forbid"))
                         {
-                            await context.ForbidAsync(WeixinOpenDefaults.AuthenticationScheme);
+                            await context.ForbidAsync(QQConnectDefaults.AuthenticationScheme);
                         }
                         else if (testpath != null)
                         {
@@ -1524,8 +1563,8 @@ namespace UnitTests
                 {
                     services.AddTransient<IClaimsTransformation, ClaimsTransformer>();
                     services.AddAuthentication(TestExtensions.CookieAuthenticationScheme)
-                        .AddCookie(TestExtensions.CookieAuthenticationScheme, o => o.ForwardChallenge = WeixinOpenDefaults.AuthenticationScheme)
-                        .AddWeixinOpen(configureOptions)
+                        .AddCookie(TestExtensions.CookieAuthenticationScheme, o => o.ForwardChallenge = QQConnectDefaults.AuthenticationScheme)
+                        .AddQQConnect(configureOptions)
                         .AddFacebook(o =>
                         {
                             o.ClientId = "Test Facebook ClientId";

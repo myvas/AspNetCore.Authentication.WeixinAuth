@@ -85,6 +85,7 @@ namespace Demo.Controllers
 
                 ExternalLoginInfo = await _signInManager.GetExternalLoginInfoAsync()
             };
+
             return View(model);
         }
     }

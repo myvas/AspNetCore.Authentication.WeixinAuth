@@ -17,14 +17,17 @@ namespace AspNetCore.Authentication.QQConnect
 {
     public class QQConnectHandler : OAuthHandler<QQConnectOptions>
     {
-        ILogger<QQConnectHandler> _logger;
+        private readonly IQQConnectApi _api;
 
         public QQConnectHandler(
+            IQQConnectApi api,
             IOptionsMonitor<QQConnectOptions> options,
-            ILoggerFactory loggerFactory, UrlEncoder encoder, ISystemClock clock)
+            ILoggerFactory loggerFactory,
+            UrlEncoder encoder,
+            ISystemClock clock)
             : base(options, loggerFactory, encoder, clock)
         {
-            _logger = loggerFactory.CreateLogger<QQConnectHandler>();
+            _api = api ?? throw new ArgumentNullException(nameof(api));
         }
 
         protected override async Task<AuthenticationTicket> CreateTicketAsync(
@@ -33,40 +36,13 @@ namespace AspNetCore.Authentication.QQConnect
             OAuthTokenResponse tokens)
         {
             // Get the openId and clientId
-            var openIdParameters = new Dictionary<string, string>()
-            {
-                { "access_token", tokens.AccessToken}
-            };
-            var requestUrl = QueryHelpers.AddQueryString(Options.OpenIdEndpoint, openIdParameters);
-            var response = await Backchannel.GetAsync(requestUrl, Context.RequestAborted);
-            if (!response.IsSuccessStatusCode)
-            {
-                throw new HttpRequestException($"An error occurred when retrieving user openid ({response.StatusCode}).");
-            }
-            var content = await response.Content.ReadAsStringAsync();
-            var contentRegex = new Regex(@"callback\((.*)\);", RegexOptions.Compiled);
-            var match = contentRegex.Match(content);
-            if (!match.Success)
-            {
-                var msg = $"获取openid错误,content:{content}";
-                _logger.LogError(msg);
-                throw new HttpRequestException($"An error occurred when parsing response message for user openid. Please contact us if the spec changed.");
-            }
-            var payload = JObject.Parse(match.Groups[1].Value);
+            var payload = await _api.GetOpenId(Options.Backchannel, Options.OpenIdEndpoint, tokens.AccessToken, Context.RequestAborted);
             //{“client_id”:”YOUR_APPID”,”openid”:”YOUR_OPENID”}
             var clientId = payload.Value<string>("client_id");
             var openid = payload.Value<string>("openid");
 
             // Get the UserInfo
-            var getUserInfoParameters = new Dictionary<string, string>()
-            {
-                {"access_token", tokens.AccessToken},
-                {"oauth_consumer_key", clientId},
-                {"openid", openid }
-            };
-            var userInfoRequestUrl = QueryHelpers.AddQueryString(Options.UserInformationEndpoint, getUserInfoParameters);
-            var userInfoRsp = await Backchannel.GetAsync(userInfoRequestUrl, Context.RequestAborted);
-            var userInfoPayload = JObject.Parse(await userInfoRsp.Content.ReadAsStringAsync());
+            var userInfoPayload = await _api.GetUserInfo(Options.Backchannel, Options.UserInformationEndpoint, tokens.AccessToken, openid, clientId, Context.RequestAborted);
             userInfoPayload.Add("openid", openid);
             userInfoPayload.Add("client_id", clientId);
 
@@ -84,24 +60,26 @@ namespace AspNetCore.Authentication.QQConnect
             queryStrings.Add("client_id", Options.ClientId);
             queryStrings.Add("redirect_uri", redirectUri);
 
-            AddQueryString(queryStrings, properties, QQConnectChallengeProperties.ScopeKey, FormatScope, Options.Scope);
-            //if (string.Compare(Options.DisplayStyle, "mobile", true) == 0)
-            {
-                AddQueryString(queryStrings, properties, QQConnectChallengeProperties.DisplayStyleKey, Options.DisplayStyle);
-            }
-            AddQueryString(queryStrings, properties, QQConnectChallengeProperties.LoginHintKey);
+            var scope = PickAuthenticationProperty(properties, QQConnectChallengeProperties.ScopeKey, FormatScope, Options.Scope);
+            var display = PickAuthenticationProperty(properties, QQConnectChallengeProperties.DisplayStyleKey, Options.DisplayStyle);
 
             var state = Options.StateDataFormat.Protect(properties);
+
             queryStrings.Add("state", state);
+            queryStrings.Add(QQConnectChallengeProperties.ScopeKey, scope);
+            queryStrings.Add(QQConnectChallengeProperties.DisplayStyleKey, display);
 
             var authorizationEndpoint = QueryHelpers.AddQueryString(Options.AuthorizationEndpoint, queryStrings);
             return authorizationEndpoint;
         }
 
-        #region AddQueryString
+        protected override string FormatScope(IEnumerable<string> scopes)
+            => string.Join(",", scopes); // WeixinOpen comma separated
+
+        #region Pick new value from AuthenticationProperties
+
         // Copy from Microsoft.AspNetCore.Authentication.Google/GoogleHandler.cs
-        private void AddQueryString<T>(
-            IDictionary<string, string> queryStrings,
+        private string PickAuthenticationProperty<T>(
             AuthenticationProperties properties,
             string name,
             Func<T, string> formatter,
@@ -121,18 +99,14 @@ namespace AspNetCore.Authentication.QQConnect
             // Remove the parameter from AuthenticationProperties so it won't be serialized into the state
             properties.Items.Remove(name);
 
-            if (value != null)
-            {
-                queryStrings[name] = value;
-            }
+            return value;
         }
 
-        private void AddQueryString(
-            IDictionary<string, string> queryStrings,
+        private string PickAuthenticationProperty(
             AuthenticationProperties properties,
             string name,
             string defaultValue = null)
-            => AddQueryString(queryStrings, properties, name, x => x, defaultValue);
+            => PickAuthenticationProperty(properties, name, x => x, defaultValue);
         #endregion
 
         /// <summary>
@@ -143,35 +117,10 @@ namespace AspNetCore.Authentication.QQConnect
         /// <returns></returns>
         protected override async Task<OAuthTokenResponse> ExchangeCodeAsync(string code, string redirectUri)
         {
-            var tokenRequestParameters = new Dictionary<string, string>()
-            {
-                { "client_id", Options.ClientId },
-                { "redirect_uri", redirectUri },
-                { "client_secret", Options.ClientSecret },
-                { "code", code },
-                { "grant_type", "authorization_code" },
-            };
-
-            var requestUrl = QueryHelpers.AddQueryString(Options.TokenEndpoint, tokenRequestParameters);
-
-            var response = await Backchannel.GetAsync(requestUrl, Context.RequestAborted);
-            if (response.IsSuccessStatusCode)
-            {
-                var content = await response.Content.ReadAsStringAsync();
-                //access_token=FE04************************CCE2&expires_in=7776000&refresh_token=88E4************************BE14
-                var payload = ParseQuery(content);
-                payload.Add("token_type", ""); //Unkown type!
-                return OAuthTokenResponse.Success(payload);
-            }
-            else
-            {
-                var error = "OAuth token endpoint failure: " + await Display(response);
-                //_logger.LogError(error);
-                return OAuthTokenResponse.Failed(new Exception(error));
-            }
+            return await _api.GetToken(Options.Backchannel, Options.TokenEndpoint, Options.AppId, Options.AppKey, code, redirectUri, Context.RequestAborted);
         }
 
-        private JObject ParseQuery(string query)
+        private static JObject ParseQuery(string query)
         {
             var jObject = new JObject();
 

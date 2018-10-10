@@ -1,5 +1,6 @@
 ﻿using AspNetCore.Authentication.QQConnect;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using System;
 
 namespace Microsoft.Extensions.DependencyInjection
@@ -25,6 +26,8 @@ namespace Microsoft.Extensions.DependencyInjection
             {
                 throw new ArgumentNullException(nameof(builder));
             }
+
+            builder.Services.TryAddTransient<IQQConnectApi, QQConnectApi>();
 
             return builder.AddOAuth<QQConnectOptions, QQConnectHandler>(authenticationScheme, displayName, setupAction);
         }
