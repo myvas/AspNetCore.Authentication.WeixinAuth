@@ -57,16 +57,19 @@ namespace Demo
                 {
                     options.AppId = _configuration["WeixinOpen:AppId"];
                     options.AppSecret = _configuration["WeixinOpen:AppSecret"];
+                    options.SaveTokens = true;
                 })
                 .AddWeixinAuth(options =>
                 {
                     options.AppId = _configuration["WeixinAuth:AppId"];
                     options.AppSecret = _configuration["WeixinAuth:AppSecret"];
+                    //options.SaveTokens = true;
                 })
                 .AddQQConnect(options =>
                 {
                     options.AppId = _configuration["QQConnect:AppId"];
                     options.AppKey = _configuration["QQConnect:AppKey"];
+                    //options.SaveTokens = true;
 
                     QQConnectScopes.TryAdd(options.Scope,
                         QQConnectScopes.Items.get_user_info,

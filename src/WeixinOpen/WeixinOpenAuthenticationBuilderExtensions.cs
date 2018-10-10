@@ -21,35 +21,20 @@ namespace Microsoft.Extensions.DependencyInjection
         public static AuthenticationBuilder AddWeixinOpen(this AuthenticationBuilder builder, string authenticationScheme, Action<WeixinOpenOptions> setupAction)
             => builder.AddWeixinOpen(authenticationScheme, WeixinOpenDefaults.DisplayName, setupAction);
 
-        /// <summary>
-        /// Authenticate users using Weixin OAuth for Open
-        /// </summary>
-        /// <param name="builder">The <see cref="IApplicationBuilder"/> passed to the configuration method</param>
-        /// <param name="options">Middleware configuration options</param>
-        /// <returns>The updated <see cref="IApplicationBuilder"/></returns>
         public static AuthenticationBuilder AddWeixinOpen(
             this AuthenticationBuilder builder,
             string authenticationScheme,
             string displayName,
             Action<WeixinOpenOptions> setupAction)
         {
-            Action<WeixinOpenOptions> runningSetupAction = options =>
+            if (builder == null)
             {
-                options.ClaimsIssuer = WeixinOpenDefaults.ClaimsIssuer;
-                options.CallbackPath = WeixinOpenDefaults.CallbackPath;
-                options.AuthorizationEndpoint = WeixinOpenDefaults.AuthorizationEndpoint;
-                options.TokenEndpoint = WeixinOpenDefaults.TokenEndpoint;
-                options.UserInformationEndpoint = WeixinOpenDefaults.UserInformationEndpoint;
-            };
-
-            if (setupAction != null)
-            {
-                runningSetupAction += setupAction;
+                throw new ArgumentNullException(nameof(builder));
             }
 
-            builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<IPostConfigureOptions<WeixinOpenOptions>, WeixinOpenPostConfigureOptions<WeixinOpenOptions>>());
+            builder.Services.TryAddTransient<IWeixinOpenApi, WeixinOpenApi>();
 
-            return builder.AddRemoteScheme<WeixinOpenOptions, WeixinOpenHandler<WeixinOpenOptions>>(authenticationScheme, displayName, runningSetupAction);
+            return builder.AddOAuth<WeixinOpenOptions, WeixinOpenHandler>(authenticationScheme, displayName, setupAction);
         }
     }
 }

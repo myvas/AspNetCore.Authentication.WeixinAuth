@@ -1,4 +1,4 @@
-﻿@model  UserInfoViewModel
+﻿@model UserInfoViewModel
 
 @{
     ViewData["Title"] = "UserInfo";
@@ -6,22 +6,93 @@
 
 <h2>@ViewData["Title"]</h2>
 
-Hello @(Model.UserName ?? "anonymous") @(Model.IsAuthenticated ? "(Authenticated)" : "(Not Authenticated)")  <br />
-
-<div>
-    --- Claims ---<br />
-    @foreach (var claim in Model.Claims)
-    {
-        <p>@claim.Type : @claim.Value </p><br />
-    }
-</div>
+<div class="text-danger">Hello @(Model.User?.Identity?.Name ?? "anonymous") @(Model.User?.Identity?.IsAuthenticated ?? false ? "(Authenticated)" : "(Not Authenticated)")  </div>
 <hr />
-<div>
-    --- Tokens ---<br />
-    Access Token: @Model.AccessToken <br />
-    Refresh Token: @Model.RefreshToken <br />
-    Token Type: @Model.TokenType <br />
-    Expires At: @Model.ExpiresAt <br />
-</div>
+
+<h3>--- Tokens ---</h3>
+@{
+    <div>Access Token: @Model.AccessToken </div>
+    <div>Refresh Token: @Model.RefreshToken </div>
+    <div>Token Type: @Model.TokenType </div>
+    <div>Expires At: @Model.ExpiresAt </div>
+}
+<hr />
+
+<h3>--- User ---</h3>
+@if (Model.User != null)
+{
+    <div class="text-success">
+        <h4>--- User.Identity</h4>
+        @if (Model.User.Identity != null)
+        {
+            <div>Name: @Model.User.Identity.Name </div>
+            <div>IsAuthenticated: @Model.User.Identity.IsAuthenticated </div>
+            <div>AuthenticationType: @Model.User.Identity.AuthenticationType </div>
+        }
+
+        <h4>--- User.Claims ---</h4>
+        @foreach (var claim in Model.User.Claims)
+        {
+            <div>@claim.Type : @claim.Value</div>
+        }
+    </div>
+
+    <h4>--- User.Identities ---</h4>
+    foreach (var identity in Model.User.Identities)
+    {
+        <h5>--- User.Identities[i] ---</h5>
+        <div>
+            Name: @identity.Name <br />
+            IsAuthenticated: @identity.IsAuthenticated <br />
+            AuthenticationType: @identity.AuthenticationType <br />
+            Label: @identity.Label <br />
+            NameClaimType: @identity.NameClaimType <br />
+            RoleClaimType: @identity.RoleClaimType <br />
+        </div>
+
+        <h5>--- User.Identities[i].Claims ---</h5>
+        @foreach (var claim in identity.Claims)
+        {
+            <div>@claim.Type : @claim.Value </div>
+        }
+    }
+}
+
+<hr />
+<h3>--- ExternalLoginInfo ---</h3>
+@if (Model.ExternalLoginInfo != null)
+{
+    <div>LoginProvider: @Model.ExternalLoginInfo.LoginProvider</div>
+    <div>ProviderKey: @Model.ExternalLoginInfo.ProviderKey </div>
+    <div>ProviderDisplayName: @Model.ExternalLoginInfo.ProviderDisplayName </div>
+
+    <h4>--- ExternalLoginInfo.AuthenticationTokens ---</h4>
+    @foreach (var token in Model.ExternalLoginInfo.AuthenticationTokens)
+    {
+        <div>@token.Name : @token.Value </div>
+    }
+
+    <h4>--- ExternalLoginInfo.Principal ---</h4>
+    @if (Model.ExternalLoginInfo.Principal != null)
+    {
+        <h5>--- ExternalLoginInfo.Principal.Claims ---</h5>
+        @foreach (var claim in Model.ExternalLoginInfo.Principal.Claims)
+        {
+            <div>@claim.Type : @claim.Value </div>
+        }
+
+        <h5>--- ExternalLoginInfo.Principal.Identities ---</h5>
+        @foreach (var identity in Model.ExternalLoginInfo.Principal.Identities)
+        {
+            <div>Name: @identity.Name</div>
+
+            <h6>--- ExternalLoginInfo.Principal.Identities[i].Claims ---</h6>
+            foreach (var claim in identity.Claims)
+            {
+                <div>@claim.Type : @claim.Value </div>
+            }
+        }
+    }
+}
 
 
