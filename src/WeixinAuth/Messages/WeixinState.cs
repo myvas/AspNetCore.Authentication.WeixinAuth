@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace AspNetCore.Authentication.WeixinAuth.Messages
+namespace AspNetCore.Authentication.WeixinAuth
 {
     /// <summary>
     /// The WeixinOAuth request 'state' obtained from the request endpoint.

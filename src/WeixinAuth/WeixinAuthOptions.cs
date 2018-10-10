@@ -1,124 +1,109 @@
 ﻿using AspNetCore.Authentication.WeixinAuth.Events;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.OAuth;
 using Microsoft.AspNetCore.Authentication.OAuth.Claims;
 using System;
 using System.Collections.Generic;
+using System.Security.Claims;
 
 namespace AspNetCore.Authentication.WeixinAuth
 {
     /// <summary>
-    /// Configuration options for <see cref="WeixinOAuthMiddleware"/>.
+    /// Configuration options for <see cref="WeixinAuthHandler"/>.
     /// </summary>
-    public class WeixinAuthOptions : RemoteAuthenticationOptions
+    public class WeixinAuthOptions : OAuthOptions
     {
         /// <summary>
         /// Gets or sets the provider-assigned client id.
         /// </summary>
-        public string AppId { get; set; }
+        public string AppId { get => ClientId; set => ClientId = value; }
 
         /// <summary>
         /// Gets or sets the provider-assigned client secret.
         /// </summary>
-        public string AppSecret { get; set; }
-
-        /// <summary>
-        /// Gets or sets the URI where the client will be redirected to authenticate.
-        /// </summary>
-        public string AuthorizationEndpoint { get; set; }
-
-        /// <summary>
-        /// Gets or sets the URI the middleware will access to exchange the OAuth token.
-        /// </summary>
-        public string TokenEndpoint { get; set; }
-
-        /// <summary>
-        /// Gets or sets the URI the middleware will access to obtain the user information.
-        /// This value is not used in the default implementation, it is for use in custom implementations of
-        /// IOAuthAuthenticationEvents.Authenticated or OAuthAuthenticationHandler.CreateTicketAsync.
-        /// </summary>
-        public string UserInformationEndpoint { get; set; }
-
-        /// <summary>
-        /// Gets or sets the <see cref="IOAuthEvents"/> used to handle authentication events.
-        /// </summary>
-        public new WeixinAuthEvents<WeixinAuthOptions> Events
-        {
-            get => (WeixinAuthEvents<WeixinAuthOptions>)base.Events;
-            set => base.Events = value;
-        }
-
-        /// <summary>
-        /// A collection of claim actions used to select values from the json user data and create Claims.
-        /// </summary>
-        public ClaimActionCollection ClaimActions { get; } = new ClaimActionCollection();
-
-        /// <summary>
-        /// Gets the list of permissions to request.
-        /// </summary>
-        public ICollection<string> Scope { get; } = new HashSet<string>();
-
-        /// <summary>
-        /// Gets or sets the type used to secure data handled by the middleware.
-        /// </summary>
-        public ISecureDataFormat<AuthenticationProperties> StateDataFormat { get; set; }
+        public string AppSecret { get => ClientSecret; set => ClientSecret = value; }
 
         /// <summary>
         /// 国家地区语言版本，支持zh_CN 简体（默认），zh_TW 繁体，en 英语等三种。
         /// </summary>
         /// <remarks>在拉取用户信息时用到</remarks>
-        public string LanguageCode { get; set; } = "zh_CN";
+        public string LanguageCode { get; set; }
+
+        public string RefreshTokenEndpoint { get; set; }
+        public string ValidateTokenEndpoint { get; set; }
 
         /// <summary>
         /// 是否需要获取除微信OpenId外的其他用户信息（名称，头像等）
         /// </summary>
-        public bool GetClaimsFromUserInfoEndpoint { get; set; } = true;
+        public bool GetClaimsFromUserInfoEndpoint
+        {
+            get
+            {
+                return WeixinAuthScopes.Contains(Scope, WeixinAuthScopes.Items.snsapi_userinfo);
+            }
+            set
+            {
+                if (value)
+                {
+                    WeixinAuthScopes.TryAdd(Scope, WeixinAuthScopes.Items.snsapi_userinfo);
+                }
+                else
+                {
+                    Scope.Remove(WeixinAuthScopes.Items.snsapi_userinfo.ToString());
+                    if (Scope.Count < 1)
+                    {
+                        Scope.Add(WeixinAuthScopes.Items.snsapi_base.ToString());
+                    }
+                }
+            }
+        }
 
         public WeixinAuthOptions()
         {
-            Events = new WeixinAuthEvents<WeixinAuthOptions>();
-
-            ClaimsIssuer = WeixinAuthDefaults.ClaimsIssuer;
             CallbackPath = WeixinAuthDefaults.CallbackPath;
             AuthorizationEndpoint = WeixinAuthDefaults.AuthorizationEndpoint;
             TokenEndpoint = WeixinAuthDefaults.TokenEndpoint;
+            RefreshTokenEndpoint = WeixinAuthDefaults.RefreshTokenEndpoint;
+            ValidateTokenEndpoint = WeixinAuthDefaults.ValidateTokenEndpoint;
             UserInformationEndpoint = WeixinAuthDefaults.UserInformationEndpoint;
+            LanguageCode =  "zh_CN";
             WeixinAuthScopes.TryAdd(Scope, WeixinAuthScopes.Items.snsapi_base);
-            if (GetClaimsFromUserInfoEndpoint)
-            {
-                WeixinAuthScopes.TryAdd(Scope, WeixinAuthScopes.Items.snsapi_userinfo);
-            }
-
+            GetClaimsFromUserInfoEndpoint = true;
             SaveTokens = true;
-        }
 
+            ClaimsIssuer = WeixinAuthDefaults.ClaimsIssuer;
+
+            ClaimActions.MapJsonKey(WeixinAuthClaimTypes.UnionId, "unionid");
+            ClaimActions.MapJsonKey(WeixinAuthClaimTypes.OpenId, "openid");
+            ClaimActions.MapJsonKey(WeixinAuthClaimTypes.NickName, "nickname");
+            ClaimActions.MapJsonKey(WeixinAuthClaimTypes.Sex, "sex");
+            ClaimActions.MapJsonKey(WeixinAuthClaimTypes.Province, "province");
+            ClaimActions.MapJsonKey(WeixinAuthClaimTypes.City, "city");
+            ClaimActions.MapJsonKey(WeixinAuthClaimTypes.Country, "country");
+            ClaimActions.MapJsonKey(WeixinAuthClaimTypes.HeadImageUrl, "headimgurl");
+            ClaimActions.MapJsonKey(WeixinAuthClaimTypes.Privilege, "privilege");
+            ClaimActions.MapJsonKey(WeixinAuthClaimTypes.Scope, "scope");
+
+            ClaimActions.MapJsonKey(ClaimTypes.NameIdentifier, "unionid");
+            ClaimActions.MapJsonKey(ClaimTypes.Name, "nickname");
+            ClaimActions.MapJsonKey(ClaimTypes.Gender, "sex");
+            ClaimActions.MapJsonKey(ClaimTypes.Country, "country");
+            ClaimActions.MapJsonKey(ClaimTypes.StateOrProvince, "province");
+        }
+        
         public override void Validate()
         {
-            base.Validate();
-
-            if (string.IsNullOrEmpty(AppId))
+            if (string.IsNullOrEmpty(LanguageCode))
             {
-                throw new ArgumentException($"{nameof(AppId)} must be provided", nameof(AppId));
-            }
-
-            if (string.IsNullOrEmpty(AppSecret))
-            {
-                throw new ArgumentException($"{nameof(AppSecret)} must be provided", nameof(AppSecret));
-            }
-
-            if (string.IsNullOrEmpty(AuthorizationEndpoint))
-            {
-                throw new ArgumentException($"{nameof(AuthorizationEndpoint)} must be provided", nameof(AuthorizationEndpoint));
+                throw new ArgumentException($"{nameof(LanguageCode)} must be provided", nameof(LanguageCode));
             }
 
             if (string.IsNullOrEmpty(TokenEndpoint))
             {
-                throw new ArgumentException($"{nameof(TokenEndpoint)} must be provided", nameof(TokenEndpoint));
+                throw new ArgumentException($"{nameof(RefreshTokenEndpoint)} must be provided", nameof(RefreshTokenEndpoint));
             }
 
-            if (CallbackPath == null || !CallbackPath.HasValue)
-            {
-                throw new ArgumentException($"{nameof(CallbackPath)} must be provided", nameof(CallbackPath));
-            }
+            base.Validate();
         }
     }
 }

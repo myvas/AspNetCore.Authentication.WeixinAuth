@@ -12,14 +12,19 @@ namespace AspNetCore.Authentication.WeixinAuth
     public static class WeixinAuthenticationTokenNames
     {
         /// <summary>
-        /// weixin_openid
+        /// openid
         /// </summary>
-        public const string weixin_openid = "weixin_openid";
+        public const string openid = "weixin_openid";
 
         /// <summary>
-        /// weixin_scope
+        /// unionid
         /// </summary>
-        public const string weixin_scope = "weixin_scope";
+        public const string unionid = "unionid";
+
+        /// <summary>
+        /// scope
+        /// </summary>
+        public const string scope = "scope";
 
         /// <summary>
         /// access_token

@@ -1,26 +1,24 @@
 ﻿using Microsoft.AspNetCore.Authentication.OAuth;
-using Microsoft.Net.Http;
-using Microsoft.Extensions.Options;
-using System;
-using System.Collections.Generic;
-using System.Text;
-using Microsoft.AspNetCore.Http;
-using System.Net.Http;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
-using System.Threading.Tasks;
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json.Linq;
+using System;
+using System.Collections.Generic;
+using System.Net.Http;
+using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 
-namespace AspNetCore.Authentication.WeixinOpen
+namespace AspNetCore.Authentication.WeixinAuth
 {
-    public class WeixinOpenApi : IWeixinOpenApi
+    public class WeixinAuthApi : IWeixinAuthApi
     {
         public ILogger Logger { get; }
 
-        public WeixinOpenApi(IOptionsMonitor<WeixinOpenOptions> optionsAccessor, ILoggerFactory loggerFactory)
+        public WeixinAuthApi(IOptionsMonitor<WeixinAuthApi> optionsAccessor, ILoggerFactory loggerFactory)
         {
-            Logger = loggerFactory?.CreateLogger<WeixinOpenApi>() ?? throw new ArgumentNullException(nameof(loggerFactory));
+            Logger = loggerFactory?.CreateLogger<WeixinAuthApi>() ?? throw new ArgumentNullException(nameof(loggerFactory));
         }
 
         private static async Task<string> Display(HttpResponseMessage response)
@@ -33,9 +31,10 @@ namespace AspNetCore.Authentication.WeixinOpen
         }
 
         /// <summary>
-        /// 通过code换取网页授权access_token
+        /// 通过code换取网页授权access_token。通过code换取的是一个特殊的网页授权access_token,与基础支持中的access_token（该access_token用于调用其他接口）不同。
         /// </summary>
         /// <param name="refreshToken">refresh_token拥有较长的有效期（30天），当refresh_token失效的后，需要用户重新授权，所以，请开发者在refresh_token即将过期时（如第29天时），进行定时的自动刷新并保存好它。</param>
+        /// <remarks>尤其注意：由于公众号的secret和获取到的access_token安全级别都非常高，必须只保存在服务器，不允许传给客户端。后续刷新access_token、通过access_token获取用户信息等步骤，也必须从服务器发起。</remarks>
         /// <returns></returns>
         public async Task<OAuthTokenResponse> GetToken(HttpClient backchannel, string tokenEndpoint, string appId, string appSecret, string code, CancellationToken cancellationToken)
         {
@@ -67,9 +66,8 @@ namespace AspNetCore.Authentication.WeixinOpen
             //    "unionid": "o6_bmasdasdsad6_2sgVt7hMZOPfL"
             //}
             var payload = JObject.Parse(content);
-            var errcode = payload.Value<string>("errcode");
-            var errmsg = payload.Value<string>("errmsg");
-            if (!string.IsNullOrEmpty(errcode))
+            int errorCode = WeixinAuthHandlerHelper.GetErrorCode(payload);
+            if (errorCode != 0)
             {
                 var error = "OAuth token endpoint failure: " + await Display(response);
                 Logger.LogError(error);
@@ -79,6 +77,7 @@ namespace AspNetCore.Authentication.WeixinOpen
             //payload.Add("token_type", "");
             return OAuthTokenResponse.Success(payload);
         }
+
 
         /// <summary>
         /// 刷新或续期access_token使用。由于access_token有效期（目前为2个小时）较短，当access_token超时后，可以使用refresh_token进行刷新。
@@ -113,7 +112,8 @@ namespace AspNetCore.Authentication.WeixinOpen
             //    "scope":"SCOPE"
             //}
             var payload = JObject.Parse(content);
-            if (!string.IsNullOrEmpty(payload.Value<string>("errcode")))
+            int errorCode = WeixinAuthHandlerHelper.GetErrorCode(payload);
+            if (errorCode != 0)
             {
                 var error = "OAuth refresh token endpoint failure: " + await Display(response);
                 Logger.LogError(error);
@@ -176,7 +176,7 @@ namespace AspNetCore.Authentication.WeixinOpen
             var response = await backchannel.GetAsync(requestUrl, cancellationToken);
             if (!response.IsSuccessStatusCode)
             {
-                var error = "OAuth user information endpoint failure: " + await Display(response);
+                var error = "OAuth userinformation endpoint failure: " + await Display(response);
                 Logger.LogError(error);
                 return null;
             }
@@ -197,7 +197,9 @@ namespace AspNetCore.Authentication.WeixinOpen
             //    "unionid": " o6_bmasdasdsad6_2sgVt7hMZOPfL"
             //}
             var payload = JObject.Parse(content);
-            if (!string.IsNullOrEmpty(payload.Value<string>("errcode")))
+
+            int errorCode = WeixinAuthHandlerHelper.GetErrorCode(payload);
+            if (errorCode != 0)
             {
                 var error = "OAuth user information endpoint failure: " + await Display(response);
                 Logger.LogError(error);

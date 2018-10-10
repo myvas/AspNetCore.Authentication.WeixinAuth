@@ -13,53 +13,53 @@ namespace AspNetCore.Authentication.WeixinAuth
     {
         #region snsapi_base
         /// <summary>
-        /// urn:weixinoauth:openid, should be always equal to ClaimTypes.NameIdentifier
+        /// urn:weixin:openid, should be always equal to ClaimTypes.NameIdentifier
         /// </summary>
         public const string OpenId = "urn:weixin:openid";
 
         /// <summary>
-        /// urn:weixinoauth:scope
+        /// urn:weixin:scope
         /// </summary>
         public const string Scope = "urn:weixin:scope";
         #endregion
         #region snsapi_userinfo
         /// <summary>
-        /// urn:weixinoauth:nickname, should be always equal to ClaimTypes.Name
+        /// urn:weixin:nickname, should be always equal to ClaimTypes.Name
         /// </summary>
         public const string NickName = "urn:weixin:nickname";
 
         /// <summary>
-        /// urn:weixinoauth:headimgurl
+        /// urn:weixin:headimgurl
         /// </summary>
         public const string HeadImageUrl = "urn:weixin:headimgurl";
 
         /// <summary>
-        /// urn:weixinoauth:sex
+        /// urn:weixin:sex
         /// </summary>
-        public const string Gender = "urn:weixin:sex";
+        public const string Sex = "urn:weixin:sex";
 
         /// <summary>
-        /// urn:weixinoauth:country
+        /// urn:weixin:country
         /// </summary>
         public const string Country = "urn:weixin:country";
 
         /// <summary>
-        /// urn:weixinoauth:province
+        /// urn:weixin:province
         /// </summary>
         public const string Province = "urn:weixin:province";
 
         /// <summary>
-        /// urn:weixinoauth:city
+        /// urn:weixin:city
         /// </summary>
         public const string City = "urn:weixin:city";
 
         /// <summary>
-        /// urn:weixinoauth:unionid
+        /// urn:weixin:unionid
         /// </summary>
         public const string UnionId = "urn:weixin:unionid";
 
         /// <summary>
-        /// urn:weixinoauth:privilege，可能有多个Claims。
+        /// urn:weixin:privilege，可能有多个Claims。
         /// </summary>
         public const string Privilege = "urn:weixin:privilege";
         #endregion

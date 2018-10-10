@@ -6,7 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace AspNetCore.Authentication.WeixinAuth.Messages
+namespace AspNetCore.Authentication.WeixinAuth
 {
     /// <summary>
     /// Serializes and deserializes WeixinOAuth request and access tokens so that they can be used by other application components.

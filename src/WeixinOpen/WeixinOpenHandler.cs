@@ -59,18 +59,22 @@ namespace AspNetCore.Authentication.WeixinOpen
             queryStrings.Add("appid", Options.AppId);
             queryStrings.Add("redirect_uri", redirectUri);
             queryStrings.Add("response_type", "code");
-            AddQueryString(queryStrings, properties, "scope", FormatScope, Options.Scope);
-            queryStrings.Add("state", Options.StateDataFormat.Protect(properties));
+
+            var scope = PickAuthenticationProperty(properties, OAuthChallengeProperties.ScopeKey, FormatScope, Options.Scope);
+            queryStrings.Add(OAuthChallengeProperties.ScopeKey, scope);
+
+            var state = Options.StateDataFormat.Protect(properties);
+            queryStrings.Add("state", state);
 
             var authorizationUrl = QueryHelpers.AddQueryString(Options.AuthorizationEndpoint, queryStrings);
             return authorizationUrl + "#wechat_redirect";
         }
 
         protected override string FormatScope(IEnumerable<string> scopes)
-            => string.Join(",", scopes); // WeixinOpen comma separated
+            => string.Join(",", scopes); // // OAuth2 3.3 space separated, but weixin not
 
-        private void AddQueryString<T>(
-            IDictionary<string, string> queryStrings,
+        #region Pick value from AuthenticationProperties
+        private static string PickAuthenticationProperty<T>(
             AuthenticationProperties properties,
             string name,
             Func<T, string> formatter,
@@ -90,25 +94,23 @@ namespace AspNetCore.Authentication.WeixinOpen
             // Remove the parameter from AuthenticationProperties so it won't be serialized into the state
             properties.Items.Remove(name);
 
-            if (value != null)
-            {
-                queryStrings[name] = value;
-            }
+            return value;
         }
 
-        private void AddQueryString(
-            IDictionary<string, string> queryStrings,
+        private static string PickAuthenticationProperty(
             AuthenticationProperties properties,
             string name,
             string defaultValue = null)
-            => AddQueryString(queryStrings, properties, name, x => x, defaultValue);
+            => PickAuthenticationProperty(properties, name, x => x, defaultValue);
+        #endregion
+
 
         /// <summary>
         /// Step 2：通过code获取access_token
         /// </summary> 
         protected override async Task<OAuthTokenResponse> ExchangeCodeAsync(string code, string redirectUri)
         {
-            return await _api.GetToken(Options.Backchannel, Options.TokenEndpoint, Options.AppId, Options.AppSecret, code);
+            return await _api.GetToken(Options.Backchannel, Options.TokenEndpoint, Options.AppId, Options.AppSecret, code, Context.RequestAborted);
         }
 
         private static async Task<string> Display(HttpResponseMessage response)
@@ -153,7 +155,7 @@ namespace AspNetCore.Authentication.WeixinOpen
             var unionid = tokens.Response.Value<string>("unionid");
             var scope = tokens.Response.Value<string>("scope");
 
-            var userInfoPayload = await _api.GetUserInfo(Options.Backchannel, Options.UserInformationEndpoint, tokens.AccessToken, openid);
+            var userInfoPayload = await _api.GetUserInfo(Options.Backchannel, Options.UserInformationEndpoint, tokens.AccessToken, openid, Context.RequestAborted, LanguageCodes.zh_CN);
             userInfoPayload.Add("scope", scope);
 
             var context = new OAuthCreatingTicketContext(new ClaimsPrincipal(identity), properties, Context, Scheme, Options, Backchannel, tokens, userInfoPayload);

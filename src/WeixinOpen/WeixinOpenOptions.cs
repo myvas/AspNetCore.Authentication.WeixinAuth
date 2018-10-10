@@ -6,7 +6,7 @@ using System.Security.Claims;
 namespace AspNetCore.Authentication.WeixinOpen
 {
     /// <summary>
-    /// Configuration options for <see cref="WeixinOAuthMiddleware"/>.
+    /// Configuration options for <see cref="WeixinOpenHandler"/>.
     /// </summary>
     public class WeixinOpenOptions : OAuthOptions
     {
@@ -59,12 +59,7 @@ namespace AspNetCore.Authentication.WeixinOpen
             ClaimActions.MapJsonKey(ClaimTypes.Country, "country");
             ClaimActions.MapJsonKey(ClaimTypes.StateOrProvince, "province");
         }
-
-        /// <summary>
-        /// access_type. Set to 'offline' to request a refresh token.
-        /// </summary>
-        public string AccessType { get; set; }
-
+        
         public override void Validate()
         {
             if (string.IsNullOrEmpty(LanguageCode))

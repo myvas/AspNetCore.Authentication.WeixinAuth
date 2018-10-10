@@ -2,7 +2,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace AspNetCore.Authentication.WeixinAuth.Messages
+namespace AspNetCore.Authentication.WeixinAuth
 {
     public static class WeixinAuthHandlerHelper
     {

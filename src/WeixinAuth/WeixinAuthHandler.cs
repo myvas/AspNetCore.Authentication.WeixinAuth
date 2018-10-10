@@ -1,9 +1,9 @@
 ﻿using AspNetCore.Authentication.WeixinAuth.Events;
-using AspNetCore.Authentication.WeixinAuth.Extensions;
-using AspNetCore.Authentication.WeixinAuth.Messages;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.OAuth;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Primitives;
@@ -18,54 +18,30 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
+using Base64UrlTextEncoder = Microsoft.AspNetCore.Authentication.Base64UrlTextEncoder;
 
 namespace AspNetCore.Authentication.WeixinAuth
 {
-    internal class WeixinAuthHandler<TOptions> : RemoteAuthenticationHandler<TOptions>
-        where TOptions : WeixinAuthOptions, new()
+    internal class WeixinAuthHandler : OAuthHandler<WeixinAuthOptions>
     {
+        private readonly IWeixinAuthApi _api;
+
         protected const string CorrelationPrefix = ".AspNetCore.Correlation.";
         protected const string CorrelationProperty = ".xsrf";
-        //protected const string CorrelationMarker = "N";
-        protected const string AuthSchemeKey = ".AuthScheme";
 
         protected static readonly RandomNumberGenerator CryptoRandom = RandomNumberGenerator.Create();
 
-        protected HttpClient Backchannel => Options.Backchannel;
-        //protected override string ClaimsIssuer => Options.ClaimsIssuer ?? Scheme.Name;
-
-        /// <summary>
-        /// The handler calls methods on the events which give the application control at certain points where processing is occurring. 
-        /// If it is not provided a default instance is supplied which does nothing when the methods are called.
-        /// </summary>
-        protected new WeixinAuthEvents<TOptions> Events
-        {
-            get => (WeixinAuthEvents<TOptions>)base.Events;
-            set => base.Events = value;
-        }
-
-        /// <summary>
-        /// Creates a new instance of the events instance.
-        /// </summary>
-        /// <returns>A new instance of the events instance.</returns>
-        protected override Task<object> CreateEventsAsync() => Task.FromResult<object>(new WeixinAuthEvents<TOptions>());
-
-        public WeixinAuthHandler(IOptionsMonitor<TOptions> options, ILoggerFactory logger, UrlEncoder encoder, ISystemClock clock)
+        public WeixinAuthHandler(
+            IOptionsMonitor<WeixinAuthOptions> options,
+            ILoggerFactory logger,
+            UrlEncoder encoder,
+            ISystemClock clock)
             : base(options, logger, encoder, clock)
-        { }
-
-        protected virtual string FormatScope()
         {
-            // OAuth2 3.3 space separated, but weixin not
-            return string.Join(",", Options.Scope);
         }
 
-        protected virtual List<string> SplitScope(string scope)
-        {
-            var result = new List<string>();
-            if (string.IsNullOrWhiteSpace(scope)) return result;
-            return scope.Split(',').ToList();
-        }
+        protected override string FormatScope(IEnumerable<string> scopes)
+            => string.Join(",", scopes); // // OAuth2 3.3 space separated, but weixin not
 
         /// <summary>
         /// 生成网页授权调用URL，用于获取code。（然后可以用此code换取网页授权access_token）
@@ -73,319 +49,183 @@ namespace AspNetCore.Authentication.WeixinAuth
         /// <param name="properties"></param>
         /// <param name="redirectUri">跳转回调redirect_uri，应当使用https链接来确保授权code的安全性。请在传入前使用UrlEncode对链接进行处理。</param>
         /// <returns></returns>
-        protected virtual string BuildChallengeUrl(AuthenticationProperties properties, string redirectUri)
+        protected override string BuildChallengeUrl(AuthenticationProperties properties, string redirectUri)
         {
-            var scope = FormatScope();
+            //注意：参数只有五个，顺序不能改变！微信对该链接做了正则强匹配校验，如果链接的参数顺序不对，授权页面将无法正常访问!!!
+            var queryStrings = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            queryStrings.Add("appid", Options.AppId);
+            queryStrings.Add("redirect_uri", redirectUri);
+            queryStrings.Add("response_type", "code");
+            var scope = PickAuthenticationProperty(properties, OAuthChallengeProperties.ScopeKey, FormatScope, Options.Scope);
+            queryStrings.Add(OAuthChallengeProperties.ScopeKey, scope);
+
+            var state = Options.StateDataFormat.Protect(properties);
             //state：腾讯非QR方式最长只能128字节，所以只能设计一个correlationId指向到特定的Cookie键值，实现各参数的存取。
             //see: https://mp.weixin.qq.com/wiki?t=resource/res_main&id=mp1421140842&token=&lang=zh_CN
             var correlationId = properties.Items[CorrelationProperty];
-            var state = correlationId;
+            state = correlationId;
+            queryStrings.Add("state", state);
 
-            //注意：参数顺序也不能乱！微信对该链接做了正则强匹配校验，如果链接的参数顺序不对，授权页面将无法正常访问
-            var queryBuilder = new QueryBuilder()
-            {
-                { "appid", Options.AppId },
-                { "redirect_uri", redirectUri },
-                { "response_type", "code" },
-                { "scope", scope },
-                { "state", state }
-            };
-            return Options.AuthorizationEndpoint + queryBuilder + "#wechat_redirect";
+            var authorizationUrl = QueryHelpers.AddQueryString(Options.AuthorizationEndpoint, queryStrings);
+            return authorizationUrl + "#wechat_redirect";
         }
 
-        protected override async Task HandleChallengeAsync(AuthenticationProperties properties)
+        #region Pick value from AuthenticationProperties
+        private static string PickAuthenticationProperty<T>(
+            AuthenticationProperties properties,
+            string name,
+            Func<T, string> formatter,
+            T defaultValue)
         {
-            Logger.LogDebug($"Entering WeixinOAuth/WeixinOpen challenge handler: {GetType().FullName}.");
-
-            // order for local RedirectUri
-            // 1. challenge.Properties.RedirectUri
-            // 2. CurrentUri if RedirectUri is not set
-            if (string.IsNullOrEmpty(properties.RedirectUri))
+            string value = null;
+            var parameterValue = properties.GetParameter<T>(name);
+            if (parameterValue != null)
             {
-                properties.RedirectUri = CurrentUri;
+                value = formatter(parameterValue);
+            }
+            else if (!properties.Items.TryGetValue(name, out value))
+            {
+                value = formatter(defaultValue);
             }
 
-            Logger.LogDebug($"Post authentication local redirect: {properties.RedirectUri}");
+            // Remove the parameter from AuthenticationProperties so it won't be serialized into the state
+            properties.Items.Remove(name);
 
-            // OAuth2 10.12 CSRF
-            GenerateCorrelationId(properties);
-
-            var authorizationEndpoint = BuildChallengeUrl(properties, BuildRedirectUri(Options.CallbackPath));
-            var redirectContext = new WeixinAuthRedirectToAuthorizationContext<TOptions>(
-                Context, Scheme, Options,
-                properties, authorizationEndpoint);
-            await Events.RedirectToAuthorizationEndpoint(redirectContext);
-
-            Logger.LogDebug($"Redirecting to {authorizationEndpoint}...");
+            return value;
         }
 
-        public override Task<bool> ShouldHandleRequestAsync() => Task.FromResult(Options.CallbackPath == Request.Path);
+        private static string PickAuthenticationProperty(
+            AuthenticationProperties properties,
+            string name,
+            string defaultValue = null)
+            => PickAuthenticationProperty(properties, name, x => x, defaultValue);
+        #endregion
 
-        public override async Task<bool> HandleRequestAsync()
-        {
-            if (!await ShouldHandleRequestAsync()) //signin-weixin-oauth
-            {
-                return false;
-            }
 
-            AuthenticationTicket ticket = null;
-            Exception exception = null;
-            try
-            {
-                var authResult = await HandleRemoteAuthenticateAsync();
-                if (authResult == null)
-                {
-                    exception = new InvalidOperationException("Invalid return state, unable to redirect.");
-                }
-                else if (authResult.Handled)
-                {
-                    return true;
-                }
-                else if (authResult.Skipped || authResult.None)
-                {
-                    return false;
-                }
-                else if (!authResult.Succeeded)
-                {
-                    exception = authResult.Failure ??
-                                new InvalidOperationException("Invalid return state, unable to redirect.");
-                }
-
-                ticket = authResult.Ticket;
-            }
-            catch (Exception ex)
-            {
-                exception = ex;
-            }
-            if (exception != null)
-            {
-                Logger.LogWarning($"Error on remote authentication: {exception.Message}");
-
-                var errorContext = new RemoteFailureContext(Context, Scheme, Options, exception);
-                await Events.RemoteFailure(errorContext);
-
-                if (errorContext.Result != null)
-                {
-                    if (errorContext.Result.Handled)
-                    {
-                        return true;
-                    }
-                    else if (errorContext.Result.Skipped)
-                    {
-                        return false;
-                    }
-                }
-
-                throw exception;
-            }
-
-            // We have a ticket if we get here
-            var ticketContext = new TicketReceivedContext(Context, Scheme, Options, ticket)
-            {
-                ReturnUri = ticket.Properties.RedirectUri
-            };
-            // REVIEW: is this safe or good?
-            ticket.Properties.RedirectUri = null;
-
-            // Mark which provider produced this identity so we can cross-check later in HandleAuthenticateAsync
-            ticketContext.Properties.Items[AuthSchemeKey] = Scheme.Name;
-
-            await Events.TicketReceived(ticketContext);
-
-            if (ticketContext.Result != null)
-            {
-                if (ticketContext.Result.Handled)
-                {
-                    Logger.LogInformation($"Signin handled.");
-                    return true;
-                }
-                else if (ticketContext.Result.Skipped)
-                {
-                    Logger.LogInformation($"Signin skipped.");
-                    return false;
-                }
-            }
-
-            await Context.SignInAsync(SignInScheme, ticketContext.Principal, ticketContext.Properties);
-
-            // Default redirect path is the base path
-            if (string.IsNullOrEmpty(ticketContext.ReturnUri))
-            {
-                ticketContext.ReturnUri = "/";
-            }
-
-            Response.Redirect(ticketContext.ReturnUri);
-            return true;
-        }
-
-        protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
-        {
-            var result = await Context.AuthenticateAsync(SignInScheme);
-            if (result != null)
-            {
-                if (result.Failure != null)
-                {
-                    return result;
-                }
-
-                // The SignInScheme may be shared with multiple providers, make sure this provider issued the identity.
-                string authenticatedScheme;
-                var ticket = result.Ticket;
-                if (ticket != null && ticket.Principal != null && ticket.Properties != null
-                    && ticket.Properties.Items.TryGetValue(AuthSchemeKey, out authenticatedScheme)
-                    && string.Equals(Scheme.Name, authenticatedScheme, StringComparison.Ordinal))
-                {
-                    return AuthenticateResult.Success(new AuthenticationTicket(ticket.Principal,
-                        ticket.Properties, Scheme.Name));
-                }
-
-                return AuthenticateResult.Fail("Not authenticated");
-            }
-
-            return AuthenticateResult.Fail("Remote authentication does not directly support AuthenticateAsync");
-        }
-
-        protected override Task HandleForbiddenAsync(AuthenticationProperties properties) => Context.ForbidAsync(SignInScheme);
 
         protected override async Task<HandleRequestResult> HandleRemoteAuthenticateAsync()
         {
-            Logger.LogDebug($"Entering remote authentication handler: {GetType().FullName}...");
+            var query = Request.Query;
 
-            try
+            var state = query["state"]; // ie. correlationId
+            if (StringValues.IsNullOrEmpty(state))
             {
-                AuthenticationProperties properties = null;
-                var query = Request.Query;
-
-                var error = query["error"];
-                if (!StringValues.IsNullOrEmpty(error))
-                {
-                    var failureMessage = new StringBuilder();
-                    failureMessage.Append(error);
-                    var errorDescription = query["error_description"];
-                    if (!StringValues.IsNullOrEmpty(errorDescription))
-                    {
-                        failureMessage.Append(";Description=").Append(errorDescription);
-                    }
-                    var errorUri = query["error_uri"];
-                    if (!StringValues.IsNullOrEmpty(errorUri))
-                    {
-                        failureMessage.Append(";Uri=").Append(errorUri);
-                    }
-
-                    return HandleRequestResult.Fail(failureMessage.ToString());
-                }
-
-                var code = query["code"];
-                var state = query["state"]; // ie. correlationId
-
-                if (StringValues.IsNullOrEmpty(code))
-                {
-                    Logger.LogWarning("Code was not found.");
-                    return HandleRequestResult.Fail("Code was not found.");
-                }
-
-                if (StringValues.IsNullOrEmpty(state))
-                {
-                    Logger.LogWarning("State was not found.");
-                    return HandleRequestResult.Fail("State was not found.");
-                }
-
-                var stateCookieName = ConcateCookieName(state);
-                var protectedProperties = Request.Cookies[stateCookieName];
-                if (string.IsNullOrEmpty(protectedProperties))
-                {
-                    var errMsg = $"'{stateCookieName}' cookie not found.";
-                    Logger.LogWarning(errMsg);
-                    return HandleRequestResult.Fail("Correlation failed." + errMsg);
-                }
-
-                properties = Options.StateDataFormat.Unprotect(protectedProperties);
-                if (properties == null)
-                {
-                    var errMsg = "The oauth state was missing or invalid.";
-                    Logger.LogWarning(errMsg);
-                    return HandleRequestResult.Fail(errMsg);
-                }
-
-                // OAuth2 10.12 CSRF
-                if (!ValidateCorrelationId(properties, state))
-                {
-                    var errMsg = "Correlation failed. Correlation id not valid.";
-                    Logger.LogWarning(errMsg);
-                    return HandleRequestResult.Fail(errMsg);
-                }
-
-                //通过code换取网页授权access_token
-                var tokens = await CustomExchangeCodeAsync(code, BuildRedirectUri(Options.CallbackPath));
-                if (tokens.Error != null)
-                {
-                    Logger.LogWarning(tokens.Error.StackTrace);
-                    return HandleRequestResult.Fail(tokens.Error);
-                }
-
-                if (string.IsNullOrEmpty(tokens.AccessToken))
-                {
-                    Logger.LogWarning("Failed to retrieve access token.");
-                    return HandleRequestResult.Fail("Failed to retrieve access token.");
-                }
-
-                var identity = new ClaimsIdentity(Options.SignInScheme);
-                if (Options.SaveTokens)
-                {
-                    var authTokens = new List<AuthenticationToken>();
-
-                    authTokens.Add(new AuthenticationToken { Name = WeixinAuthenticationTokenNames.access_token, Value = tokens.AccessToken });
-                    if (!string.IsNullOrEmpty(tokens.RefreshToken))
-                    {
-                        authTokens.Add(new AuthenticationToken { Name = WeixinAuthenticationTokenNames.refresh_token, Value = tokens.RefreshToken });
-                    }
-                    if (!string.IsNullOrEmpty(tokens.TokenType))
-                    {
-                        authTokens.Add(new AuthenticationToken { Name = WeixinAuthenticationTokenNames.token_type, Value = tokens.TokenType });
-                    }
-                    if (!string.IsNullOrEmpty(tokens.OpenId))
-                    {
-                        authTokens.Add(new AuthenticationToken { Name = WeixinAuthenticationTokenNames.weixin_openid, Value = tokens.OpenId });
-                    }
-                    if (!string.IsNullOrEmpty(tokens.Scope))
-                    {
-                        authTokens.Add(new AuthenticationToken { Name = WeixinAuthenticationTokenNames.weixin_scope, Value = tokens.Scope });
-                    }
-                    if (!string.IsNullOrEmpty(tokens.ExpiresIn))
-                    {
-                        int value;
-                        if (int.TryParse(tokens.ExpiresIn, NumberStyles.Integer, CultureInfo.InvariantCulture, out value))
-                        {
-                            // https://www.w3.org/TR/xmlschema-2/#dateTime
-                            // https://msdn.microsoft.com/en-us/library/az4se3k1(v=vs.110).aspx
-                            var expiresAt = Clock.UtcNow + TimeSpan.FromSeconds(value);
-                            authTokens.Add(new AuthenticationToken
-                            {
-                                Name = WeixinAuthenticationTokenNames.expires_at,
-                                Value = expiresAt.ToString("o", CultureInfo.InvariantCulture)
-                            });
-                        }
-                    }
-
-                    properties.StoreTokens(authTokens); //ExternalLoginInfo.AuthenticationTokens
-                }
-
-                var ticket = await CustomCreateTicketAsync(identity, properties, tokens);
-                if (ticket != null)
-                {
-                    return HandleRequestResult.Success(ticket);
-                }
-                else
-                {
-                    Logger.LogWarning("Failed to retrieve user information from remote server.");
-                    return HandleRequestResult.Fail("Failed to retrieve user information from remote server.");
-                }
+                return HandleRequestResult.Fail("The oauth state was missing.");
             }
-            catch (Exception ex)
-            {
-                Logger.LogError(ex, ex.Message);
 
-                return HandleRequestResult.Fail(ex);
+            var stateCookieName = ConcateCookieName(state);
+            var protectedProperties = Request.Cookies[stateCookieName];
+            if (string.IsNullOrEmpty(protectedProperties))
+            {
+                return HandleRequestResult.Fail($"The oauth state cookie was missing: Cookie: {stateCookieName}");
+            }
+
+            var properties = Options.StateDataFormat.Unprotect(protectedProperties);
+            if (properties == null)
+            {
+                return HandleRequestResult.Fail($"The oauth state cookie was invalid: Cookie: {stateCookieName}");
+            }
+
+            // OAuth2 10.12 CSRF
+            if (!ValidateCorrelationId(properties, state))
+            {
+                return HandleRequestResult.Fail("Correlation failed.", properties);
+            }
+
+            var error = query["error"];
+            if (!StringValues.IsNullOrEmpty(error))
+            {
+                var failureMessage = new StringBuilder();
+                failureMessage.Append(error);
+                var errorDescription = query["error_description"];
+                if (!StringValues.IsNullOrEmpty(errorDescription))
+                {
+                    failureMessage.Append(";Description=").Append(errorDescription);
+                }
+                var errorUri = query["error_uri"];
+                if (!StringValues.IsNullOrEmpty(errorUri))
+                {
+                    failureMessage.Append(";Uri=").Append(errorUri);
+                }
+
+                return HandleRequestResult.Fail(failureMessage.ToString());
+            }
+
+            var code = query["code"];
+
+            if (StringValues.IsNullOrEmpty(code))
+            {
+                Logger.LogWarning("Code was not found.");
+                return HandleRequestResult.Fail("Code was not found.", properties);
+            }
+
+            var tokens = await ExchangeCodeAsync(code, BuildRedirectUri(Options.CallbackPath));
+
+            if (tokens.Error != null)
+            {
+                return HandleRequestResult.Fail(tokens.Error, properties);
+            }
+
+            if (string.IsNullOrEmpty(tokens.AccessToken))
+            {
+                return HandleRequestResult.Fail("Failed to retrieve access token.", properties);
+            }
+
+            var identity = new ClaimsIdentity(ClaimsIssuer);
+
+            if (Options.SaveTokens)
+            {
+                var authTokens = new List<AuthenticationToken>();
+
+                authTokens.Add(new AuthenticationToken { Name = WeixinAuthenticationTokenNames.access_token, Value = tokens.AccessToken });
+                if (!string.IsNullOrEmpty(tokens.RefreshToken))
+                {
+                    authTokens.Add(new AuthenticationToken { Name = WeixinAuthenticationTokenNames.refresh_token, Value = tokens.RefreshToken });
+                }
+                if (!string.IsNullOrEmpty(tokens.TokenType))
+                {
+                    authTokens.Add(new AuthenticationToken { Name = WeixinAuthenticationTokenNames.token_type, Value = tokens.TokenType });
+                }
+                if (!string.IsNullOrEmpty(tokens.GetOpenId()))
+                {
+                    authTokens.Add(new AuthenticationToken { Name = WeixinAuthenticationTokenNames.openid, Value = tokens.GetOpenId() });
+                }
+                if (!string.IsNullOrEmpty(tokens.GetUnionId()))
+                {
+                    authTokens.Add(new AuthenticationToken { Name = WeixinAuthenticationTokenNames.unionid, Value = tokens.GetUnionId() });
+                }
+                if (!string.IsNullOrEmpty(tokens.GetScope()))
+                {
+                    authTokens.Add(new AuthenticationToken { Name = WeixinAuthenticationTokenNames.scope, Value = tokens.GetScope() });
+                }
+                if (!string.IsNullOrEmpty(tokens.ExpiresIn))
+                {
+                    int value;
+                    if (int.TryParse(tokens.ExpiresIn, NumberStyles.Integer, CultureInfo.InvariantCulture, out value))
+                    {
+                        // https://www.w3.org/TR/xmlschema-2/#dateTime
+                        // https://msdn.microsoft.com/en-us/library/az4se3k1(v=vs.110).aspx
+                        var expiresAt = Clock.UtcNow + TimeSpan.FromSeconds(value);
+                        authTokens.Add(new AuthenticationToken
+                        {
+                            Name = WeixinAuthenticationTokenNames.expires_at,
+                            Value = expiresAt.ToString("o", CultureInfo.InvariantCulture)
+                        });
+                    }
+                }
+
+                properties.StoreTokens(authTokens); //ExternalLoginInfo.AuthenticationTokens
+            }
+
+
+            var ticket = await CreateTicketAsync(identity, properties, tokens);
+            if (ticket != null)
+            {
+                return HandleRequestResult.Success(ticket);
+            }
+            else
+            {
+                return HandleRequestResult.Fail("Failed to retrieve user information from remote server.", properties);
             }
         }
 
@@ -395,36 +235,9 @@ namespace AspNetCore.Authentication.WeixinAuth
         /// <param name="code">用于换取网页授权access_token。此code只能使用一次，5分钟未被使用自动过期。</param>
         /// <param name="redirectUri"></param>
         /// <returns></returns>
-        protected virtual async Task<WeixinAuthTokenResponse> CustomExchangeCodeAsync(string code, string redirectUri)
+        protected override async Task<OAuthTokenResponse> ExchangeCodeAsync(string code, string redirectUri)
         {
-            var query = new QueryBuilder()
-            {
-                { "appid", Options.AppId },
-                { "secret", Options.AppSecret },
-                { "code", code },
-                { "grant_type", "authorization_code" },
-                { "redirect_uri", redirectUri }
-            };
-            var url = Options.TokenEndpoint + query;
-            Logger.LogInformation($"Exchanging code via {url}...");
-            var response = await Backchannel.GetAsync(url, Context.RequestAborted);
-            if (!response.IsSuccessStatusCode)
-            {
-                var error = "An error occured while exchanging the code.";
-                Logger.LogError($"{error} The remote server returned a {response.StatusCode} response with the following payload: {response.Headers.ToString()} {await response.Content.ReadAsStringAsync()}");
-                //throw new HttpRequestException($"{error}");
-                return WeixinAuthTokenResponse.Failed(new Exception(error));
-            }
-            var payload = JObject.Parse(await response.Content.ReadAsStringAsync());
-            var result = WeixinAuthTokenResponse.Success(payload);
-            //错误时微信会返回错误JSON数据包，示例如下: { "errcode":40029,"errmsg":"invalid code"}
-            if (string.IsNullOrWhiteSpace(result.AccessToken))
-            {
-                int errorCode = WeixinAuthHandlerHelper.GetErrorCode(payload);
-                var errorMessage = WeixinAuthHandlerHelper.GetErrorMessage(payload);
-                return WeixinAuthTokenResponse.Failed(new Exception($"The remote server returned an error while exchanging the code. {errorCode} {errorMessage}"));
-            }
-            return result;
+            return await _api.GetToken(Options.Backchannel, Options.TokenEndpoint, Options.AppId, Options.AppSecret, code, Context.RequestAborted);
         }
 
         private static async Task<string> Display(HttpResponseMessage response)
@@ -447,8 +260,10 @@ namespace AspNetCore.Authentication.WeixinAuth
         /// <param name="properties"></param>
         /// <param name="tokens"></param>
         /// <returns></returns>
-        protected virtual async Task<AuthenticationTicket> CustomCreateTicketAsync(
-            ClaimsIdentity identity, AuthenticationProperties properties, WeixinAuthTokenResponse tokens)
+        protected override async Task<AuthenticationTicket> CreateTicketAsync(
+            ClaimsIdentity identity,
+            AuthenticationProperties properties,
+            OAuthTokenResponse tokens)
         {
             if (identity == null)
             {
@@ -463,91 +278,30 @@ namespace AspNetCore.Authentication.WeixinAuth
                 throw new ArgumentNullException(nameof(tokens));
             }
 
-            var openId = tokens.OpenId;
-            var scope = tokens.Scope;
-            // std:NameIdentifier
-            identity.AddOptionalClaim(ClaimTypes.NameIdentifier, openId, Options.ClaimsIssuer);
-            identity.AddOptionalClaim(WeixinAuthClaimTypes.OpenId, openId, Options.ClaimsIssuer);
-            // scope
-            identity.AddOptionalClaim(WeixinAuthClaimTypes.Scope, scope, Options.ClaimsIssuer);
+            var unionid = tokens.GetUnionId();
+            var openid = tokens.GetOpenId();
+            var scope = tokens.GetScope();
 
+            JObject payload = new JObject();
             if (WeixinAuthScopes.Contains(scope, WeixinAuthScopes.Items.snsapi_userinfo))
             {
-                identity = await GetUserInformationAsync(tokens.AccessToken, openId, identity);
+                payload = await _api.GetUserInfo(Options.Backchannel, Options.UserInformationEndpoint, tokens.AccessToken, openid, Context.RequestAborted, LanguageCodes.zh_CN);
             }
-            else
+            if (!payload.ContainsKey("unionid") && string.IsNullOrWhiteSpace(unionid))
             {
-                identity.AddOptionalClaim(ClaimTypes.Name, $"[{openId}]", this.Options.ClaimsIssuer);
+                payload.Add("unionid", unionid);
             }
-
-            var principal = new ClaimsPrincipal(identity);
-            var ticket = new AuthenticationTicket(principal, properties, Scheme.Name);
-            //TODO: generic type
-            var context = new WeixinAuthCreatingTicketContext<WeixinAuthOptions>(Context, Scheme, Options, Backchannel, ticket, tokens);
-            await Options.Events.CreatingTicket(context);
-
-            return context.Ticket;
-        }
-
-        private async Task<ClaimsIdentity> GetUserInformationAsync(string accessToken, string openId, ClaimsIdentity identity)
-        {
-            Logger.LogDebug($"Getting user information {openId}...");
-
-            //get url userinfo
-            var query = new QueryBuilder();
-            query.Add("access_token", accessToken);
-            query.Add("openid", openId);
-            query.Add("lang", Options.LanguageCode);
-            var url = Options.UserInformationEndpoint + query;
-            Logger.LogInformation($"Retrieving user info via {url}...");
-            var response = await Backchannel.GetAsync(url, Context.RequestAborted);
-            if (!response.IsSuccessStatusCode)
+            if (!payload.ContainsKey("openid") && string.IsNullOrWhiteSpace(openid))
             {
-                Logger.LogError($"An error occurred while retrieving the user profile: the remote server returned a {response.StatusCode} response with the following payload: {response.Headers.ToString()} {await response.Content.ReadAsStringAsync()}");
-                throw new HttpRequestException("An error occured while retrieving the user profile.");
+                payload.Add("openid", openid);
             }
-            var payload = JObject.Parse(await response.Content.ReadAsStringAsync());
-            int errorCode = WeixinAuthHandlerHelper.GetErrorCode(payload);
-            if (errorCode != 0)
-            {
-                var errorMessage = WeixinAuthHandlerHelper.GetErrorMessage(payload);
-                Logger.LogError($"The remote server returned an error while retrieving the user profile. {errorCode} {errorMessage}");
-                throw new Exception($"The remote server returned an error while retrieving the user profile. {errorCode} {errorMessage}");
-            }
-            else
-            {
-                //提取userinfo
-                // std:Name
-                var nickname = WeixinAuthHandlerHelper.GetNickName(payload);
-                identity.AddOptionalClaim(ClaimTypes.Name, nickname, this.Options.ClaimsIssuer);
-                identity.AddOptionalClaim(WeixinAuthClaimTypes.NickName, nickname, Options.ClaimsIssuer);
+            payload.Add("scope", scope);
 
-                var sex = WeixinAuthHandlerHelper.GetGender(payload);
-                identity.AddOptionalClaim(WeixinAuthClaimTypes.Gender, sex, Options.ClaimsIssuer);
+            var context = new OAuthCreatingTicketContext(new ClaimsPrincipal(identity), properties, Context, Scheme, Options, Backchannel, tokens, payload);
+            context.RunClaimActions();
 
-                var province = WeixinAuthHandlerHelper.GetProvince(payload);
-                identity.AddOptionalClaim(WeixinAuthClaimTypes.Province, province, Options.ClaimsIssuer);
-
-                var city = WeixinAuthHandlerHelper.GetCity(payload);
-                identity.AddOptionalClaim(WeixinAuthClaimTypes.City, city, Options.ClaimsIssuer);
-
-                var country = WeixinAuthHandlerHelper.GetCountry(payload);
-                identity.AddOptionalClaim(WeixinAuthClaimTypes.Country, country, Options.ClaimsIssuer);
-
-                var headImageUrl = WeixinAuthHandlerHelper.GetHeadImageUrl(payload);
-                identity.AddOptionalClaim(WeixinAuthClaimTypes.HeadImageUrl, headImageUrl, Options.ClaimsIssuer);
-
-                var privileges = WeixinAuthHandlerHelper.GetPrivileges(payload);
-                foreach (string privilege in privileges)
-                {
-                    identity.AddOptionalClaim(WeixinAuthClaimTypes.Privilege, privilege, Options.ClaimsIssuer);
-                }
-
-                var unionId = WeixinAuthHandlerHelper.GetUnionId(payload);
-                identity.AddOptionalClaim(WeixinAuthClaimTypes.UnionId, unionId, Options.ClaimsIssuer);
-            }
-
-            return identity;
+            await Events.CreatingTicket(context);
+            return new AuthenticationTicket(context.Principal, context.Properties, Scheme.Name);
         }
 
         /// <summary>

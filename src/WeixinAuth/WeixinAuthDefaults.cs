@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace AspNetCore.Authentication.WeixinOpen
+namespace AspNetCore.Authentication.WeixinAuth
 {
     public enum LanguageCodes
     {
@@ -12,33 +12,32 @@ namespace AspNetCore.Authentication.WeixinOpen
         en
     }
 
-    public static class WeixinOpenDefaults
+    public static class WeixinAuthDefaults
     {
+        /// <summary>
+        /// WeixinAuth
+        /// </summary>
+        public const string AuthenticationScheme = "WeixinAuth";
 
         /// <summary>
-        /// WeixinOpen
+        /// WeixinAuth
         /// </summary>
-        public const string AuthenticationScheme = "WeixinOpen";
+        public const string DisplayName = "WeixinAuth";
 
         /// <summary>
-        /// WeixinOpen
+        /// WeixinAuth
         /// </summary>
-        public const string DisplayName = "WeixinOpen";
+        public const string ClaimsIssuer = "WeixinAuth";
 
         /// <summary>
-        /// WeixinOpen
+        /// /signin-weixin-oauth
         /// </summary>
-        public const string ClaimsIssuer = "WeixinOpen";
-
+        public const string CallbackPath = "/signin-weixinauth";
+        
         /// <summary>
-        /// /signin-weixinopen
+        /// https://open.weixin.qq.com/connect/oauth2/authorize, different from WeixinOpen
         /// </summary>
-        public const string CallbackPath = "/signin-weixinopen";
-
-        /// <summary>
-        /// https://open.weixin.qq.com/connect/qrconnect, different from WeixinAuth
-        /// </summary>
-        public const string AuthorizationEndpoint = "https://open.weixin.qq.com/connect/qrconnect";
+        public const string AuthorizationEndpoint = "https://open.weixin.qq.com/connect/oauth2/authorize";
 
         /// <summary>
         /// https://api.weixin.qq.com/sns/oauth2/access_token

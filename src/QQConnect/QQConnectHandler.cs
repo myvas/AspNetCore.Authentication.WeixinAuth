@@ -76,10 +76,8 @@ namespace AspNetCore.Authentication.QQConnect
         protected override string FormatScope(IEnumerable<string> scopes)
             => string.Join(",", scopes); // WeixinOpen comma separated
 
-        #region Pick new value from AuthenticationProperties
-
-        // Copy from Microsoft.AspNetCore.Authentication.Google/GoogleHandler.cs
-        private string PickAuthenticationProperty<T>(
+        #region Pick value from AuthenticationProperties
+        private static string PickAuthenticationProperty<T>(
             AuthenticationProperties properties,
             string name,
             Func<T, string> formatter,
@@ -102,7 +100,7 @@ namespace AspNetCore.Authentication.QQConnect
             return value;
         }
 
-        private string PickAuthenticationProperty(
+        private static string PickAuthenticationProperty(
             AuthenticationProperties properties,
             string name,
             string defaultValue = null)

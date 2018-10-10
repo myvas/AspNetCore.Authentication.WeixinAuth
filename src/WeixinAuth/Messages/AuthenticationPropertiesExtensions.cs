@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace AspNetCore.Authentication.WeixinAuth.Messages
+namespace AspNetCore.Authentication.WeixinAuth
 {
     public static class AuthenticationPropertiesExtensions
     {
