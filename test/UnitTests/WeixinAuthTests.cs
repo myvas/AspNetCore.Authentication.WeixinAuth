@@ -49,13 +49,18 @@ namespace UnitTests
 
             var transaction = await server.SendAsync("http://weixinoauth.myvas.com/challenge-weixinauth");
             Assert.Equal(HttpStatusCode.Redirect, transaction.Response.StatusCode);
-            //Location: https://open.weixin.qq.com/connect/qrconnect?appid=wxf6c8f44257ba5e8b&redirect_uri=http%3A%2F%2Fweixinoauth.myvas.com%2Fsignin-weixinopen&response_type=code&scope=snsapi_login&state=CfDJ8AAAAAAAAAAAAAAAAAAAAADiRnFpsyDWLMde0p9GZFt_-NrtTbuQjA4Nwp-CZ0Zj-aUVtlJNJPDP9CB_FY9pN-iLe6lIv1y0P2KgPdjTGFakRC4ESXjCqsa0yv8rqBltKfntPSTGzrDSgq-jFmGLuh2sXejt9WUCnUKj6QKTlrBsEfueolnSJDvwiO9f0fzrED4Qfkh8SqBeNgY_09SaTruVmli_0qtPHltZFazy16dYpkU#wechat_redirect
+            //Location: https://open.weixin.qq.com/connect/oauth2/authorize?appid=wx02056e2b2b9cc4ef&redirect_uri=http%3A%2F%2Fweixinoauth.myvas.com%2Fsignin-weixinauth&response_type=code&scope=snsapi_base,snsapi_userinfo&state=n6TFxuWkbt56BFslzKvkKXi1VgIHkUprbxyLM82mVm8#wechat_redirect
             Assert.StartsWith(WeixinAuthDefaults.AuthorizationEndpoint, transaction.Response.Headers.Location.AbsoluteUri);
-            Assert.Contains("appid=wxf6c8f44257ba5e8b", transaction.Response.Headers.Location.PathAndQuery);
-            Assert.Contains("redirect_uri=", transaction.Response.Headers.Location.PathAndQuery);
-            Assert.Contains("response_type=code", transaction.Response.Headers.Location.PathAndQuery);
-            Assert.Contains("scope=snsapi_login", transaction.Response.Headers.Location.PathAndQuery);
-            Assert.Contains("state=", transaction.Response.Headers.Location.PathAndQuery);
+
+            var query = System.Web.HttpUtility.ParseQueryString(transaction.Response.Headers.Location.Query);
+            Assert.Equal("wx02056e2b2b9cc4ef", query.Get("appid"));
+            Assert.NotEmpty(query.Get("redirect_uri"));
+            Assert.Equal("code", query.Get("response_type"));
+            Assert.Equal("snsapi_base,snsapi_userinfo", query.Get("scope"));
+
+            var state = query.Get("state");
+            Assert.NotEmpty(state);
+            Assert.True(state.Length <= 128, $"state length must less than 128, but actual is {state.Length}");
         }
 
         [Fact]
@@ -91,11 +96,12 @@ namespace UnitTests
 
             var transaction = await server.SendAsync(
                     "https://example.com/signin-WeixinAuth?code=TestCode&state=" + UrlEncoder.Default.Encode(state),
-                    $".AspNetCore.Correlation.{WeixinAuthDefaults.AuthenticationScheme}.{correlationValue}=N");
+                    $".AspNetCore.Correlation.{WeixinAuthDefaults.AuthenticationScheme}.{correlationValue}=N\n"
+                    + $".AspNetCore.Correlation.{WeixinAuthDefaults.AuthenticationScheme}.{correlationValue}.State={state}");
             Assert.Equal(HttpStatusCode.Redirect, transaction.Response.StatusCode);
             Assert.Equal("/ExternalLoginCallback", transaction.Response.Headers.GetValues("Location").First());
         }
-        
+
         [Fact]
         public async Task CanForwardDefault()
         {
@@ -1200,7 +1206,7 @@ namespace UnitTests
             Assert.StartsWith("OAuth token endpoint failure: ", error3.GetBaseException().Message);
             Assert.Contains("invalid appid", error3.GetBaseException().Message);
         }
-        
+
         [Fact]
         public async Task CanRedirectOnError()
         {

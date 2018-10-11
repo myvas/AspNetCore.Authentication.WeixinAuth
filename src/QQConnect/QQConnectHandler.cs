@@ -117,29 +117,5 @@ namespace AspNetCore.Authentication.QQConnect
         {
             return await _api.GetToken(Options.Backchannel, Options.TokenEndpoint, Options.AppId, Options.AppKey, code, redirectUri, Context.RequestAborted);
         }
-
-        private static JObject ParseQuery(string query)
-        {
-            var jObject = new JObject();
-
-            foreach (var kv in query.Split('&'))
-            {
-                var keyValue = kv.Split('=');
-
-                jObject.Add(keyValue[0], new JValue(keyValue[1]));
-            }
-
-            return jObject;
-        }
-
-        // Copy from Microsoft.AspNetCore.Authentication.OAuth/OAuthHandler.cs
-        private static async Task<string> Display(HttpResponseMessage response)
-        {
-            var output = new StringBuilder();
-            output.Append("Status: " + response.StatusCode + ";");
-            output.Append("Headers: " + response.Headers.ToString() + ";");
-            output.Append("Body: " + await response.Content.ReadAsStringAsync() + ";");
-            return output.ToString();
-        }
     }
 }

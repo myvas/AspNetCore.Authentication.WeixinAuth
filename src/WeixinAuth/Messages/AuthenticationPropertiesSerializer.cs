@@ -1,18 +1,22 @@
 ﻿using Microsoft.AspNetCore.Authentication;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace AspNetCore.Authentication.WeixinAuth
 {
     /// <summary>
-    /// Serializes and deserializes WeixinOAuth request and access tokens so that they can be used by other application components.
+    /// Serializes and deserializes WeixinAuth request and access tokens so that they can be used by other application components.
     /// </summary>
-    public class AuthenticationPropertiesSerializer : IDataSerializer<AuthenticationProperties>
+    public class WeixinAuthenticationPropertiesSerializer : IDataSerializer<AuthenticationProperties>
     {
-        private const int FormatVersion = 1;
+        private const int FormatVersion = 2;
 
         /// <summary>
         /// Serialize a request token.
@@ -21,16 +25,14 @@ namespace AspNetCore.Authentication.WeixinAuth
         /// <returns>A byte array containing the serialized token</returns>
         public virtual byte[] Serialize(AuthenticationProperties model)
         {
-            using (var memory = new MemoryStream())
-            {
-                using (var writer = new BinaryWriter(memory))
-                {
-                    Write(writer, model);
-                    writer.Flush();
-                    return memory.ToArray();
-                }
-            }
+            var s = JsonConvert.SerializeObject(model.Items, Formatting.None);
+
+            var r = Encoding.UTF8.GetBytes(s);
+            var r1 = Zipper.Zip(s);
+            var r2 = CompressionExtensions.Zip(s).Result.ToArray();
+            return r;
         }
+
 
         /// <summary>
         /// Deserializes a request token.
@@ -39,13 +41,10 @@ namespace AspNetCore.Authentication.WeixinAuth
         /// <returns>The Twitter request token</returns>
         public virtual AuthenticationProperties Deserialize(byte[] data)
         {
-            using (var memory = new MemoryStream(data))
-            {
-                using (var reader = new BinaryReader(memory))
-                {
-                    return Read(reader);
-                }
-            }
+            var s = Zipper.Unzip(data);
+
+            var items = JsonConvert.DeserializeObject<IDictionary<string, string>>(s);
+            return new AuthenticationProperties(items);
         }
 
         /// <summary>

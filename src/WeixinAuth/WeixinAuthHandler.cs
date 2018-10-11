@@ -1,10 +1,12 @@
 ﻿using AspNetCore.Authentication.WeixinAuth.Events;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.OAuth;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Primitives;
 using Newtonsoft.Json.Linq;
@@ -50,7 +52,7 @@ namespace AspNetCore.Authentication.WeixinAuth
             {
                 properties.RedirectUri = CurrentUri;
             }
-
+            
             // OAuth2 10.12 CSRF
             GenerateCorrelationId(properties);
 
@@ -78,6 +80,13 @@ namespace AspNetCore.Authentication.WeixinAuth
             queryStrings.Add(OAuthChallengeProperties.ScopeKey, scope);
 
             var state = Options.StateDataFormat.Protect(properties);
+            var stateFormat = new WeixinAuthPropertiesDataFormat(Options.DataProtectionProvider.CreateProtector(typeof(WeixinAuthHandler).FullName, "WeixinAuth", "v2"));
+            var state12 = stateFormat.Protect(properties);
+
+            var redirectInProperties = PickAuthenticationProperty(properties, ".redirect");
+            var state21 = Options.StateDataFormat.Protect(properties);
+            var state22 = stateFormat.Protect(properties);
+
             //state：腾讯非QR方式最长只能128字节，所以只能设计一个correlationId指向到特定的Cookie键值，实现各参数的存取。
             //see: https://mp.weixin.qq.com/wiki?t=resource/res_main&id=mp1421140842&token=&lang=zh_CN
             var correlationId = properties.Items[CorrelationProperty];
@@ -131,7 +140,7 @@ namespace AspNetCore.Authentication.WeixinAuth
                 return HandleRequestResult.Fail("The oauth state was missing.");
             }
 
-            var stateCookieName = BuildCookieName(state);
+            var stateCookieName = BuildCorelationCookieName(state);
             var protectedProperties = Request.Cookies[stateCookieName];
             if (string.IsNullOrEmpty(protectedProperties))
             {
@@ -145,7 +154,7 @@ namespace AspNetCore.Authentication.WeixinAuth
             }
 
             // OAuth2 10.12 CSRF
-            if (!ValidateCorrelationId(properties, state))
+            if (!ValidateCorrelationId(properties))
             {
                 return HandleRequestResult.Fail("Correlation failed.", properties);
             }
@@ -173,7 +182,7 @@ namespace AspNetCore.Authentication.WeixinAuth
 
             if (StringValues.IsNullOrEmpty(code))
             {
-                Logger.LogWarning("Code was not found.");
+                Logger.LogWarning("Code was not found.", properties);
                 return HandleRequestResult.Fail("Code was not found.", properties);
             }
 
@@ -341,36 +350,26 @@ namespace AspNetCore.Authentication.WeixinAuth
 
             properties.Items[CorrelationProperty] = correlationId; //need to build challenge url
 
-            var cookieName1 = BuildCookieName(correlationId);
+            var cookieName1 = BuildCorelationCookieName(correlationId);
             Response.Cookies.Append(cookieName1, CorrelationMarker, cookieOptions);
 
-            var cookieName2 = cookieName1 + StateProperty;
+            var cookieName2 = BuildStateCookieName(correlationId);
             Response.Cookies.Append(cookieName2, Options.StateDataFormat.Protect(properties), cookieOptions);
         }
 
         #region Handle big properties protected output, by store it to cookie 'xxxx.state'
         private const string CorrelationMarker = "N";
-        private const string StateProperty = ".State";
-        protected virtual string BuildCookieName(string correlationId)
+        protected virtual string BuildCorelationCookieName(string correlationId)
         {
             return Options.CorrelationCookie.Name + Scheme.Name + "." + correlationId;
+        }
+        protected virtual string BuildStateCookieName(string correlationId)
+        {
+            return Options.CorrelationCookie.Name + Scheme.Name + "." + correlationId + "." + "State";
         }
         #endregion
 
         protected override bool ValidateCorrelationId(AuthenticationProperties properties)
-        {
-            Logger.LogCritical($"The program try to invoke a not implementted method of ValidateCorrelationId() in WeixinOAuthHandler!");
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
-        /// cut smaller of <see cref="AuthenticationProperties"/> to suit for WeixinOAuth State's limitation of 128 bytes.
-        /// </summary>
-        /// <remarks>The cookie of AspNetCore.Correlation.Weixin-OAuth.{correlationId} will be deleted in this method. </remarks>
-        /// <param name="properties">from cookie. properties = Request.Cookies[ConcateCookieName(correlationId)];</param>
-        /// <param name="state">from url</param>
-        /// <returns></returns>
-        protected virtual bool ValidateCorrelationId(AuthenticationProperties properties, string state)
         {
             if (properties == null)
             {
@@ -390,12 +389,15 @@ namespace AspNetCore.Authentication.WeixinAuth
                 HttpOnly = true,
                 Secure = Request.IsHttps
             };
-            var cookieName = BuildCookieName(correlationId);
-            Response.Cookies.Delete(cookieName, cookieOptions);
+            var corelationCookieName = BuildCorelationCookieName(correlationId);
+            Response.Cookies.Delete(corelationCookieName, cookieOptions);
 
-            if (!string.Equals(correlationId, state, StringComparison.Ordinal))
+            var stateCookieName = BuildStateCookieName(correlationId);
+            Response.Cookies.Delete(stateCookieName, cookieOptions);
+
+            if (!string.Equals(correlationId, CorrelationMarker, StringComparison.Ordinal))
             {
-                Logger.LogWarning($"The correlation value in cookie '{cookieName}' did not match the expected value '{state}'.");
+                Logger.LogWarning($"The correlation value in cookie '{corelationCookieName}' did not match the expected value '{CorrelationMarker}'.");
                 return false;
             }
 
