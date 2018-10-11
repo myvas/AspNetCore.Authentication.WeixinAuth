@@ -43,6 +43,24 @@ namespace AspNetCore.Authentication.WeixinAuth
         protected override string FormatScope(IEnumerable<string> scopes)
             => string.Join(",", scopes); // // OAuth2 3.3 space separated, but weixin not
 
+
+        protected override async Task HandleChallengeAsync(AuthenticationProperties properties)
+        {
+            if (string.IsNullOrEmpty(properties.RedirectUri))
+            {
+                properties.RedirectUri = CurrentUri;
+            }
+
+            // OAuth2 10.12 CSRF
+            GenerateCorrelationId(properties);
+
+            var authorizationEndpoint = BuildChallengeUrl(properties, BuildRedirectUri(Options.CallbackPath));
+            var redirectContext = new RedirectContext<OAuthOptions>(
+                Context, Scheme, Options,
+                properties, authorizationEndpoint);
+            await Events.RedirectToAuthorizationEndpoint(redirectContext);
+        }
+
         /// <summary>
         /// 生成网页授权调用URL，用于获取code。（然后可以用此code换取网页授权access_token）
         /// </summary>
@@ -64,7 +82,7 @@ namespace AspNetCore.Authentication.WeixinAuth
             //see: https://mp.weixin.qq.com/wiki?t=resource/res_main&id=mp1421140842&token=&lang=zh_CN
             var correlationId = properties.Items[CorrelationProperty];
             state = correlationId;
-            queryStrings.Add("state", state);
+            queryStrings.Add("state", state);//Properties will be stored in Header[state] =  Options.StateDataFormat.Protect(properties);
 
             var authorizationUrl = QueryHelpers.AddQueryString(Options.AuthorizationEndpoint, queryStrings);
             return authorizationUrl + "#wechat_redirect";
@@ -113,7 +131,7 @@ namespace AspNetCore.Authentication.WeixinAuth
                 return HandleRequestResult.Fail("The oauth state was missing.");
             }
 
-            var stateCookieName = ConcateCookieName(state);
+            var stateCookieName = BuildCookieName(state);
             var protectedProperties = Request.Cookies[stateCookieName];
             if (string.IsNullOrEmpty(protectedProperties))
             {
@@ -319,23 +337,25 @@ namespace AspNetCore.Authentication.WeixinAuth
             CryptoRandom.GetBytes(bytes);
             var correlationId = Base64UrlTextEncoder.Encode(bytes);
 
-            var cookieOptions = new CookieOptions
-            {
-                HttpOnly = true,
-                Secure = Request.IsHttps,
-                Expires = Clock.UtcNow.Add(Options.RemoteAuthenticationTimeout),
-            };
+            var cookieOptions = Options.CorrelationCookie.Build(Context, Clock.UtcNow);
 
             properties.Items[CorrelationProperty] = correlationId; //need to build challenge url
 
-            var cookieName = ConcateCookieName(correlationId);
-            Response.Cookies.Append(cookieName, Options.StateDataFormat.Protect(properties), cookieOptions);
+            var cookieName1 = BuildCookieName(correlationId);
+            Response.Cookies.Append(cookieName1, CorrelationMarker, cookieOptions);
+
+            var cookieName2 = cookieName1 + StateProperty;
+            Response.Cookies.Append(cookieName2, Options.StateDataFormat.Protect(properties), cookieOptions);
         }
 
-        protected virtual string ConcateCookieName(string correlationId)
+        #region Handle big properties protected output, by store it to cookie 'xxxx.state'
+        private const string CorrelationMarker = "N";
+        private const string StateProperty = ".State";
+        protected virtual string BuildCookieName(string correlationId)
         {
-            return CorrelationPrefix + Scheme.Name + "." + correlationId;
+            return Options.CorrelationCookie.Name + Scheme.Name + "." + correlationId;
         }
+        #endregion
 
         protected override bool ValidateCorrelationId(AuthenticationProperties properties)
         {
@@ -370,7 +390,7 @@ namespace AspNetCore.Authentication.WeixinAuth
                 HttpOnly = true,
                 Secure = Request.IsHttps
             };
-            var cookieName = ConcateCookieName(correlationId);
+            var cookieName = BuildCookieName(correlationId);
             Response.Cookies.Delete(cookieName, cookieOptions);
 
             if (!string.Equals(correlationId, state, StringComparison.Ordinal))

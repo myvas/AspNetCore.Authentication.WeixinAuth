@@ -880,7 +880,7 @@ namespace UnitTests
                 {
                     Sender = req =>
                     {
-                        return ReturnJsonResponse(new object());
+                        return ReturnJsonResponse(new object()); // Will match TokenEndpoint
                     }
                 };
                 o.Events = redirect ? new OAuthEvents()
@@ -906,13 +906,13 @@ namespace UnitTests
             {
                 var transaction = await sendTask;
                 Assert.Equal(HttpStatusCode.Redirect, transaction.Response.StatusCode);
-                Assert.Equal("/error?FailureMessage=" + UrlEncoder.Default.Encode("Failed on parsing the callback string: {}"),
+                Assert.Equal("/error?FailureMessage=" + UrlEncoder.Default.Encode("Failed on parsing query string: {}"),
                     transaction.Response.Headers.GetValues("Location").First());
             }
             else
             {
                 var error = await Assert.ThrowsAnyAsync<Exception>(() => sendTask);
-                Assert.Equal("Failed on parsing the callback string: {}", error.GetBaseException().Message);
+                Assert.Equal("Failed on parsing query string: {}", error.GetBaseException().Message);
             }
         }
 
@@ -1126,12 +1126,31 @@ namespace UnitTests
         }
 
         [Fact]
+        public async Task ChallengeWithRealAccount()
+        {
+            var stateFormat = new PropertiesDataFormat(new EphemeralDataProtectionProvider(NullLoggerFactory.Instance).CreateProtector("QQConnectTest"));
+            var server = CreateServer(o =>
+            {
+                ConfigureDefaults(o);
+                o.AppId = "101511936";
+                o.AppKey = "ddd401a2c48f2c470e852b00f63defb3";
+                o.StateDataFormat = stateFormat;
+            });
+
+            var transaction = await server.SendAsync("http://weixinoauth.myvas.com/signin-qqconnect");
+            Assert.Equal(HttpStatusCode.Redirect, transaction.Response.StatusCode);
+
+        }
+
+        [Fact]
         public async Task CodeInvalidCauseException()
         {
             var stateFormat = new PropertiesDataFormat(new EphemeralDataProtectionProvider(NullLoggerFactory.Instance).CreateProtector("QQConnectTest"));
             var server = CreateServer(o =>
             {
                 ConfigureDefaults(o);
+                o.AppId= "101511936";
+                o.AppKey= "ddd401a2c48f2c470e852b00f63defb3";
                 o.StateDataFormat = stateFormat;
             });
 
@@ -1139,11 +1158,11 @@ namespace UnitTests
             var correlationKey = ".xsrf";
             var correlationValue = "TestCorrelationId";
             properties.Items.Add(correlationKey, correlationValue);
-            properties.RedirectUri = "/ExternalLoginCallback";
+            //properties.RedirectUri = "/ExternalLoginCallback";
             var state = stateFormat.Protect(properties);
 
             var transaction = await server.SendAsync(
-                    $"https://example.com{QQConnectDefaults.CallbackPath}?code=TestCode&state=" + UrlEncoder.Default.Encode(state),
+                    $"http://weixinoauth.myvas.com{QQConnectDefaults.CallbackPath}?code=TestCode&state=" + UrlEncoder.Default.Encode(state),
                     $".AspNetCore.Correlation.{QQConnectDefaults.AuthenticationScheme}.{correlationValue}=N");
             Assert.Equal(HttpStatusCode.Redirect, transaction.Response.StatusCode);
             Assert.Equal("/ExternalLoginCallback", transaction.Response.Headers.GetValues("Location").First());
@@ -1387,12 +1406,15 @@ namespace UnitTests
                     //else
                     if (req.RequestUri.AbsoluteUri.StartsWith(QQConnectDefaults.TokenEndpoint))
                     {
-                        return ReturnCallbackJsonResponse(new
-                        {
-                            access_token = "Test Access Token",
-                            expires_in = 3600,
-                            refresh_token = "Test Refresh Token"
-                        });
+                        //access_token=E92FA4F3C0CEB05F2B8AF97D71D89F86&expires_in=7776000&refresh_token=80D06D921B91EAE3B196C8480EEF5521
+                        return ReturnFormResponse(("Test Access Token", 3600,"Test Refresh Token"));
+                        //return ReturnCallbackJsonResponse(new
+                        //{
+                        //    access_token = "Test Access Token",
+                        //    expires_in = 3600,
+                        //    refresh_token = "Test Refresh Token"
+                        //});
+
                     }
                     else if (req.RequestUri.AbsoluteUri.StartsWith(QQConnectDefaults.OpenIdEndpoint))
                     {
@@ -1404,17 +1426,21 @@ namespace UnitTests
                     }
                     else if (req.RequestUri.AbsoluteUri.StartsWith(QQConnectDefaults.UserInformationEndpoint))
                     {
-                        return ReturnCallbackJsonResponse(new
+                        return ReturnJsonResponse(new
                         {
                             ret = 0,
                             msg = "",
                             nickname = "Test Name",
+                            gender = "男",
+                            province="广东",
+                            city="广州",
+                            year="1970",
+                            constellation="",
                             figureurl = "http://qzapp.qlogo.cn/qzapp/111111/942FEA70050EEAFBD4DCE2C1FC775E56/30",
                             figureurl_1 = "http://qzapp.qlogo.cn/qzapp/111111/942FEA70050EEAFBD4DCE2C1FC775E56/50",
                             figureurl_2 = "http://qzapp.qlogo.cn/qzapp/111111/942FEA70050EEAFBD4DCE2C1FC775E56/100",
                             figureurl_qq_1 = "http://q.qlogo.cn/qqapp/100312990/DE1931D5330620DBD07FB4A5422917B6/40",
                             figureurl_qq_2 = "http://q.qlogo.cn/qqapp/100312990/DE1931D5330620DBD07FB4A5422917B6/100",
-                            gender = "男",
                             is_yellow_vip = "1",
                             vip = "1",
                             yellow_vip_level = "7",
@@ -1431,7 +1457,7 @@ namespace UnitTests
         private static HttpResponseMessage ReturnFormResponse((string access_token, int expires_in, string refresh_token) content, HttpStatusCode code = HttpStatusCode.OK)
         {
             var res = new HttpResponseMessage(code);
-            var text = $"{content.access_token}&{content.expires_in}&{content.refresh_token}";
+            var text = $"access_token={content.access_token}&expires_in={content.expires_in}&refresh_token={content.refresh_token}";
             res.Content = new StringContent(text, Encoding.UTF8);
             return res;
         }

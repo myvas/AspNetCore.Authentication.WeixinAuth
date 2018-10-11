@@ -62,31 +62,15 @@ namespace AspNetCore.Authentication.QQConnect
             }
 
             var content = await response.Content.ReadAsStringAsync();
-            //callback( {"error":100001,"error_description":"param client_id is wrong or lost "} );
-            //callback( {"error":100010,"error_description":"redirect uri is illegal"} );
-            //access_token=FE04************************CCE2&expires_in=7776000&refresh_token=88E4************************BE14
-            var payload = ParseCallbackString(content);
-            if (!IsCallbackSuccess(payload))
+            //access_token=E92FA4F3C0CEB05F2B8AF97D71D89F86&expires_in=7776000&refresh_token=80D06D921B91EAE3B196C8480EEF5521
+            var payload = ParseQueryString(content);
+            if (!IsQuerySuccess(payload))
             {
                 var error = $"OAuth openid endpoint failure: " + await Display(response);
                 Logger.LogError(error);
                 throw new HttpRequestException(error);
             }
             return OAuthTokenResponse.Success(payload);
-        }
-
-        private static JObject ParseQuery(string query)
-        {
-            var jObject = new JObject();
-
-            foreach (var kv in query.Split('&'))
-            {
-                var keyValue = kv.Split('=');
-
-                jObject.Add(keyValue[0], new JValue(keyValue[1]));
-            }
-
-            return jObject;
         }
 
         /// <summary>
@@ -147,25 +131,100 @@ namespace AspNetCore.Authentication.QQConnect
             return payload;
         }
 
-        private JObject ParseCallbackString(string content)
+        #region QQConnect接口中用到的三种返回内容解析
+        /// <summary>
+        /// 示例：access_token=E92FA4F3C0CEB05F2B8AF97D71D89F86&expires_in=7776000&refresh_token=80D06D921B91EAE3B196C8480EEF5521
+        /// </summary>
+        /// <param name="content"></param>
+        /// <remarks>access_token=E92FA4F3C0CEB05F2B8AF97D71D89F86&expires_in=7776000&refresh_token=80D06D921B91EAE3B196C8480EEF5521</remarks>
+        /// <returns></returns>
+        private JObject ParseQueryString(string content)
         {
-            var contentRegex = new Regex(@"callback\((.*)\);", RegexOptions.Compiled);
-            var match = contentRegex.Match(content);
-            if (!match.Success)
+            try
             {
-                var error = $"Failed on parsing the callback string: {content}";
-                Logger.LogError(error);
-                throw new HttpRequestException(error);
+                var result = new JObject();
+                var dict = System.Web.HttpUtility.ParseQueryString(content);
+                foreach (var k in dict.AllKeys)
+                {
+                    result.Add(k, dict[k]);
+                }
+                return result;
             }
-            var json = match.Groups[1].Value;
-            return JObject.Parse(json);
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, $"Failed on parsing query string: {content}");
+            }
+
+            var error = $"Failed on parsing query string: {content}";
+            throw new HttpRequestException(error);
+        }
+        private bool IsQuerySuccess(JObject payload)
+        {
+            return payload.Count > 0;
         }
 
+        /// <summary>
+        /// 示例：callback( {"error":100001,"error_description":"param client_id is wrong or lost "} );
+        /// </summary>
+        /// <param name="content"></param>
+        /// <remarks>callback( {"error":100001,"error_description":"param client_id is wrong or lost "} );</remarks>
+        /// <returns></returns>
+        private JObject ParseCallbackString(string content)
+        {
+            try
+            {
+                var regexPattern = @"callback\((?<Json>.+)\);";
+                var regex = new Regex(regexPattern, RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.Multiline, TimeSpan.FromMilliseconds(100));
+                var match = regex.Match(content);
+                if (match.Success)
+                {
+                    var json = match.Groups["Json"].Value;
+                    return JObject.Parse(json);
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, $"Failed on parsing callback string: {content}");
+            }
+
+            var error = $"Failed on parsing callback string: {content}";
+            throw new HttpRequestException(error);
+        }
+        /// <summary>
+        /// 示例：{"error":100001,"error_description":"param client_id is wrong or lost "}
+        /// </summary>
         private bool IsCallbackSuccess(JObject payload)
         {
-            //{ "ret":1002, "msg":"请先登录" }
+            return payload.Value<int?>("error").GetValueOrDefault(0) == 0;
+        }
+
+        /// <summary>
+        /// 示例： { "ret":1002, "msg":"请先登录" }
+        /// </summary>
+        /// <param name="content"></param>
+        /// <returns></returns>
+        private JObject ParseJsonString(string content)
+        {
+            try
+            {
+                return JObject.Parse(content);
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, $"Failed on parsing json string: {content}");
+            }
+
+            var error = $"Failed on parsing json string: {content}";
+            throw new HttpRequestException(error);
+        }
+        /// <summary>
+        /// 示例： { "ret":1002, "msg":"请先登录" }
+        /// </summary>
+        private bool IsJsonSuccess(JObject payload)
+        {
             return payload.Value<int?>("ret").GetValueOrDefault(0) == 0;
         }
+        #endregion
 
         /// <summary>
         /// 获取登录用户的昵称、头像、性别（get_user_info, UnionID机制）
@@ -213,8 +272,8 @@ namespace AspNetCore.Authentication.QQConnect
             //}
             // or
             //{ "ret":1002, "msg":"请先登录" }
-            var payload = ParseCallbackString(content);
-            if (!IsCallbackSuccess(payload))
+            var payload = ParseJsonString(content);
+            if (!IsJsonSuccess(payload))
             {
                 var error = $"OAuth userinformation endpoint failure: " + await Display(response);
                 Logger.LogError(error);
