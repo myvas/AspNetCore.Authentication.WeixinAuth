@@ -36,6 +36,68 @@ namespace UnitTests
         }
 
         [Fact]
+        public async Task ChallengeWithRealAccount()
+        {
+            var stateFormat = new PropertiesDataFormat(new EphemeralDataProtectionProvider(NullLoggerFactory.Instance).CreateProtector("QQConnectTest"));
+            var server = CreateServer(o =>
+            {
+                ConfigureDefaults(o);
+                o.AppId = "101511936";
+                o.AppKey = "ddd401a2c48f2c470e852b00f63defb3";
+                o.StateDataFormat = stateFormat;
+            });
+
+            var transaction = await server.SendAsync("http://weixinoauth.myvas.com/challenge-qqconnect");
+            Assert.Equal(HttpStatusCode.Redirect, transaction.Response.StatusCode);
+            //Location: https://graph.qq.com/oauth2.0/authorize?response_type=code&client_id=101511936&redirect_uri=http%3A%2F%2Fweixinoauth.myvas.com%2Fsignin-qqconnect&state=CfDJ8AAAAAAAAAAAAAAAAAAAAAAgT51TbRTOV940aEHuP9dRKyz1_P4bC1T0w_ImybTBuyHZwbWxCs6V8fNKSYl-8IpwXxO5bFMFs4hjw9WWAT-n79_r6exk_ajXN2npXGDBhhSoDIlPuJBY9mzPiK0oGdyZwAfauBDRNXvnuJfbPZMMXGL9o0Eko_V0is9YlUf9ie0fJq-jvoX_a7Be0SUFm7PvGAEwseIY6e1TO3rB1r7u0A&scope=get_user_info&display=
+            Assert.StartsWith(QQConnectDefaults.AuthorizationEndpoint, transaction.Response.Headers.Location.AbsoluteUri);
+            Assert.Contains("response_type=code", transaction.Response.Headers.Location.PathAndQuery);
+            Assert.Contains("client_id=101511936", transaction.Response.Headers.Location.PathAndQuery);
+            Assert.Contains("redirect_uri=", transaction.Response.Headers.Location.PathAndQuery);
+            Assert.Contains("state=", transaction.Response.Headers.Location.PathAndQuery);
+            Assert.Contains("scope=get_user_info", transaction.Response.Headers.Location.PathAndQuery);
+            Assert.Contains("display=", transaction.Response.Headers.Location.PathAndQuery);
+        }
+
+        [Fact]
+        public async Task CodeMockValid()
+        {
+            var stateFormat = new PropertiesDataFormat(new EphemeralDataProtectionProvider(NullLoggerFactory.Instance).CreateProtector("QQConnectTest"));
+            var server = CreateServer(o =>
+            {
+                ConfigureDefaults(o);
+                o.StateDataFormat = stateFormat;
+                o.BackchannelHttpHandler = CreateBackchannel();
+                o.Events = new OAuthEvents()
+                {
+                    OnCreatingTicket = context =>
+                    {
+                        Assert.NotNull(context.User);
+                        Assert.Equal("Test Access Token", context.AccessToken);
+                        Assert.Equal("Test Refresh Token", context.RefreshToken);
+                        Assert.Equal(TimeSpan.FromSeconds(3600), context.ExpiresIn);
+                        Assert.Equal("Test User ID", context.Identity.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+                        Assert.Equal("Test Name", context.Identity.FindFirst(ClaimTypes.Name)?.Value);
+                        return Task.FromResult(0);
+                    }
+                };
+            });
+
+            var properties = new AuthenticationProperties();
+            var correlationKey = ".xsrf";
+            var correlationValue = "TestCorrelationId";
+            properties.Items.Add(correlationKey, correlationValue);
+            properties.RedirectUri = "/ExternalLoginCallback";
+            var state = stateFormat.Protect(properties);
+
+            var transaction = await server.SendAsync(
+                    $"https://example.com{QQConnectDefaults.CallbackPath}?code=TestCode&state=" + UrlEncoder.Default.Encode(state),
+                    $".AspNetCore.Correlation.{QQConnectDefaults.AuthenticationScheme}.{correlationValue}=N");
+            Assert.Equal(HttpStatusCode.Redirect, transaction.Response.StatusCode);
+            Assert.Equal("/ExternalLoginCallback", transaction.Response.Headers.GetValues("Location").First());
+        }
+
+        [Fact]
         public async Task CanForwardDefault()
         {
             var services = new ServiceCollection().AddLogging();
@@ -1126,87 +1188,6 @@ namespace UnitTests
         }
 
         [Fact]
-        public async Task ChallengeWithRealAccount()
-        {
-            var stateFormat = new PropertiesDataFormat(new EphemeralDataProtectionProvider(NullLoggerFactory.Instance).CreateProtector("QQConnectTest"));
-            var server = CreateServer(o =>
-            {
-                ConfigureDefaults(o);
-                o.AppId = "101511936";
-                o.AppKey = "ddd401a2c48f2c470e852b00f63defb3";
-                o.StateDataFormat = stateFormat;
-            });
-
-            var transaction = await server.SendAsync("http://weixinoauth.myvas.com/signin-qqconnect");
-            Assert.Equal(HttpStatusCode.Redirect, transaction.Response.StatusCode);
-
-        }
-
-        [Fact]
-        public async Task CodeInvalidCauseException()
-        {
-            var stateFormat = new PropertiesDataFormat(new EphemeralDataProtectionProvider(NullLoggerFactory.Instance).CreateProtector("QQConnectTest"));
-            var server = CreateServer(o =>
-            {
-                ConfigureDefaults(o);
-                o.AppId= "101511936";
-                o.AppKey= "ddd401a2c48f2c470e852b00f63defb3";
-                o.StateDataFormat = stateFormat;
-            });
-
-            var properties = new AuthenticationProperties();
-            var correlationKey = ".xsrf";
-            var correlationValue = "TestCorrelationId";
-            properties.Items.Add(correlationKey, correlationValue);
-            //properties.RedirectUri = "/ExternalLoginCallback";
-            var state = stateFormat.Protect(properties);
-
-            var transaction = await server.SendAsync(
-                    $"http://weixinoauth.myvas.com{QQConnectDefaults.CallbackPath}?code=TestCode&state=" + UrlEncoder.Default.Encode(state),
-                    $".AspNetCore.Correlation.{QQConnectDefaults.AuthenticationScheme}.{correlationValue}=N");
-            Assert.Equal(HttpStatusCode.Redirect, transaction.Response.StatusCode);
-            Assert.Equal("/ExternalLoginCallback", transaction.Response.Headers.GetValues("Location").First());
-        }
-
-        [Fact]
-        public async Task CodeMockValid()
-        {
-            var stateFormat = new PropertiesDataFormat(new EphemeralDataProtectionProvider(NullLoggerFactory.Instance).CreateProtector("QQConnectTest"));
-            var server = CreateServer(o =>
-            {
-                ConfigureDefaults(o);
-                o.StateDataFormat = stateFormat;
-                o.BackchannelHttpHandler = CreateBackchannel();
-                o.Events = new OAuthEvents()
-                {
-                    OnCreatingTicket = context =>
-                    {
-                        Assert.NotNull(context.User);
-                        Assert.Equal("Test Access Token", context.AccessToken);
-                        Assert.Equal("Test Refresh Token", context.RefreshToken);
-                        Assert.Equal(TimeSpan.FromSeconds(3600), context.ExpiresIn);
-                        Assert.Equal("Test User ID", context.Identity.FindFirst(ClaimTypes.NameIdentifier)?.Value);
-                        Assert.Equal("Test Name", context.Identity.FindFirst(ClaimTypes.Name)?.Value);
-                        return Task.FromResult(0);
-                    }
-                };
-            });
-
-            var properties = new AuthenticationProperties();
-            var correlationKey = ".xsrf";
-            var correlationValue = "TestCorrelationId";
-            properties.Items.Add(correlationKey, correlationValue);
-            properties.RedirectUri = "/ExternalLoginCallback";
-            var state = stateFormat.Protect(properties);
-
-            var transaction = await server.SendAsync(
-                    $"https://example.com{QQConnectDefaults.CallbackPath}?code=TestCode&state=" + UrlEncoder.Default.Encode(state),
-                    $".AspNetCore.Correlation.{QQConnectDefaults.AuthenticationScheme}.{correlationValue}=N");
-            Assert.Equal(HttpStatusCode.Redirect, transaction.Response.StatusCode);
-            Assert.Equal("/ExternalLoginCallback", transaction.Response.Headers.GetValues("Location").First());
-        }
-
-        [Fact]
         public async Task CanRedirectOnError()
         {
             var stateFormat = new PropertiesDataFormat(new EphemeralDataProtectionProvider(NullLoggerFactory.Instance).CreateProtector("QQConnectTest"));
@@ -1407,7 +1388,7 @@ namespace UnitTests
                     if (req.RequestUri.AbsoluteUri.StartsWith(QQConnectDefaults.TokenEndpoint))
                     {
                         //access_token=E92FA4F3C0CEB05F2B8AF97D71D89F86&expires_in=7776000&refresh_token=80D06D921B91EAE3B196C8480EEF5521
-                        return ReturnFormResponse(("Test Access Token", 3600,"Test Refresh Token"));
+                        return ReturnFormResponse(("Test Access Token", 3600, "Test Refresh Token"));
                         //return ReturnCallbackJsonResponse(new
                         //{
                         //    access_token = "Test Access Token",
@@ -1432,10 +1413,10 @@ namespace UnitTests
                             msg = "",
                             nickname = "Test Name",
                             gender = "男",
-                            province="广东",
-                            city="广州",
-                            year="1970",
-                            constellation="",
+                            province = "广东",
+                            city = "广州",
+                            year = "1970",
+                            constellation = "",
                             figureurl = "http://qzapp.qlogo.cn/qzapp/111111/942FEA70050EEAFBD4DCE2C1FC775E56/30",
                             figureurl_1 = "http://qzapp.qlogo.cn/qzapp/111111/942FEA70050EEAFBD4DCE2C1FC775E56/50",
                             figureurl_2 = "http://qzapp.qlogo.cn/qzapp/111111/942FEA70050EEAFBD4DCE2C1FC775E56/100",
