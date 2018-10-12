@@ -14,11 +14,13 @@ namespace AspNetCore.Authentication.WeixinAuth
 {
     public class WeixinAuthApi : IWeixinAuthApi
     {
-        public ILogger Logger { get; }
+        protected ILogger Logger { get; }
+        protected IOptionsMonitor<WeixinAuthOptions> OptionsMonitor;
 
-        public WeixinAuthApi(IOptionsMonitor<WeixinAuthApi> optionsAccessor, ILoggerFactory loggerFactory)
+        public WeixinAuthApi(IOptionsMonitor<WeixinAuthOptions> optionsMonitor, ILoggerFactory loggerFactory)
         {
             Logger = loggerFactory?.CreateLogger<WeixinAuthApi>() ?? throw new ArgumentNullException(nameof(loggerFactory));
+            OptionsMonitor = optionsMonitor ?? throw new ArgumentNullException(nameof(optionsMonitor));
         }
 
         private static async Task<string> Display(HttpResponseMessage response)

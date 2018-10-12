@@ -12,6 +12,7 @@ using Microsoft.Extensions.Primitives;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Net.Http;
@@ -30,29 +31,32 @@ namespace AspNetCore.Authentication.WeixinAuth
 
         protected const string CorrelationPrefix = ".AspNetCore.Correlation.";
         protected const string CorrelationProperty = ".xsrf";
+        private const string CorrelationMarker = "N";
 
         protected static readonly RandomNumberGenerator CryptoRandom = RandomNumberGenerator.Create();
 
         public WeixinAuthHandler(
-            IOptionsMonitor<WeixinAuthOptions> options,
-            ILoggerFactory logger,
+            IWeixinAuthApi api,
+            IOptionsMonitor<WeixinAuthOptions> optionsAccessor,
+            ILoggerFactory loggerFactory,
             UrlEncoder encoder,
             ISystemClock clock)
-            : base(options, logger, encoder, clock)
+            : base(optionsAccessor, loggerFactory, encoder, clock)
         {
+            _api = api ?? throw new ArgumentNullException(nameof(api));
         }
 
         protected override string FormatScope(IEnumerable<string> scopes)
             => string.Join(",", scopes); // // OAuth2 3.3 space separated, but weixin not
 
 
-        protected override async Task HandleChallengeAsync(AuthenticationProperties properties)
+        protected virtual async Task HandleChallengeAsyncX(AuthenticationProperties properties)
         {
             if (string.IsNullOrEmpty(properties.RedirectUri))
             {
                 properties.RedirectUri = CurrentUri;
             }
-            
+
             // OAuth2 10.12 CSRF
             GenerateCorrelationId(properties);
 
@@ -66,8 +70,10 @@ namespace AspNetCore.Authentication.WeixinAuth
         /// <summary>
         /// 生成网页授权调用URL，用于获取code。（然后可以用此code换取网页授权access_token）
         /// </summary>
-        /// <param name="properties"></param>
-        /// <param name="redirectUri">跳转回调redirect_uri，应当使用https链接来确保授权code的安全性。请在传入前使用UrlEncode对链接进行处理。</param>
+        /// <param name="properties">客户端Challenge时，（1）可以通过properties.Items["scope"]去替换请求参数scope；
+        /// （2）可以自定义额外关联数据，例如，Identity中使用的LoginProvider和XsrfId等等。
+        /// （3）Challenge成功后，将跳转到由properties.Items[".redirect"]指定的url。</param>
+        /// <param name="redirectUri">供Challenge使用的回调地址。由HandleChallengeAsyc在调用本函数时将Options.Callback处理成AbsoluteUri。</param>
         /// <returns></returns>
         protected override string BuildChallengeUrl(AuthenticationProperties properties, string redirectUri)
         {
@@ -79,26 +85,37 @@ namespace AspNetCore.Authentication.WeixinAuth
             var scope = PickAuthenticationProperty(properties, OAuthChallengeProperties.ScopeKey, FormatScope, Options.Scope);
             queryStrings.Add(OAuthChallengeProperties.ScopeKey, scope);
 
-            var state = Options.StateDataFormat.Protect(properties);
-            var stateFormat = new WeixinAuthPropertiesDataFormat(Options.DataProtectionProvider.CreateProtector(typeof(WeixinAuthHandler).FullName, "WeixinAuth", "v2"));
-            var state12 = stateFormat.Protect(properties);
-
-            var redirectInProperties = PickAuthenticationProperty(properties, ".redirect");
-            var state21 = Options.StateDataFormat.Protect(properties);
-            var state22 = stateFormat.Protect(properties);
-
-            //state：腾讯非QR方式最长只能128字节，所以只能设计一个correlationId指向到特定的Cookie键值，实现各参数的存取。
-            //see: https://mp.weixin.qq.com/wiki?t=resource/res_main&id=mp1421140842&token=&lang=zh_CN
+            //腾讯规定state最长128字节，所以properties只能存放在Cookie中，state作为Cookie值的索引键。
+            //https://mp.weixin.qq.com/wiki?t=resource/res_main&id=mp1421140842
             var correlationId = properties.Items[CorrelationProperty];
-            state = correlationId;
-            queryStrings.Add("state", state);//Properties will be stored in Header[state] =  Options.StateDataFormat.Protect(properties);
+            Context.Response.Cookies.Append(BuildStateCookieName(correlationId), Options.StateDataFormat.Protect(properties));
+            queryStrings.Add("state", correlationId);
 
             var authorizationUrl = QueryHelpers.AddQueryString(Options.AuthorizationEndpoint, queryStrings);
             return authorizationUrl + "#wechat_redirect";
         }
 
+        #region RemoveAllExceptCorrelationIdFromProperties
+        private string RemoveAllExceptCorrelationIdFromProperties(AuthenticationProperties properties, string correlationProperty)
+        {
+            var items = properties.Items.Where(x => x.Key != correlationProperty);
+            foreach (var kv in items.ToList())
+            {
+                Logger.LogWarning($"BuildChallengeUrl: properties.Items[\"{kv.Key}\"] with value \"{kv.Value}\" will be removed!");
+                properties.Items.Remove(kv.Key);
+            }
+
+            if (properties.Items.TryGetValue(correlationProperty, out string value))
+            {
+                return value;
+            }
+
+            return "";
+        }
+        #endregion
+
         #region Pick value from AuthenticationProperties
-        private static string PickAuthenticationProperty<T>(
+        private string PickAuthenticationProperty<T>(
             AuthenticationProperties properties,
             string name,
             Func<T, string> formatter,
@@ -116,48 +133,22 @@ namespace AspNetCore.Authentication.WeixinAuth
             }
 
             // Remove the parameter from AuthenticationProperties so it won't be serialized into the state
+            Logger.LogWarning($"BuildChallengeUrl: properties.Items[\"{name}\"] with value \"{value}\" will be Picked!");
             properties.Items.Remove(name);
 
             return value;
         }
 
-        private static string PickAuthenticationProperty(
+        private string PickAuthenticationProperty(
             AuthenticationProperties properties,
             string name,
             string defaultValue = null)
             => PickAuthenticationProperty(properties, name, x => x, defaultValue);
         #endregion
 
-
-
         protected override async Task<HandleRequestResult> HandleRemoteAuthenticateAsync()
         {
             var query = Request.Query;
-
-            var state = query["state"]; // ie. correlationId
-            if (StringValues.IsNullOrEmpty(state))
-            {
-                return HandleRequestResult.Fail("The oauth state was missing.");
-            }
-
-            var stateCookieName = BuildCorelationCookieName(state);
-            var protectedProperties = Request.Cookies[stateCookieName];
-            if (string.IsNullOrEmpty(protectedProperties))
-            {
-                return HandleRequestResult.Fail($"The oauth state cookie was missing: Cookie: {stateCookieName}");
-            }
-
-            var properties = Options.StateDataFormat.Unprotect(protectedProperties);
-            if (properties == null)
-            {
-                return HandleRequestResult.Fail($"The oauth state cookie was invalid: Cookie: {stateCookieName}");
-            }
-
-            // OAuth2 10.12 CSRF
-            if (!ValidateCorrelationId(properties))
-            {
-                return HandleRequestResult.Fail("Correlation failed.", properties);
-            }
 
             var error = query["error"];
             if (!StringValues.IsNullOrEmpty(error))
@@ -177,6 +168,35 @@ namespace AspNetCore.Authentication.WeixinAuth
 
                 return HandleRequestResult.Fail(failureMessage.ToString());
             }
+
+            var state = query["state"]; // ie. correlationId
+            if (StringValues.IsNullOrEmpty(state))
+            {
+                return HandleRequestResult.Fail("The oauth state was missing.");
+            }
+
+            var stateCookieName = BuildStateCookieName(state);
+            var protectedProperties = Request.Cookies[stateCookieName];
+            if (string.IsNullOrEmpty(protectedProperties))
+            {
+                return HandleRequestResult.Fail($"The oauth state cookie was missing: Cookie: {stateCookieName}");
+            }
+
+            var cookieOptions = Options.CorrelationCookie.Build(Context, Clock.UtcNow);
+            Response.Cookies.Delete(stateCookieName, cookieOptions);
+
+            var properties = Options.StateDataFormat.Unprotect(protectedProperties);
+            if (properties == null)
+            {
+                return HandleRequestResult.Fail($"The oauth state cookie was invalid: Cookie: {stateCookieName}");
+            }
+
+            // OAuth2 10.12 CSRF
+            if (!ValidateCorrelationId(properties))
+            {
+                return HandleRequestResult.Fail("Correlation failed.", properties);
+            }
+
 
             var code = query["code"];
 
@@ -310,15 +330,16 @@ namespace AspNetCore.Authentication.WeixinAuth
             var scope = tokens.GetScope();
 
             JObject payload = new JObject();
-            if (WeixinAuthScopes.Contains(scope, WeixinAuthScopes.Items.snsapi_userinfo))
+            if (/*WeixinAuthScopes.Contains(Options.Scope, WeixinAuthScopes.Items.snsapi_userinfo)
+                || */WeixinAuthScopes.Contains(scope, WeixinAuthScopes.Items.snsapi_userinfo))
             {
                 payload = await _api.GetUserInfo(Options.Backchannel, Options.UserInformationEndpoint, tokens.AccessToken, openid, Context.RequestAborted, LanguageCodes.zh_CN);
             }
-            if (!payload.ContainsKey("unionid") && string.IsNullOrWhiteSpace(unionid))
+            if (!payload.ContainsKey("unionid") && !string.IsNullOrWhiteSpace(unionid))
             {
                 payload.Add("unionid", unionid);
             }
-            if (!payload.ContainsKey("openid") && string.IsNullOrWhiteSpace(openid))
+            if (!payload.ContainsKey("openid") && !string.IsNullOrWhiteSpace(openid))
             {
                 payload.Add("openid", openid);
             }
@@ -332,17 +353,17 @@ namespace AspNetCore.Authentication.WeixinAuth
         }
 
         /// <summary>
-        /// 
+        /// 生成一个较短的CorrelationId，以便解决state长度限制为128字节的问题
         /// </summary>
-        /// <param name="properties">properties only .Items[CorrelationProperty] used.</param>
-        protected override void GenerateCorrelationId(AuthenticationProperties properties)
+        /// <param name="properties"></param>
+        protected virtual void GenerateCorrelationIdX(AuthenticationProperties properties)
         {
-            if (properties == null)
+            if (properties == null)//contains .redirect={redirect_uri}
             {
                 throw new ArgumentNullException(nameof(properties));
             }
 
-            var bytes = new byte[32];
+            var bytes = new byte[8];//32->12->8
             CryptoRandom.GetBytes(bytes);
             var correlationId = Base64UrlTextEncoder.Encode(bytes);
 
@@ -358,18 +379,17 @@ namespace AspNetCore.Authentication.WeixinAuth
         }
 
         #region Handle big properties protected output, by store it to cookie 'xxxx.state'
-        private const string CorrelationMarker = "N";
         protected virtual string BuildCorelationCookieName(string correlationId)
         {
             return Options.CorrelationCookie.Name + Scheme.Name + "." + correlationId;
         }
         protected virtual string BuildStateCookieName(string correlationId)
         {
-            return Options.CorrelationCookie.Name + Scheme.Name + "." + correlationId + "." + "State";
+            return Options.CorrelationCookie.Name + Scheme.Name + "." + correlationId + "." + CorrelationMarker;
         }
         #endregion
 
-        protected override bool ValidateCorrelationId(AuthenticationProperties properties)
+        protected virtual bool ValidateCorrelationIdX(AuthenticationProperties properties)
         {
             if (properties == null)
             {
