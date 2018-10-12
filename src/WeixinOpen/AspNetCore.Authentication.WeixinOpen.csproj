@@ -5,7 +5,7 @@
     <AssemblyName>AspNetCore.Authentication.WeixinOpen</AssemblyName>
     <TargetFramework>netstandard2.0</TargetFramework>
     <AssetTargetFallback>$(AssetTargetFallback);portable-win8+wp8+wpa81;</AssetTargetFallback>
-    <Version>2.1.410</Version>
+    <Version>2.1.412</Version>
     <PackageTags>AspNetCore, Authentication, OAuth, Weixin Open, Tencent, Myvas</PackageTags>
     <PackageProjectUrl>https://github.com/myvas/AspNetCore.Authentication</PackageProjectUrl>   
     <Description>ASP.NET Core 2.x Authentication middleware that enables an application to support the WeixinOpen OAuth2.0 authentication workflow. (https://open.weixin.qq.com, 微信开放平台@网站应用扫码登录)</Description>   
