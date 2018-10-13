@@ -14,5 +14,26 @@ namespace AspNetCore.Authentication.WeixinOpen.Messages
         {
             return properties.Items[CorrelationProperty];
         }
+
+        private const string RedirectProperty = ".redirect";
+
+        public static string GetRedirectUri(this AuthenticationProperties properties)
+        {
+            return properties.Items[RedirectProperty];
+        }
+
+        private const string XsrfIdProperty = "XsrfId";
+
+        public static string GetXsrfId(this AuthenticationProperties properties)
+        {
+            return properties.Items[XsrfIdProperty];
+        }
+        
+        private const string LoginProviderProperty = "LoginProvider";
+
+        public static string GetLoginProvider(this AuthenticationProperties properties)
+        {
+            return properties.Items[LoginProviderProperty];
+        }
     }
 }

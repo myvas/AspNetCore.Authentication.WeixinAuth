@@ -1,9 +1,6 @@
-﻿using AspNetCore.Authentication.WeixinAuth.Events;
-using Microsoft.AspNetCore.Authentication;
+﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.OAuth;
-using Microsoft.AspNetCore.Authentication.OAuth.Claims;
 using System;
-using System.Collections.Generic;
 using System.Security.Claims;
 
 namespace AspNetCore.Authentication.WeixinAuth
