@@ -10,7 +10,7 @@
   <ItemGroup>
     <PackageReference Include="AspNetCore.TencentSms" Version="2.1.403" />
     <PackageReference Include="AspNetCore.ViewDivert" Version="2.1.404" />
-    <PackageReference Include="Microsoft.AspNetCore.All" Version="2.1.5" />
+    <PackageReference Include="Microsoft.AspNetCore.All" />
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="2.1.5" PrivateAssets="All" />
   </ItemGroup>
 

@@ -30,9 +30,9 @@ namespace AspNetCore.Authentication.WeixinAuth
         public string ValidateTokenEndpoint { get; set; }
 
         /// <summary>
-        /// 是否需要获取除微信OpenId外的其他用户信息（名称，头像等）
+        /// 是否采用静默模式。默认为是。使用静默模式时，将仅获取用户的OpenId信息，不会获取微信用户昵称、头像等其他信息。
         /// </summary>
-        public bool GetClaimsFromUserInfoEndpoint
+        public bool SilentMode
         {
             get
             {
@@ -42,15 +42,15 @@ namespace AspNetCore.Authentication.WeixinAuth
             {
                 if (value)
                 {
-                    WeixinAuthScopes.TryAdd(Scope, WeixinAuthScopes.Items.snsapi_userinfo);
-                }
-                else
-                {
                     Scope.Remove(WeixinAuthScopes.Items.snsapi_userinfo.ToString());
                     if (Scope.Count < 1)
                     {
                         Scope.Add(WeixinAuthScopes.Items.snsapi_base.ToString());
                     }
+                }
+                else
+                {
+                    WeixinAuthScopes.TryAdd(Scope, WeixinAuthScopes.Items.snsapi_userinfo);
                 }
             }
         }
@@ -63,9 +63,9 @@ namespace AspNetCore.Authentication.WeixinAuth
             RefreshTokenEndpoint = WeixinAuthDefaults.RefreshTokenEndpoint;
             ValidateTokenEndpoint = WeixinAuthDefaults.ValidateTokenEndpoint;
             UserInformationEndpoint = WeixinAuthDefaults.UserInformationEndpoint;
-            LanguageCode =  "zh_CN";
+            LanguageCode = "zh_CN";
             WeixinAuthScopes.TryAdd(Scope, WeixinAuthScopes.Items.snsapi_base);
-            GetClaimsFromUserInfoEndpoint = true;
+            SilentMode = true;
             SaveTokens = true;
 
             ClaimsIssuer = WeixinAuthDefaults.ClaimsIssuer;
@@ -87,7 +87,7 @@ namespace AspNetCore.Authentication.WeixinAuth
             ClaimActions.MapJsonKey(ClaimTypes.Country, "country");
             ClaimActions.MapJsonKey(ClaimTypes.StateOrProvince, "province");
         }
-        
+
         public override void Validate()
         {
             if (string.IsNullOrEmpty(LanguageCode))

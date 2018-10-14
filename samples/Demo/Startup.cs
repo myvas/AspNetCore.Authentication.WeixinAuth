@@ -63,6 +63,7 @@ namespace Demo
                 {
                     options.AppId = _configuration["WeixinAuth:AppId"];
                     options.AppSecret = _configuration["WeixinAuth:AppSecret"];
+                    options.SilentMode = false; //不采用静默模式
                     //options.SaveTokens = true;
                 })
                 .AddQQConnect(options =>
