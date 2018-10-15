@@ -4,7 +4,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 
-namespace AspNetCore.Authentication.QQConnect
+namespace Myvas.AspNetCore.Authentication.QQConnect
 {
     /// <summary>
     /// Defines constants for the well-known claim types that can be assigned to a subject.

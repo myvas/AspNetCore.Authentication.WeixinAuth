@@ -1,11 +1,12 @@
-﻿using AspNetCore.Authentication.QQConnect;
+﻿using Myvas.AspNetCore.Authentication;
+using Myvas.AspNetCore.Authentication.QQConnect;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 using Xunit;
 
-namespace UnitTests
+namespace UnitTest
 {
     public class QQConnectScopesTests
     {
@@ -58,12 +59,12 @@ namespace UnitTests
         }
 
         [Theory]
-        [InlineData("get_user_info", QQConnectScopes.Items.get_user_info)]
-        [InlineData("get_user_info,list_album", QQConnectScopes.Items.get_user_info, QQConnectScopes.Items.list_album)]
-        [InlineData("get_user_info,list_album,upload_pic", QQConnectScopes.Items.get_user_info, QQConnectScopes.Items.list_album, QQConnectScopes.Items.upload_pic)]
-        [InlineData("get_user_info,list_album,upload_pic,do_like", QQConnectScopes.Items.get_user_info, QQConnectScopes.Items.list_album, QQConnectScopes.Items.upload_pic, QQConnectScopes.Items.do_like)]
-        [InlineData("get_user_info,list_album,upload_pic,do_like", QQConnectScopes.Items.get_user_info, QQConnectScopes.Items.get_user_info, QQConnectScopes.Items.list_album, QQConnectScopes.Items.upload_pic, QQConnectScopes.Items.do_like)]
-        public void Scope_TryAdd_Enum_Test(string expected, QQConnectScopes.Items origin, params QQConnectScopes.Items[] values)
+        [InlineData("get_user_info", QQConnectScopes.get_user_info)]
+        [InlineData("get_user_info,list_album", QQConnectScopes.get_user_info, QQConnectScopes.list_album)]
+        [InlineData("get_user_info,list_album,upload_pic", QQConnectScopes.get_user_info, QQConnectScopes.list_album, QQConnectScopes.upload_pic)]
+        [InlineData("get_user_info,list_album,upload_pic,do_like", QQConnectScopes.get_user_info, QQConnectScopes.list_album, QQConnectScopes.upload_pic, QQConnectScopes.do_like)]
+        [InlineData("get_user_info,list_album,upload_pic,do_like", QQConnectScopes.get_user_info, QQConnectScopes.get_user_info, QQConnectScopes.list_album, QQConnectScopes.upload_pic, QQConnectScopes.do_like)]
+        public void Scope_TryAdd_RealValues_Test(string expected, string origin, params string[] values)
         {
             var test = new ScopeTester();
 

@@ -1,9 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.OAuth;
+using Myvas.AspNetCore.Authentication.WeixinOpen;
 using System;
 using System.Security.Claims;
 
-namespace AspNetCore.Authentication.WeixinOpen
+namespace Myvas.AspNetCore.Authentication
 {
     /// <summary>
     /// Configuration options for <see cref="WeixinOpenHandler"/>.

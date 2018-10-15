@@ -5,9 +5,9 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace AspNetCore.Authentication.WeixinAuth
+namespace Myvas.AspNetCore.Authentication.WeixinAuth
 {
-    public static class AuthenticationPropertiesExtensions
+    public static class WeixinAuthAuthenticationPropertiesExtensions
     {
         private const string CorrelationProperty = ".xsrf";
 
@@ -20,7 +20,7 @@ namespace AspNetCore.Authentication.WeixinAuth
         {
             var state = correlationId;
             var fullCookieValue = cookies.FirstOrDefault(x => x.StartsWith($"{correlationCookieName}.{schemeName}.{state}.N"));
-            var cookieValue = AuthenticationPropertiesExtensions.GetCookieValue(fullCookieValue, state);
+            var cookieValue = WeixinAuthAuthenticationPropertiesExtensions.GetCookieValue(fullCookieValue, state);
             var stateProperties = stateFormat.Unprotect(cookieValue);
             return stateProperties;
         }

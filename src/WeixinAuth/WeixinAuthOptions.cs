@@ -1,9 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.OAuth;
+using Myvas.AspNetCore.Authentication.WeixinAuth;
 using System;
 using System.Security.Claims;
 
-namespace AspNetCore.Authentication.WeixinAuth
+namespace Myvas.AspNetCore.Authentication
 {
     /// <summary>
     /// Configuration options for <see cref="WeixinAuthHandler"/>.
@@ -36,21 +37,21 @@ namespace AspNetCore.Authentication.WeixinAuth
         {
             get
             {
-                return WeixinAuthScopes.Contains(Scope, WeixinAuthScopes.Items.snsapi_userinfo);
+                return WeixinAuthScopes.Contains(Scope, WeixinAuthScopes.snsapi_userinfo);
             }
             set
             {
                 if (value)
                 {
-                    Scope.Remove(WeixinAuthScopes.Items.snsapi_userinfo.ToString());
+                    Scope.Remove(WeixinAuthScopes.snsapi_userinfo);
                     if (Scope.Count < 1)
                     {
-                        Scope.Add(WeixinAuthScopes.Items.snsapi_base.ToString());
+                        Scope.Add(WeixinAuthScopes.snsapi_base);
                     }
                 }
                 else
                 {
-                    WeixinAuthScopes.TryAdd(Scope, WeixinAuthScopes.Items.snsapi_userinfo);
+                    WeixinAuthScopes.TryAdd(Scope, WeixinAuthScopes.snsapi_userinfo);
                 }
             }
         }
@@ -64,7 +65,7 @@ namespace AspNetCore.Authentication.WeixinAuth
             ValidateTokenEndpoint = WeixinAuthDefaults.ValidateTokenEndpoint;
             UserInformationEndpoint = WeixinAuthDefaults.UserInformationEndpoint;
             LanguageCode = "zh_CN";
-            WeixinAuthScopes.TryAdd(Scope, WeixinAuthScopes.Items.snsapi_base);
+            WeixinAuthScopes.TryAdd(Scope, WeixinAuthScopes.snsapi_base);
             SilentMode = true;
             SaveTokens = true;
 

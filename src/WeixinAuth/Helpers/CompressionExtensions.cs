@@ -7,12 +7,12 @@ using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace AspNetCore.Authentication.WeixinAuth
+namespace Myvas.AspNetCore.Authentication.WeixinAuth
 {
     /// <summary>
     /// ref. https://stackoverflow.com/questions/7343465/compression-decompression-string-with-c-sharp
     /// </summary>
-    public static class CompressionExtensions
+    static internal class CompressionExtensions
     {
         public static async Task<IEnumerable<byte>> Zip(this object obj)
         {
@@ -44,7 +44,7 @@ namespace AspNetCore.Authentication.WeixinAuth
         }
     }
 
-    public static class SerializerExtensions
+    internal static class SerializerExtensions
     {
         /// <summary>
         /// Writes the given object instance to a binary file.

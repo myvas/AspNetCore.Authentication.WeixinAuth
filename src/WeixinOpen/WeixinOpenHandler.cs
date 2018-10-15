@@ -15,7 +15,7 @@ using System.Text;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 
-namespace AspNetCore.Authentication.WeixinOpen
+namespace Myvas.AspNetCore.Authentication.WeixinOpen
 {
     internal class WeixinOpenHandler : OAuthHandler<WeixinOpenOptions>
     {
@@ -155,7 +155,7 @@ namespace AspNetCore.Authentication.WeixinOpen
             var unionid = tokens.Response.Value<string>("unionid");
             var scope = tokens.Response.Value<string>("scope");
 
-            var userInfoPayload = await _api.GetUserInfo(Options.Backchannel, Options.UserInformationEndpoint, tokens.AccessToken, openid, Context.RequestAborted, LanguageCodes.zh_CN);
+            var userInfoPayload = await _api.GetUserInfo(Options.Backchannel, Options.UserInformationEndpoint, tokens.AccessToken, openid, Context.RequestAborted, WeixinOpenLanguageCodes.zh_CN);
             userInfoPayload.Add("scope", scope);
 
             var context = new OAuthCreatingTicketContext(new ClaimsPrincipal(identity), properties, Context, Scheme, Options, Backchannel, tokens, userInfoPayload);

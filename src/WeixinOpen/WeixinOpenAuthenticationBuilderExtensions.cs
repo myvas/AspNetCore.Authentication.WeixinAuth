@@ -1,6 +1,7 @@
-﻿using AspNetCore.Authentication.WeixinOpen;
-using Microsoft.AspNetCore.Authentication;
+﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Myvas.AspNetCore.Authentication;
+using Myvas.AspNetCore.Authentication.WeixinOpen;
 using System;
 
 namespace Microsoft.Extensions.DependencyInjection
@@ -9,7 +10,7 @@ namespace Microsoft.Extensions.DependencyInjection
     /// 微信开放平台@网站应用微信登录
     /// https://open.weixin.qq.com/cgi-bin/showdocument?action=dir_list&t=resource/res_list&verify=1&id=open1419316505&token=&lang=zh_CN
     /// </summary>
-    public static class WeixinOpenExtensions
+    public static class WeixinOpenAuthenticationBuilderExtensions
     {
         public static AuthenticationBuilder AddWeixinOpen(this AuthenticationBuilder builder)
             => builder.AddWeixinOpen(WeixinOpenDefaults.AuthenticationScheme, _ => { });

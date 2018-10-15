@@ -10,7 +10,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace AspNetCore.Authentication.WeixinAuth
+namespace Myvas.AspNetCore.Authentication.WeixinAuth
 {
     public class WeixinAuthApi : IWeixinAuthApi
     {
@@ -164,7 +164,7 @@ namespace AspNetCore.Authentication.WeixinAuth
         /// </summary>
         /// <param name="accessToken"></param>
         /// <returns></returns>
-        public async Task<JObject> GetUserInfo(HttpClient backchannel, string userInformationEndpoint, string accessToken, string openid, CancellationToken cancellationToken, LanguageCodes languageCode = LanguageCodes.zh_CN)
+        public async Task<JObject> GetUserInfo(HttpClient backchannel, string userInformationEndpoint, string accessToken, string openid, CancellationToken cancellationToken, WeixinAuthLanguageCodes languageCode = WeixinAuthLanguageCodes.zh_CN)
         {
             var tokenRequestParameters = new Dictionary<string, string>()
             {

@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Authentication.OAuth;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 
-namespace AspNetCore.Authentication.QQConnect
+namespace Myvas.AspNetCore.Authentication.QQConnect
 {
     public interface IQQConnectApi
     {

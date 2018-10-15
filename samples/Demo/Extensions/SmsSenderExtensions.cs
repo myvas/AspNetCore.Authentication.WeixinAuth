@@ -1,6 +1,7 @@
+using Myvas.AspNetCore.TencentSms;
 using System.Threading.Tasks;
 
-namespace AspNetCore.TencentSms
+namespace Myvas.AspNetCore.TencentSms
 {
     internal static class TencentSmsSenderExtensions
     {

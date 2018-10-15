@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using System.Threading;
 
-namespace AspNetCore.Authentication.WeixinOpen
+namespace Myvas.AspNetCore.Authentication.WeixinOpen
 {
     public class WeixinOpenApi : IWeixinOpenApi
     {
@@ -162,7 +162,7 @@ namespace AspNetCore.Authentication.WeixinOpen
         /// </summary>
         /// <param name="accessToken"></param>
         /// <returns></returns>
-        public async Task<JObject> GetUserInfo(HttpClient backchannel, string userInformationEndpoint, string accessToken, string openid, CancellationToken cancellationToken, LanguageCodes languageCode = LanguageCodes.zh_CN)
+        public async Task<JObject> GetUserInfo(HttpClient backchannel, string userInformationEndpoint, string accessToken, string openid, CancellationToken cancellationToken, WeixinOpenLanguageCodes languageCode = WeixinOpenLanguageCodes.zh_CN)
         {
             var tokenRequestParameters = new Dictionary<string, string>()
             {

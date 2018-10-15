@@ -1,16 +1,16 @@
-﻿using AspNetCore.Authentication.WeixinOpen;
-using Microsoft.AspNetCore.Authentication;
+﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
+using Myvas.AspNetCore.Authentication;
 using System;
 using System.Security.Claims;
 using System.Threading.Tasks;
 
-namespace UnitTests.TestServers
+namespace UnitTest.TestServers
 {
     internal class TestServerBuilder
     {

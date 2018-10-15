@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
-using AspNetCore.Authentication.WeixinAuth;
+using Myvas.AspNetCore.Authentication.WeixinAuth;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.Logging.Abstractions;
 using System.Security.Cryptography;
 
-namespace UnitTests
+namespace UnitTest
 {
     public class ShorterStateTests
     {

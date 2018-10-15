@@ -1,6 +1,7 @@
-﻿using AspNetCore.Authentication.QQConnect;
-using Microsoft.AspNetCore.Authentication;
+﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Myvas.AspNetCore.Authentication;
+using Myvas.AspNetCore.Authentication.QQConnect;
 using System;
 
 namespace Microsoft.Extensions.DependencyInjection

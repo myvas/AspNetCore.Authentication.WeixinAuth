@@ -4,9 +4,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace AspNetCore.Authentication.WeixinOpen.Messages
+namespace Myvas.AspNetCore.Authentication.WeixinOpen
 {
-    public static class AuthenticationPropertiesExtensions
+    public static class WeixinOpenAuthenticationPropertiesExtensions
     {
         private const string CorrelationProperty = ".xsrf";
 

@@ -12,10 +12,11 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.TestHost;
 
-namespace Microsoft.AspNetCore.Authentication
+namespace UnitTest
 {
     public static class TestExtensions
     {

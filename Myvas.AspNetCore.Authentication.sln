@@ -21,13 +21,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "samples", "samples", "{6E6B
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Demo", "samples\Demo\Demo.csproj", "{6F343D69-D804-46F0-B4A6-F6C1C5C99282}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AspNetCore.Authentication.WeixinAuth", "src\WeixinAuth\AspNetCore.Authentication.WeixinAuth.csproj", "{009C886C-3B18-44F3-8509-5EAF6731E276}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WeixinAuth", "src\WeixinAuth\WeixinAuth.csproj", "{009C886C-3B18-44F3-8509-5EAF6731E276}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AspNetCore.Authentication.WeixinOpen", "src\WeixinOpen\AspNetCore.Authentication.WeixinOpen.csproj", "{C68C8D63-7FBA-4BE2-B929-C2B00A59C5A6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WeixinOpen", "src\WeixinOpen\WeixinOpen.csproj", "{C68C8D63-7FBA-4BE2-B929-C2B00A59C5A6}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AspNetCore.Authentication.QQConnect", "src\QQConnect\AspNetCore.Authentication.QQConnect.csproj", "{1E918763-5FDE-44AA-9634-6013987226E7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QQConnect", "src\QQConnect\QQConnect.csproj", "{1E918763-5FDE-44AA-9634-6013987226E7}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UnitTests", "test\UnitTests\UnitTests.csproj", "{623F9E1F-BEC9-45FB-A474-6012AE00E66D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UnitTest", "test\UnitTest\UnitTest.csproj", "{53D4F64D-7ACB-4D01-89CC-627DC2A20FB9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -51,10 +51,10 @@ Global
 		{1E918763-5FDE-44AA-9634-6013987226E7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1E918763-5FDE-44AA-9634-6013987226E7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1E918763-5FDE-44AA-9634-6013987226E7}.Release|Any CPU.Build.0 = Release|Any CPU
-		{623F9E1F-BEC9-45FB-A474-6012AE00E66D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{623F9E1F-BEC9-45FB-A474-6012AE00E66D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{623F9E1F-BEC9-45FB-A474-6012AE00E66D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{623F9E1F-BEC9-45FB-A474-6012AE00E66D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{53D4F64D-7ACB-4D01-89CC-627DC2A20FB9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{53D4F64D-7ACB-4D01-89CC-627DC2A20FB9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{53D4F64D-7ACB-4D01-89CC-627DC2A20FB9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{53D4F64D-7ACB-4D01-89CC-627DC2A20FB9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -64,7 +64,7 @@ Global
 		{009C886C-3B18-44F3-8509-5EAF6731E276} = {672FEA18-F072-4549-9C4C-DBD1F9CDC7BB}
 		{C68C8D63-7FBA-4BE2-B929-C2B00A59C5A6} = {672FEA18-F072-4549-9C4C-DBD1F9CDC7BB}
 		{1E918763-5FDE-44AA-9634-6013987226E7} = {672FEA18-F072-4549-9C4C-DBD1F9CDC7BB}
-		{623F9E1F-BEC9-45FB-A474-6012AE00E66D} = {73FCFCF4-3A1C-4D4D-939A-9CABDC2341DC}
+		{53D4F64D-7ACB-4D01-89CC-627DC2A20FB9} = {73FCFCF4-3A1C-4D4D-939A-9CABDC2341DC}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {2AEDFD1F-BBE1-4727-9978-2FB04DCE84AF}

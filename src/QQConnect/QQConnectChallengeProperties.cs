@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace AspNetCore.Authentication.QQConnect
+namespace Myvas.AspNetCore.Authentication.QQConnect
 {
     public class QQConnectChallengeProperties : OAuthChallengeProperties
     {

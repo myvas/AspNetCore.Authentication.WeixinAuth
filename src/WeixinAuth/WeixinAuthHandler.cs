@@ -18,7 +18,7 @@ using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 using Base64UrlTextEncoder = Microsoft.AspNetCore.Authentication.Base64UrlTextEncoder;
 
-namespace AspNetCore.Authentication.WeixinAuth
+namespace Myvas.AspNetCore.Authentication.WeixinAuth
 {
     internal class WeixinAuthHandler : OAuthHandler<WeixinAuthOptions>
     {
@@ -326,9 +326,9 @@ namespace AspNetCore.Authentication.WeixinAuth
 
             JObject payload = new JObject();
             if (/*WeixinAuthScopes.Contains(Options.Scope, WeixinAuthScopes.Items.snsapi_userinfo)
-                || */WeixinAuthScopes.Contains(scope, WeixinAuthScopes.Items.snsapi_userinfo))
+                || */WeixinAuthScopes.Contains(scope, WeixinAuthScopes.snsapi_userinfo))
             {
-                payload = await _api.GetUserInfo(Options.Backchannel, Options.UserInformationEndpoint, tokens.AccessToken, openid, Context.RequestAborted, LanguageCodes.zh_CN);
+                payload = await _api.GetUserInfo(Options.Backchannel, Options.UserInformationEndpoint, tokens.AccessToken, openid, Context.RequestAborted, WeixinAuthLanguageCodes.zh_CN);
             }
             if (!payload.ContainsKey("unionid") && !string.IsNullOrWhiteSpace(unionid))
             {

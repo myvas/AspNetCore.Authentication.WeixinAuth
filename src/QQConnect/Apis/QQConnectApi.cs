@@ -13,7 +13,7 @@ using Newtonsoft.Json.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 
-namespace AspNetCore.Authentication.QQConnect
+namespace Myvas.AspNetCore.Authentication.QQConnect
 {
     public class QQConnectApi : IQQConnectApi
     {

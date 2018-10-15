@@ -1,13 +1,11 @@
-﻿using AspNetCore.Authentication.QQConnect;
-using AspNetCore.TencentSms;
-using Demo;
-using Demo.Models;
+﻿using Demo.Models;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Myvas.AspNetCore.Authentication;
 
 namespace Demo
 {
@@ -73,10 +71,10 @@ namespace Demo
                     //options.SaveTokens = true;
 
                     QQConnectScopes.TryAdd(options.Scope,
-                        QQConnectScopes.Items.get_user_info,
-                        QQConnectScopes.Items.list_album,
-                        QQConnectScopes.Items.upload_pic,
-                        QQConnectScopes.Items.do_like);
+                        QQConnectScopes.get_user_info,
+                        QQConnectScopes.list_album,
+                        QQConnectScopes.upload_pic,
+                        QQConnectScopes.do_like);
                 });
 
             services.AddTencentSms(options =>

@@ -4,9 +4,9 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 
-namespace AspNetCore.Authentication.WeixinAuth.Extensions
+namespace Myvas.AspNetCore.Authentication.WeixinAuth.Extensions
 {
-    internal static class ClaimsExtensions
+    internal static class WeixinAuthClaimsExtensions
     {
         public static ClaimsIdentity AddOptionalClaim(this ClaimsIdentity identity,
             string type, string value, string issuer)

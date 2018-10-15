@@ -8,10 +8,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AspNetCore.TencentSms" Version="2.1.403" />
-    <PackageReference Include="AspNetCore.ViewDivert" Version="2.1.404" />
     <PackageReference Include="Microsoft.AspNetCore.All" />
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="2.1.5" PrivateAssets="All" />
+    <PackageReference Include="Myvas.AspNetCore.TencentSms" Version="2.1.404" />
+    <PackageReference Include="Myvas.AspNetCore.ViewDivert" Version="2.1.405" />
   </ItemGroup>
 
   <ItemGroup>
@@ -19,9 +19,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\QQConnect\AspNetCore.Authentication.QQConnect.csproj" />
-    <ProjectReference Include="..\..\src\WeixinAuth\AspNetCore.Authentication.WeixinAuth.csproj" />
-    <ProjectReference Include="..\..\src\WeixinOpen\AspNetCore.Authentication.WeixinOpen.csproj" />
+    <ProjectReference Include="..\..\src\QQConnect\QQConnect.csproj" />
+    <ProjectReference Include="..\..\src\WeixinAuth\WeixinAuth.csproj" />
+    <ProjectReference Include="..\..\src\WeixinOpen\WeixinOpen.csproj" />
   </ItemGroup>
 
   <Target Name="PrecompileScript" BeforeTargets="BeforeBuild">

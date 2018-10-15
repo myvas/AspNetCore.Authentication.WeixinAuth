@@ -1,4 +1,4 @@
-﻿using AspNetCore.TencentSms;
+﻿using Myvas.AspNetCore.TencentSms;
 using Demo.Models;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;

@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace AspNetCore.Authentication.QQConnect.Models
+namespace Myvas.AspNetCore.Authentication.QQConnect
 {
-    public class UserInfoJson : ErrorJson
+    public class QQConnectUserInfoJson : QQConnectErrorJson
     {
         public string nickname { get; set; }
         public string figureurl { get; set; }

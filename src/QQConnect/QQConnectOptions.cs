@@ -1,11 +1,10 @@
-﻿using AspNetCore.Authentication.QQConnect;
-using Microsoft.AspNetCore.Authentication;
+﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.OAuth;
 using Microsoft.AspNetCore.Http;
 using System;
 using System.Security.Claims;
 
-namespace AspNetCore.Authentication.QQConnect
+namespace Myvas.AspNetCore.Authentication
 {
     public class QQConnectOptions : OAuthOptions
     {
@@ -30,7 +29,7 @@ namespace AspNetCore.Authentication.QQConnect
             TokenEndpoint = QQConnectDefaults.TokenEndpoint;
             UserInformationEndpoint = QQConnectDefaults.UserInformationEndpoint;
 
-            Scope.Add(QQConnectScopes.Items.get_user_info.ToString());
+            Scope.Add(QQConnectScopes.get_user_info);
             //QQOAuthScopes.TryAdd(Scope,
             //    QQOAuthScopes.Items.get_user_info,
             //    QQOAuthScopes.Items.list_album,

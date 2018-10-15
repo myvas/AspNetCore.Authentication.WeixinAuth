@@ -1,4 +1,4 @@
-﻿namespace AspNetCore.Authentication.QQConnect
+﻿namespace Myvas.AspNetCore.Authentication
 {
     public static class QQConnectDefaults
     {

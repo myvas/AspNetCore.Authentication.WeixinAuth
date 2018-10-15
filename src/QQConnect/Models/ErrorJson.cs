@@ -3,9 +3,9 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace AspNetCore.Authentication.QQConnect.Models
+namespace Myvas.AspNetCore.Authentication.QQConnect
 {
-    public class ErrorJson
+    public class QQConnectErrorJson
     {
         public int? ret { get; set; }
         public string msg { get; set; }

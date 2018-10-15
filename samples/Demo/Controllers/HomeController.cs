@@ -1,4 +1,4 @@
-﻿using AspNetCore.Authentication.WeixinOpen;
+﻿using Myvas.AspNetCore.Authentication.WeixinOpen;
 using Demo.Models;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;

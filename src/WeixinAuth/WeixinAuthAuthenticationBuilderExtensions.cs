@@ -1,7 +1,7 @@
-﻿using AspNetCore.Authentication.WeixinAuth;
-using Microsoft.AspNetCore.Authentication;
+﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.Extensions.Options;
+using Myvas.AspNetCore.Authentication;
+using Myvas.AspNetCore.Authentication.WeixinAuth;
 using System;
 
 namespace Microsoft.Extensions.DependencyInjection
