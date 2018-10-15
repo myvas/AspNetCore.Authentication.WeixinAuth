@@ -47,6 +47,11 @@ services.AddAuthentication()
     };
 ```
 
+### ConfigureServices
+```csharp
+    app.UseAuthentication();
+```
+
 ## How to Build
 * Visual Studio 2017 v15.8.7+ and dotnet-sdk-2.1.403
 
