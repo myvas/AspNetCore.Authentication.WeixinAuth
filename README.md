@@ -19,7 +19,7 @@ https://www.nuget.org/packages/Myvas.AspNetCore.Authentication.QQConnect
 ### ConfigureServices
 ```csharp
 services.AddAuthentication()
-    //微信网页登录，须mp.weixin.qq.com账号，微信内置浏览器用户访问网站时自动登入网站。（Scope: 静默方式snsapi_base, 用户确认方式snsapi_userinfo）
+    //微信网页登录，须mp.weixin.qq.com账号，微信内置浏览器用户访问网站时自动登入网站。
     .AddWeixinAuth(options => 
     {
         options.AppId = Configuration["WeixinAuth:AppId"];
@@ -47,7 +47,7 @@ services.AddAuthentication()
     };
 ```
 
-### ConfigureServices
+### Configure
 ```csharp
     app.UseAuthentication();
 ```
