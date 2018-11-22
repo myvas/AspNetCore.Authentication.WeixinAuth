@@ -4,23 +4,22 @@ A series of Authentication client middlewares.
 - WeixinAuth for https://mp.weixin.qq.com
 - QQConnect for https://connect.qq.com
 
+## NuGet
+https://www.nuget.org/packages/Myvas.AspNetCore.Authentication.WeixinAuth
+https://www.nuget.org/packages/Myvas.AspNetCore.Authentication.WeixinOpen
+https://www.nuget.org/packages/Myvas.AspNetCore.Authentication.QQConnect
+
 ## Demo Online
 - http://demo.auth.myvas.com (debian.8-x64)
-
 - Qrcode to enter the demo weixin service account:
 
 ![alt QrCode](http://mmbiz.qpic.cn/mmbiz_jpg/lPe5drS9euRQR1eCK5cGXaibHYL6vBR4pGLB34ju2hXCiaMQiayOU8w5GMfEH7WZsVNTnhLTpnzAC9xfdWuTT89OA/0)
 
 ## How to Use
-### NuGet
-https://www.nuget.org/packages/Myvas.AspNetCore.Authentication.WeixinAuth
-https://www.nuget.org/packages/Myvas.AspNetCore.Authentication.WeixinOpen
-https://www.nuget.org/packages/Myvas.AspNetCore.Authentication.QQConnect
-
 ### ConfigureServices
 ```csharp
 services.AddAuthentication()
-    //微信网页登录，须mp.weixin.qq.com账号，微信内置浏览器用户访问网站时自动登入网站。（Scope: 静默方式snsapi_base, 用户确认方式snsapi_userinfo）
+    //微信网页登录，须mp.weixin.qq.com账号，微信内置浏览器用户访问网站时自动登入网站。
     .AddWeixinAuth(options => 
     {
         options.AppId = Configuration["WeixinAuth:AppId"];
@@ -46,6 +45,11 @@ services.AddAuthentication()
             QQConnectScopes.upload_pic, //需要额外开通权限，暂未实现
             QQConnectScopes.do_like); //需要额外开通权限，暂未实现
     };
+```
+
+### Configure
+```csharp
+    app.UseAuthentication();
 ```
 
 ## How to Build
