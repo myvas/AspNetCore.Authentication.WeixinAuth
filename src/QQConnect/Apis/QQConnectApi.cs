@@ -18,13 +18,10 @@ namespace Myvas.AspNetCore.Authentication.QQConnect
     public class QQConnectApi : IQQConnectApi
     {
         public ILogger Logger { get; }
-        QQConnectOptions Options;
 
         public QQConnectApi(
-            IOptionsMonitor<QQConnectOptions> optionsAccessor,
             ILoggerFactory loggerFactory)
         {
-            Options = optionsAccessor?.CurrentValue ?? throw new ArgumentNullException(nameof(optionsAccessor));
             Logger = loggerFactory?.CreateLogger<QQConnectApi>() ?? throw new ArgumentNullException(nameof(loggerFactory));
         }
 
@@ -99,19 +96,19 @@ namespace Myvas.AspNetCore.Authentication.QQConnect
         /// 
         /// </summary>
         /// <param name="backchannel"></param>
-        /// <param name="endpoint">OpenIdEndpoint</param>
+        /// <param name="openIdEndpoint">OpenIdEndpoint</param>
         /// <param name="accessToken"></param>
         /// <param name="openid"></param>
         /// <param name="languageCode"></param>
         /// <returns>{“client_id”:”YOUR_APPID”,”openid”:”YOUR_OPENID”}</returns>
-        public async Task<JObject> GetOpenId(HttpClient backchannel, string endpoint, string accessToken, CancellationToken cancellationToken)
+        public async Task<JObject> GetOpenId(HttpClient backchannel, string openIdEndpoint, string accessToken, CancellationToken cancellationToken)
         {
             // Get the openId and clientId
             var openIdParameters = new Dictionary<string, string>()
             {
                 { "access_token", accessToken}
             };
-            var requestUrl = QueryHelpers.AddQueryString(Options.OpenIdEndpoint, openIdParameters);
+            var requestUrl = QueryHelpers.AddQueryString(openIdEndpoint, openIdParameters);
             var response = await backchannel.GetAsync(requestUrl, cancellationToken);
             if (!response.IsSuccessStatusCode)
             {
@@ -286,61 +283,186 @@ namespace Myvas.AspNetCore.Authentication.QQConnect
         /// 访问用户QQ会员信息：获取QQ会员的基本信息(get_vip_info)
         /// </summary>
         /// <param name="backchannel"></param>
-        /// <param name="userInformationEndpoint"></param>
+        /// <param name="userVipInfoEndpoint"></param>
         /// <param name="accessToken"></param>
         /// <param name="openid"></param>
         /// <param name="clientId"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public async Task<JObject> GetUserVipInfo(HttpClient backchannel, string userInformationEndpoint, string accessToken, string openid, string clientId, CancellationToken cancellationToken)
+        public async Task<JObject> GetUserVipInfo(HttpClient backchannel, string userVipInfoEndpoint, string accessToken, string openid, string clientId, CancellationToken cancellationToken)
         {
-            await Task.FromResult<JObject>(null);
-            throw new NotImplementedException();
+            // Get the UserVipInfo
+            var getUserInfoParameters = new Dictionary<string, string>()
+            {
+                {"access_token", accessToken},
+                {"oauth_consumer_key", clientId},
+                {"openid", openid },
+                {"format", "json"}
+            };
+
+            var requestUrl = QueryHelpers.AddQueryString(userVipInfoEndpoint, getUserInfoParameters);
+
+            var response = await backchannel.GetAsync(requestUrl, cancellationToken);
+            if (!response.IsSuccessStatusCode)
+            {
+                var error = $"OAuth userVipInfo endpoint failure: " + Display(response);
+                Logger.LogError(error);
+                throw new HttpRequestException(error);
+            }
+
+            var content = await response.Content.ReadAsStringAsync();
+            //{
+            //"ret":0,
+            //"msg":"",
+            //"is_qq_vip ":1,
+            //"qq_vip_level":3,
+            //"is_qq_year_vip":1
+            //}
+            // or
+            //{ "ret":1002, "msg":"请先登录" }
+            var payload = ParseJsonString(content);
+            if (!IsJsonSuccess(payload))
+            {
+                var error = $"OAuth userVipInfo endpoint failure: " + await Display(response);
+                Logger.LogError(error);
+                throw new HttpRequestException(error);
+            }
+            return payload;
         }
 
         /// <summary>
         /// 访问用户QQ会员信息：获取QQ会员的高级信息(get_vip_rich_info)
         /// </summary>
         /// <param name="backchannel"></param>
-        /// <param name="userInformationEndpoint"></param>
+        /// <param name="userVipRichInfoEndpoint"></param>
         /// <param name="accessToken"></param>
         /// <param name="openid"></param>
         /// <param name="clientId"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public async Task<JObject> GetUserVipRichInfo(HttpClient backchannel, string userInformationEndpoint, string accessToken, string openid, string clientId, CancellationToken cancellationToken)
+        public async Task<JObject> GetUserVipRichInfo(HttpClient backchannel, string userVipRichInfoEndpoint, string accessToken, string openid, string clientId, CancellationToken cancellationToken)
         {
-            await Task.FromResult<JObject>(null);
-            throw new NotImplementedException();
+            // Get the userVipRichInfo
+            var getUserInfoParameters = new Dictionary<string, string>()
+            {
+                {"access_token", accessToken},
+                {"oauth_consumer_key", clientId},
+                {"openid", openid },
+                {"format", "json"}
+            };
+
+            var requestUrl = QueryHelpers.AddQueryString(userVipRichInfoEndpoint, getUserInfoParameters);
+
+            var response = await backchannel.GetAsync(requestUrl, cancellationToken);
+            if (!response.IsSuccessStatusCode)
+            {
+                var error = $"OAuth userVipRichInfo endpoint failure: " + Display(response);
+                Logger.LogError(error);
+                throw new HttpRequestException(error);
+            }
+
+            var content = await response.Content.ReadAsStringAsync();
+            //{
+            //ret 返回码
+            //msg 如果ret<0，会有相应的错误信息提示，返回数据全部用UTF - 8编码
+            //is_qq_vip   标识是否QQ会员（0：不是； 1：是）
+            //qq_vip_start QQ会员最后一次充值时间
+            //qq_vip_end QQ会员期限
+            //qq_vip_payway QQ会员充值方式
+            //qq_year_vip_start QQ年费会员最后一次充值时间
+            //qq_year_vip_end QQ年费会员期限
+            //qq_year_vip_payway QQ年费会员充值方式
+            //qq_zuanhuang_start QQ钻皇最后一次充值时间
+            //qq_zuanhuang_end QQ钻皇期限
+            //qq_zuanhuang_payway QQ钻皇充值方式
+            //qq_haohua_start 豪华版QQ会员最后一次充值时间
+            //qq_haohua_end 豪华版QQ会员期限
+            //qq_haohua_payway 豪华版QQ会员充值方式
+            //qq_svip_start QQ SVIP最后一次充值时间，预留字段，当前信息无效
+            //qq_svip_end QQ SVIP期限，预留字段，当前信息无效
+            //qq_svip_payway  QQ SVIP充值方式，预留字段，当前信息无效
+            //history_pay_time    非会员历史充值时间，仅在用户是非会员时信息有效
+            //history_end_time    非会员历史充值到期时间，仅在用户是非会员时信息有效
+            //}
+            // or
+            //{ "ret":1002, "msg":"请先登录" }
+            var payload = ParseJsonString(content);
+            if (!IsJsonSuccess(payload))
+            {
+                var error = $"OAuth userVipRichInfo endpoint failure: " + await Display(response);
+                Logger.LogError(error);
+                throw new HttpRequestException(error);
+            }
+            return payload;
         }
 
         /// <summary>
         /// 访问我的空间相册：获取用户QQ空间相册列表(list_album)
         /// </summary>
         /// <param name="backchannel"></param>
-        /// <param name="userInformationEndpoint"></param>
+        /// <param name="photoListAlbumEndpoint"></param>
         /// <param name="accessToken"></param>
         /// <param name="openid"></param>
         /// <param name="clientId"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public async Task<JObject> ListAlbum(HttpClient backchannel, string userInformationEndpoint, string accessToken, string openid, string clientId, CancellationToken cancellationToken)
+        public async Task<JObject> ListAlbum(HttpClient backchannel, string photoListAlbumEndpoint, string accessToken, string openid, string clientId, CancellationToken cancellationToken)
         {
-            await Task.FromResult<JObject>(null);
-            throw new NotImplementedException();
+            // Get the photoListAlbum
+            var getUserInfoParameters = new Dictionary<string, string>()
+            {
+                {"access_token", accessToken},
+                {"oauth_consumer_key", clientId},
+                {"openid", openid },
+                {"format", "json"}
+            };
+
+            var requestUrl = QueryHelpers.AddQueryString(photoListAlbumEndpoint, getUserInfoParameters);
+
+            var response = await backchannel.GetAsync(requestUrl, cancellationToken);
+            if (!response.IsSuccessStatusCode)
+            {
+                var error = $"OAuth photoListAlbum endpoint failure: " + Display(response);
+                Logger.LogError(error);
+                throw new HttpRequestException(error);
+            }
+
+            var content = await response.Content.ReadAsStringAsync();
+            //{
+            //ret: 返回码
+            //albumid: 相册ID
+            //classid: 相册分类ID
+            //createtime: 相册创建时间
+            //desc: 相册描述
+            //name: 相册名称
+            //coverurl: 相册封面照片地址
+            //picnum: 照片数
+            //albumnum: 相册总数
+            //msg: 错误消息
+            //}
+            // or
+            //{ "ret":1002, "msg":"请先登录" }
+            var payload = ParseJsonString(content);
+            if (!IsJsonSuccess(payload))
+            {
+                var error = $"OAuth photoListAlbum endpoint failure: " + await Display(response);
+                Logger.LogError(error);
+                throw new HttpRequestException(error);
+            }
+            return payload;
         }
 
         /// <summary>
         /// 访问我的空间相册：上传一张照片到QQ空间相册(upload_pic)
         /// </summary>
         /// <param name="backchannel"></param>
-        /// <param name="userInformationEndpoint"></param>
+        /// <param name="uploadPictureEndpoint"></param>
         /// <param name="accessToken"></param>
         /// <param name="openid"></param>
         /// <param name="clientId"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public async Task<JObject> UploadPicture(HttpClient backchannel, string userInformationEndpoint, string accessToken, string openid, string clientId, CancellationToken cancellationToken)
+        public async Task<JObject> UploadPicture(HttpClient backchannel, string uploadPictureEndpoint, string accessToken, string openid, string clientId, /*PhotoUploadSinglePictureRequestParameters*/object param, CancellationToken cancellationToken)
         {
             await Task.FromResult<JObject>(null);
             throw new NotImplementedException();
@@ -350,13 +472,13 @@ namespace Myvas.AspNetCore.Authentication.QQConnect
         /// 访问我的空间相册：在用户的空间相册里，创建一个新的个人相册(add_album)
         /// </summary>
         /// <param name="backchannel"></param>
-        /// <param name="userInformationEndpoint"></param>
+        /// <param name="addAlbumEndpoint"></param>
         /// <param name="accessToken"></param>
         /// <param name="openid"></param>
         /// <param name="clientId"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public async Task<JObject> AddAlbum(HttpClient backchannel, string userInformationEndpoint, string accessToken, string openid, string clientId, CancellationToken cancellationToken)
+        public async Task<JObject> AddAlbum(HttpClient backchannel, string addAlbumEndpoint, string accessToken, string openid, string clientId, CancellationToken cancellationToken)
         {
             await Task.FromResult<JObject>(null);
             throw new NotImplementedException();
@@ -366,15 +488,20 @@ namespace Myvas.AspNetCore.Authentication.QQConnect
         /// 访问我的空间相册：获取用户QQ空间相册中的照片列表（list_photo)
         /// </summary>
         /// <param name="backchannel"></param>
-        /// <param name="userInformationEndpoint"></param>
+        /// <param name="listPhotoEndpoint"></param>
         /// <param name="accessToken"></param>
         /// <param name="openid"></param>
         /// <param name="clientId"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public async Task<JObject> ListPhoto(HttpClient backchannel, string userInformationEndpoint, string accessToken, string openid, string clientId, CancellationToken cancellationToken)
+        public async Task<JObject> ListPhoto(HttpClient backchannel, string listPhotoEndpoint, string accessToken, string openid, string clientId, CancellationToken cancellationToken)
         {
             await Task.FromResult<JObject>(null);
+            throw new NotImplementedException();
+        }
+
+        public Task<JObject> UploadPicture(HttpClient backchannel, string uploadPictureEndpoint, string accessToken, string openid, string clientId, CancellationToken cancellationToken)
+        {
             throw new NotImplementedException();
         }
     }

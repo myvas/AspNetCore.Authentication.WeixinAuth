@@ -77,6 +77,7 @@ namespace Myvas.AspNetCore.Authentication.WeixinAuth
             queryStrings.Add("appid", Options.AppId);
             queryStrings.Add("redirect_uri", redirectUri);
             queryStrings.Add("response_type", "code");
+
             var scope = PickAuthenticationProperty(properties, OAuthChallengeProperties.ScopeKey, FormatScope, Options.Scope);
             queryStrings.Add(OAuthChallengeProperties.ScopeKey, scope);
 

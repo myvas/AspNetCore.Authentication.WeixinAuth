@@ -4,9 +4,11 @@ using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Primitives;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Net.Http;
 using System.Security.Claims;
@@ -63,12 +65,28 @@ namespace Myvas.AspNetCore.Authentication.WeixinOpen
             var scope = PickAuthenticationProperty(properties, OAuthChallengeProperties.ScopeKey, FormatScope, Options.Scope);
             queryStrings.Add(OAuthChallengeProperties.ScopeKey, scope);
 
-            var state = Options.StateDataFormat.Protect(properties);
-            queryStrings.Add("state", state);
+            //未找到官方说明，但实验证明properties添加returnUrl和scheme后，state为1264字符，此时报错：state参数过长。所以properties只能存放在Cookie中，state作为Cookie值的索引键。
+            //var state = Options.StateDataFormat.Protect(properties);
+            //queryStrings.Add("state", state);
+            var correlationId = properties.Items[CorrelationProperty];
+            Context.Response.Cookies.Append(BuildStateCookieName(correlationId), Options.StateDataFormat.Protect(properties));
+            queryStrings.Add("state", correlationId);
 
             var authorizationUrl = QueryHelpers.AddQueryString(Options.AuthorizationEndpoint, queryStrings);
             return authorizationUrl + "#wechat_redirect";
         }
+
+        #region Handle big properties protected output, by store it to cookie 'xxxx.state'
+        private const string CorrelationMarker = "N";
+        protected virtual string BuildCorelationCookieName(string correlationId)
+        {
+            return Options.CorrelationCookie.Name + Scheme.Name + "." + correlationId;
+        }
+        protected virtual string BuildStateCookieName(string correlationId)
+        {
+            return Options.CorrelationCookie.Name + Scheme.Name + "." + correlationId + "." + CorrelationMarker;
+        }
+        #endregion
 
         protected override string FormatScope(IEnumerable<string> scopes)
             => string.Join(",", scopes); // // OAuth2 3.3 space separated, but weixin not
@@ -104,6 +122,135 @@ namespace Myvas.AspNetCore.Authentication.WeixinOpen
             => PickAuthenticationProperty(properties, name, x => x, defaultValue);
         #endregion
 
+        protected override async Task<HandleRequestResult> HandleRemoteAuthenticateAsync()
+        {
+            var query = Request.Query;
+
+            var error = query["error"];
+            if (!StringValues.IsNullOrEmpty(error))
+            {
+                var failureMessage = new StringBuilder();
+                failureMessage.Append(error);
+                var errorDescription = query["error_description"];
+                if (!StringValues.IsNullOrEmpty(errorDescription))
+                {
+                    failureMessage.Append(";Description=").Append(errorDescription);
+                }
+                var errorUri = query["error_uri"];
+                if (!StringValues.IsNullOrEmpty(errorUri))
+                {
+                    failureMessage.Append(";Uri=").Append(errorUri);
+                }
+
+                return HandleRequestResult.Fail(failureMessage.ToString());
+            }
+
+            var state = query["state"]; // ie. correlationId
+            if (StringValues.IsNullOrEmpty(state))
+            {
+                return HandleRequestResult.Fail("The oauth state was missing.");
+            }
+
+            var stateCookieName = BuildStateCookieName(state);
+            var protectedProperties = Request.Cookies[stateCookieName];
+            if (string.IsNullOrEmpty(protectedProperties))
+            {
+                return HandleRequestResult.Fail($"The oauth state cookie was missing: Cookie: {stateCookieName}");
+            }
+
+            var cookieOptions = Options.CorrelationCookie.Build(Context, Clock.UtcNow);
+            Response.Cookies.Delete(stateCookieName, cookieOptions);
+
+            var properties = Options.StateDataFormat.Unprotect(protectedProperties);
+            if (properties == null)
+            {
+                return HandleRequestResult.Fail($"The oauth state cookie was invalid: Cookie: {stateCookieName}");
+            }
+
+            // OAuth2 10.12 CSRF
+            if (!ValidateCorrelationId(properties))
+            {
+                return HandleRequestResult.Fail("Correlation failed.", properties);
+            }
+
+
+            var code = query["code"];
+
+            if (StringValues.IsNullOrEmpty(code))
+            {
+                Logger.LogWarning("Code was not found.", properties);
+                return HandleRequestResult.Fail("Code was not found.", properties);
+            }
+
+            var tokens = await ExchangeCodeAsync(code, BuildRedirectUri(Options.CallbackPath));
+
+            if (tokens.Error != null)
+            {
+                return HandleRequestResult.Fail(tokens.Error, properties);
+            }
+
+            if (string.IsNullOrEmpty(tokens.AccessToken))
+            {
+                return HandleRequestResult.Fail("Failed to retrieve access token.", properties);
+            }
+
+            var identity = new ClaimsIdentity(ClaimsIssuer);
+
+            if (Options.SaveTokens)
+            {
+                var authTokens = new List<AuthenticationToken>();
+
+                authTokens.Add(new AuthenticationToken { Name = WeixinAuthenticationTokenNames.access_token, Value = tokens.AccessToken });
+                if (!string.IsNullOrEmpty(tokens.RefreshToken))
+                {
+                    authTokens.Add(new AuthenticationToken { Name = WeixinAuthenticationTokenNames.refresh_token, Value = tokens.RefreshToken });
+                }
+                if (!string.IsNullOrEmpty(tokens.TokenType))
+                {
+                    authTokens.Add(new AuthenticationToken { Name = WeixinAuthenticationTokenNames.token_type, Value = tokens.TokenType });
+                }
+                if (!string.IsNullOrEmpty(tokens.GetOpenId()))
+                {
+                    authTokens.Add(new AuthenticationToken { Name = WeixinAuthenticationTokenNames.openid, Value = tokens.GetOpenId() });
+                }
+                if (!string.IsNullOrEmpty(tokens.GetUnionId()))
+                {
+                    authTokens.Add(new AuthenticationToken { Name = WeixinAuthenticationTokenNames.unionid, Value = tokens.GetUnionId() });
+                }
+                if (!string.IsNullOrEmpty(tokens.GetScope()))
+                {
+                    authTokens.Add(new AuthenticationToken { Name = WeixinAuthenticationTokenNames.scope, Value = tokens.GetScope() });
+                }
+                if (!string.IsNullOrEmpty(tokens.ExpiresIn))
+                {
+                    int value;
+                    if (int.TryParse(tokens.ExpiresIn, NumberStyles.Integer, CultureInfo.InvariantCulture, out value))
+                    {
+                        // https://www.w3.org/TR/xmlschema-2/#dateTime
+                        // https://msdn.microsoft.com/en-us/library/az4se3k1(v=vs.110).aspx
+                        var expiresAt = Clock.UtcNow + TimeSpan.FromSeconds(value);
+                        authTokens.Add(new AuthenticationToken
+                        {
+                            Name = WeixinAuthenticationTokenNames.expires_at,
+                            Value = expiresAt.ToString("o", CultureInfo.InvariantCulture)
+                        });
+                    }
+                }
+
+                properties.StoreTokens(authTokens); //ExternalLoginInfo.AuthenticationTokens
+            }
+
+
+            var ticket = await CreateTicketAsync(identity, properties, tokens);
+            if (ticket != null)
+            {
+                return HandleRequestResult.Success(ticket);
+            }
+            else
+            {
+                return HandleRequestResult.Fail("Failed to retrieve user information from remote server.", properties);
+            }
+        }
 
         /// <summary>
         /// Step 2：通过code获取access_token
