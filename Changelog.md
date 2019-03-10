@@ -1,5 +1,8 @@
 # Changelog
 
+## 2.1.504 (2019-03-09)
+- Update to dotnet-sdk-2.1.504
+
 ## 2.1.412 (2018-10-12)
 - Fix [state-128-bytes-limitation-problem](https://github.com/myvas/AspNetCore.Authentication/issues/2) in WeixinAuth
 

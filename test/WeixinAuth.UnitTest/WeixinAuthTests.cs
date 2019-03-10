@@ -26,7 +26,7 @@ using Xunit;
 
 namespace UnitTest
 {
-    public class WeixinAuthTests
+	public class WeixinAuthTests
     {
         private void ConfigureDefaults(WeixinAuthOptions o)
         {
@@ -1487,12 +1487,12 @@ namespace UnitTest
                         if (req.Path == new PathString("/challenge"))
                         {
                             await context.ChallengeAsync();
-                        }
-                        else if (req.Path == new PathString("/challenge-facebook"))
-                        {
-                            await context.ChallengeAsync(FacebookDefaults.AuthenticationScheme);
-                        }
-                        else if (req.Path == new PathString("/challenge-WeixinAuth"))
+						}
+						else if (req.Path == new PathString("/challenge-facebook"))
+						{
+							await context.ChallengeAsync(FacebookDefaults.AuthenticationScheme);
+						}
+						else if (req.Path == new PathString("/challenge-WeixinAuth"))
                         {
                             var provider = WeixinAuthDefaults.AuthenticationScheme;
                             string userId = "1234567890123456789012";
@@ -1520,18 +1520,18 @@ namespace UnitTest
                         {
                             var result = await context.AuthenticateAsync(TestExtensions.CookieAuthenticationScheme);
                             res.Describe(result.Principal);
-                        }
-                        else if (req.Path == new PathString("/authenticate-WeixinAuth"))
+						}
+						else if (req.Path == new PathString("/authenticate-WeixinAuth"))
                         {
                             var result = await context.AuthenticateAsync(WeixinAuthDefaults.AuthenticationScheme);
                             res.Describe(result?.Principal);
-                        }
-                        else if (req.Path == new PathString("/authenticate-facebook"))
-                        {
-                            var result = await context.AuthenticateAsync(FacebookDefaults.AuthenticationScheme);
-                            res.Describe(result?.Principal);
-                        }
-                        else if (req.Path == new PathString("/401"))
+						}
+						else if (req.Path == new PathString("/authenticate-facebook"))
+						{
+							var result = await context.AuthenticateAsync(FacebookDefaults.AuthenticationScheme);
+							res.Describe(result?.Principal);
+						}
+						else if (req.Path == new PathString("/401"))
                         {
                             res.StatusCode = (int)HttpStatusCode.Unauthorized;// 401;
                         }
@@ -1574,12 +1574,12 @@ namespace UnitTest
                     services.AddAuthentication(TestExtensions.CookieAuthenticationScheme)
                         .AddCookie(TestExtensions.CookieAuthenticationScheme, o => o.ForwardChallenge = WeixinAuthDefaults.AuthenticationScheme)
                         .AddWeixinAuth(configureOptions)
-                        .AddFacebook(o =>
-                        {
-                            o.ClientId = "Test Facebook ClientId";
-                            o.ClientSecret = "Test Facebook AppSecrent";
-                        });
-                });
+						.AddFacebook(o =>
+						{
+							o.ClientId = "Test Facebook ClientId";
+							o.ClientSecret = "Test Facebook AppSecrent";
+						});
+				});
             return new TestServer(builder);
         }
 

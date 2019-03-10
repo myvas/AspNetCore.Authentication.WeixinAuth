@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <Authors>Myvas</Authors>
-    <Version>2.1.414</Version>
+    <Version>2.1.504</Version>
     <Description>QQConnect Authentication middleware for https://connect.qq.com. (腾讯QQ互联@网站应用QQ登录）</Description>
     <PackageProjectUrl>https://github.com/myvas/Authentication</PackageProjectUrl>
     <PackageTags>Myvas,AspNetCore, Authentication, QQ Connect, Tencent</PackageTags>
