@@ -1,16 +1,17 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <PackageId>Myvas.AspNetCore.Authentication.WeixinAuth</PackageId>
+    <PackageId>AspNetCore.Authentication.WeixinAuth</PackageId>
     <AssemblyName>Myvas.AspNetCore.Authentication.WeixinAuth</AssemblyName>
     <TargetFramework>netstandard2.0</TargetFramework>
     <AssetTargetFallback>$(AssetTargetFallback);portable-win8+wp8+wpa81;</AssetTargetFallback>
-    <Version>2.1.504</Version>
+    <Version>2.1.505</Version>
     <PackageTags>Myvas,AspNetCore, Authentication, Weixin Auth, Tencent</PackageTags>
-    <PackageProjectUrl>https://github.com/myvas/Authentication</PackageProjectUrl>   
-    <Description>WeixinAuth Authentication middleware for https://mp.weixin.qq.com. (微信公众平台@网页应用微信登录)</Description>   
-    <Authors>Myvas</Authors>   
-    <RootNamespace>Myvas.AspNetCore.Authentication.WeixinAuth</RootNamespace>
+    <PackageProjectUrl>https://github.com/myvas/AspNetCore.Authentication.WeixinAuth</PackageProjectUrl>   
+    <Description>An ASP.NET Core authentication middleware: WeixinAuth for https://mp.weixin.qq.com （微信公众平台/微信网页授权登录）</Description>   
+    <Authors>AspNetCore</Authors>   
+    <RootNamespace>Myvas.AspNetCore.Authentication.WeixinAuth</RootNamespace>   
+    <Product>AspNetCore.Authentication</Product>
   </PropertyGroup>
 
   <ItemGroup>

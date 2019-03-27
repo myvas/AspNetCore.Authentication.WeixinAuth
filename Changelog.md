@@ -1,5 +1,8 @@
 # Changelog
 
+## 2.1.505 (2019-03-27)
+- Update to dotnet-sdk-2.1.505
+
 ## 2.1.504 (2019-03-09)
 - Update to dotnet-sdk-2.1.504
 

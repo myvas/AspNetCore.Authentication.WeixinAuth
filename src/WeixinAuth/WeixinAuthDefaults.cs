@@ -21,7 +21,7 @@ namespace Myvas.AspNetCore.Authentication
         public const string ClaimsIssuer = "WeixinAuth";
 
         /// <summary>
-        /// /signin-weixin-oauth
+        /// /signin-weixinauth
         /// </summary>
         public const string CallbackPath = "/signin-weixinauth";
         
