@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Myvas.AspNetCore.Authentication.WeixinAuth
+namespace Myvas.AspNetCore.Authentication
 {
     /// <summary>
     /// Defines constants for the well-known claim types that can be assigned to a subject.

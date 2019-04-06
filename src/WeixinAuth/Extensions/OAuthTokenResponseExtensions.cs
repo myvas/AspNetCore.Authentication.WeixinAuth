@@ -5,9 +5,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Myvas.AspNetCore.Authentication.WeixinAuth
+namespace Myvas.AspNetCore.Authentication.WeixinAuth.Extensions
 {
-    public static class WeixinAuthTokenResponseExtensions
+    internal static class WeixinAuthTokenResponseExtensions
     {
         public static string GetUnionId(this OAuthTokenResponse response)
         {

@@ -26,8 +26,12 @@ using Xunit;
 
 namespace UnitTest
 {
-	public class WeixinAuthTests
+    public class WeixinAuthTests
     {
+        string correlationKey = ".xsrf";
+        string correlationValue = "TestCorrelationId";
+        string correlationMarker = "N";
+
         private void ConfigureDefaults(WeixinAuthOptions o)
         {
             o.AppId = "Test Id";
@@ -80,7 +84,7 @@ namespace UnitTest
                         Assert.Equal("Test Access Token", context.AccessToken);
                         Assert.Equal("Test Refresh Token", context.RefreshToken);
                         Assert.Equal(TimeSpan.FromSeconds(3600), context.ExpiresIn);
-                        Assert.Equal("Test User ID", context.Identity.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+                        Assert.Equal("Test Open ID", context.Identity.FindFirst(ClaimTypes.NameIdentifier)?.Value);
                         Assert.Equal("Test Name", context.Identity.FindFirst(ClaimTypes.Name)?.Value);
                         return Task.FromResult(0);
                     }
@@ -90,19 +94,14 @@ namespace UnitTest
             // Skip the challenge step, go directly to the callback path
 
             var properties = new AuthenticationProperties();
-            var correlationKey = ".xsrf";
-            var correlationId = "TestCorrelationId";
-            var correlationMarker = "N";
-            properties.Items.Add(correlationKey, correlationId);
+            properties.Items.Add(correlationKey, correlationValue);
             properties.RedirectUri = "/Account/ExternalLoginCallback?returnUrl=%2FHome%2FUserInfo";
-            var state = stateFormat.Protect(properties);
 
             var transaction = await server.SendAsync(
-                $"https://example.com/signin-{WeixinAuthDefaults.AuthenticationScheme}?code=TestCode&state={UrlEncoder.Default.Encode(correlationId)}",
-                $".AspNetCore.Correlation.{WeixinAuthDefaults.AuthenticationScheme}.{correlationId}={correlationMarker}"
-                + $";.AspNetCore.Correlation.{WeixinAuthDefaults.AuthenticationScheme}.{correlationId}.{correlationMarker}={state}");
+                $"https://example.com/signin-{WeixinAuthDefaults.AuthenticationScheme}?code=TestCode&state={correlationValue}",
+                $".AspNetCore.Correlation.{WeixinAuthDefaults.AuthenticationScheme}.{correlationValue}={correlationMarker}",
+                $".AspNetCore.Correlation.{WeixinAuthDefaults.AuthenticationScheme}.{correlationValue}.{correlationMarker}={stateFormat.Protect(properties)}");
 
-            Assert.Equal(HttpStatusCode.Redirect, transaction.Response.StatusCode);
             Assert.Equal(HttpStatusCode.Redirect, transaction.Response.StatusCode);
             Assert.Equal("/Account/ExternalLoginCallback?returnUrl=%2FHome%2FUserInfo", transaction.Response.Headers.GetValues("Location").First());
         }
@@ -846,16 +845,13 @@ namespace UnitTest
             });
 
             var properties = new AuthenticationProperties();
-            var correlationKey = ".xsrf";
-            var correlationId = "TestCorrelationId";
-            var correlationMarker = "N";
-            properties.Items.Add(correlationKey, correlationId);
+            properties.Items.Add(correlationKey, correlationValue);
             properties.RedirectUri = "/me";
-            var state = stateFormat.Protect(properties);
+
             var transaction = await server.SendAsync(
-                $"https://example.com/signin-{WeixinAuthDefaults.AuthenticationScheme}?code=TestCode&state={UrlEncoder.Default.Encode(correlationId)}",
-                $".AspNetCore.Correlation.{WeixinAuthDefaults.AuthenticationScheme}.{correlationId}={correlationMarker}"
-                + $";.AspNetCore.Correlation.{WeixinAuthDefaults.AuthenticationScheme}.{correlationId}.{correlationMarker}={state}");
+                $"https://example.com/signin-{WeixinAuthDefaults.AuthenticationScheme}?code=TestCode&state={correlationValue}",
+                $".AspNetCore.Correlation.{WeixinAuthDefaults.AuthenticationScheme}.{correlationValue}={correlationMarker}",
+                $".AspNetCore.Correlation.{WeixinAuthDefaults.AuthenticationScheme}.{correlationValue}.{correlationMarker}={stateFormat.Protect(properties)}");
             Assert.Equal(HttpStatusCode.Redirect, transaction.Response.StatusCode);
             Assert.Equal("/me", transaction.Response.Headers.GetValues("Location").First());
             Assert.True(transaction.SetCookie.Count >= 2);
@@ -865,7 +861,7 @@ namespace UnitTest
             Assert.Equal(HttpStatusCode.OK, transaction.Response.StatusCode);
             var expectedIssuer = claimsIssuer ?? WeixinAuthDefaults.AuthenticationScheme;
             Assert.Equal("Test Name", transaction.FindClaimValue(ClaimTypes.Name, expectedIssuer));
-            Assert.Equal("Test User ID", transaction.FindClaimValue(ClaimTypes.NameIdentifier, expectedIssuer));
+            Assert.Equal("Test Open ID", transaction.FindClaimValue(ClaimTypes.NameIdentifier, expectedIssuer));
 
             // Ensure claims transformation
             Assert.Equal("yup", transaction.FindClaimValue("xform"));
@@ -907,17 +903,13 @@ namespace UnitTest
                 } : new OAuthEvents();
             });
             var properties = new AuthenticationProperties();
-            var correlationKey = ".xsrf";
-            var correlationId = "TestCorrelationId";
-            var correlationMarker = "N";
-            properties.Items.Add(correlationKey, correlationId);
+            properties.Items.Add(correlationKey, correlationValue);
             properties.RedirectUri = "/me";
 
-            var state = stateFormat.Protect(properties);
             var sendTask = server.SendAsync(
-                $"https://example.com/signin-{WeixinAuthDefaults.AuthenticationScheme}?code=TestCode&state={UrlEncoder.Default.Encode(correlationId)}",
-                $".AspNetCore.Correlation.{WeixinAuthDefaults.AuthenticationScheme}.{correlationId}={correlationMarker}"
-                + $";.AspNetCore.Correlation.{WeixinAuthDefaults.AuthenticationScheme}.{correlationId}.{correlationMarker}={state}");
+                $"https://example.com/signin-{WeixinAuthDefaults.AuthenticationScheme}?code=TestCode&state={correlationValue}",
+                $".AspNetCore.Correlation.{WeixinAuthDefaults.AuthenticationScheme}.{correlationValue}={correlationMarker}",
+                $".AspNetCore.Correlation.{WeixinAuthDefaults.AuthenticationScheme}.{correlationValue}.{correlationMarker}={stateFormat.Protect(properties)}");
             if (redirect)
             {
                 var transaction = await sendTask;
@@ -961,16 +953,13 @@ namespace UnitTest
                 } : new OAuthEvents();
             });
             var properties = new AuthenticationProperties();
-            var correlationKey = ".xsrf";
-            var correlationValue = "TestCorrelationId";
-            var correlationMarker = "N";
             properties.Items.Add(correlationKey, correlationValue);
             properties.RedirectUri = "/me";
-            var state = stateFormat.Protect(properties);
+
             var sendTask = server.SendAsync(
-                $"https://example.com/signin-{WeixinAuthDefaults.AuthenticationScheme}?code=TestCode&state={UrlEncoder.Default.Encode(correlationValue)}",
-                $".AspNetCore.Correlation.{WeixinAuthDefaults.AuthenticationScheme}.{correlationValue}={correlationMarker}"
-                + $";.AspNetCore.Correlation.{WeixinAuthDefaults.AuthenticationScheme}.{correlationValue}.{correlationMarker}={state}");
+                $"https://example.com/signin-{WeixinAuthDefaults.AuthenticationScheme}?code=TestCode&state={correlationValue}",
+                $".AspNetCore.Correlation.{WeixinAuthDefaults.AuthenticationScheme}.{correlationValue}={correlationMarker}",
+                $".AspNetCore.Correlation.{WeixinAuthDefaults.AuthenticationScheme}.{correlationValue}.{correlationMarker}={stateFormat.Protect(properties)}");
             if (redirect)
             {
                 var transaction = await sendTask;
@@ -1008,16 +997,13 @@ namespace UnitTest
             // Skip the challenge step, go directly to the callback path
 
             var properties = new AuthenticationProperties();
-            var correlationKey = ".xsrf";
-            var correlationId = "TestCorrelationId";
-            var correlationMarker = "N";
-            properties.Items.Add(correlationKey, correlationId);
+            properties.Items.Add(correlationKey, correlationValue);
             properties.RedirectUri = "/me";
-            var state = stateFormat.Protect(properties);
+
             var transaction = await server.SendAsync(
-                $"https://example.com/signin-{WeixinAuthDefaults.AuthenticationScheme}?code=TestCode&state={UrlEncoder.Default.Encode(correlationId)}",
-                $".AspNetCore.Correlation.{WeixinAuthDefaults.AuthenticationScheme}.{correlationId}={correlationMarker}"
-                + $";.AspNetCore.Correlation.{WeixinAuthDefaults.AuthenticationScheme}.{correlationId}.{correlationMarker}={state}");
+                $"https://example.com/signin-{WeixinAuthDefaults.AuthenticationScheme}?code=TestCode&state={correlationValue}",
+                $".AspNetCore.Correlation.{WeixinAuthDefaults.AuthenticationScheme}.{correlationValue}={correlationMarker}",
+                $".AspNetCore.Correlation.{WeixinAuthDefaults.AuthenticationScheme}.{correlationValue}.{correlationMarker}={stateFormat.Protect(properties)}");
             Assert.Equal(HttpStatusCode.Redirect, transaction.Response.StatusCode);
             Assert.Equal("/me", transaction.Response.Headers.GetValues("Location").First());
             Assert.True(transaction.SetCookie.Count >= 2);
@@ -1048,15 +1034,12 @@ namespace UnitTest
             });
 
             var properties = new AuthenticationProperties();
-            var correlationKey = ".xsrf";
-            var correlationValue = "TestCorrelationId";
-            var correlationMarker = "N";
             properties.Items.Add(correlationKey, correlationValue);
-            var state = stateFormat.Protect(properties);
+
             var transaction = await server.SendAsync(
-                $"https://example.com/signin-{WeixinAuthDefaults.AuthenticationScheme}?code=TestCode&state={UrlEncoder.Default.Encode(correlationValue)}",
-                $".AspNetCore.Correlation.{WeixinAuthDefaults.AuthenticationScheme}.{correlationValue}={correlationMarker}"
-                + $";.AspNetCore.Correlation.{WeixinAuthDefaults.AuthenticationScheme}.{correlationValue}.{correlationMarker}={state}");
+                $"https://example.com/signin-{WeixinAuthDefaults.AuthenticationScheme}?code=TestCode&state={correlationValue}",
+                $".AspNetCore.Correlation.{WeixinAuthDefaults.AuthenticationScheme}.{correlationValue}={correlationMarker}",
+                $".AspNetCore.Correlation.{WeixinAuthDefaults.AuthenticationScheme}.{correlationValue}.{correlationMarker}={stateFormat.Protect(properties)}");
 
             Assert.Equal(HttpStatusCode.Redirect, transaction.Response.StatusCode);
             Assert.Equal("/", transaction.Response.Headers.GetValues("Location").First());
@@ -1080,9 +1063,10 @@ namespace UnitTest
                         Assert.Equal("Test Access Token", context.AccessToken);
                         Assert.Equal("Test Refresh Token", context.RefreshToken);
                         Assert.Equal(TimeSpan.FromSeconds(3600), context.ExpiresIn);
-                        Assert.Equal("Test User ID", context.Identity.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+                        Assert.Equal("Test Open ID", context.Identity.FindFirst(ClaimTypes.NameIdentifier)?.Value);
                         Assert.Equal("Test Name", context.Identity.FindFirst(ClaimTypes.Name)?.Value);
                         Assert.Equal("Test Open ID", context.Identity.FindFirst(WeixinAuthClaimTypes.OpenId)?.Value);
+                        Assert.Equal("Test Union ID", context.Identity.FindFirst(WeixinAuthClaimTypes.UnionId)?.Value);
                         return Task.FromResult(0);
                     }
                 };
@@ -1090,18 +1074,14 @@ namespace UnitTest
             });
 
             var properties = new AuthenticationProperties();
-            var correlationKey = ".xsrf";
-            var correlationValue = "TestCorrelationId";
-            var correlationMarker = "N";
             properties.Items.Add(correlationKey, correlationValue);
             properties.RedirectUri = "/foo";
-            var state = stateFormat.Protect(properties);
-
+            
             //Post a message to the WeixinAuth middleware
             var transaction = await server.SendAsync(
-                $"https://example.com/signin-{WeixinAuthDefaults.AuthenticationScheme}?code=TestCode&state={UrlEncoder.Default.Encode(correlationValue)}",
-                $".AspNetCore.Correlation.{WeixinAuthDefaults.AuthenticationScheme}.{correlationValue}={correlationMarker}"
-                + $";.AspNetCore.Correlation.{WeixinAuthDefaults.AuthenticationScheme}.{correlationValue}.{correlationMarker}={state}");
+                $"https://example.com/signin-{WeixinAuthDefaults.AuthenticationScheme}?code=TestCode&state={correlationValue}",
+                $".AspNetCore.Correlation.{WeixinAuthDefaults.AuthenticationScheme}.{correlationValue}={correlationMarker}",
+                $".AspNetCore.Correlation.{WeixinAuthDefaults.AuthenticationScheme}.{correlationValue}.{correlationMarker}={stateFormat.Protect(properties)}");
             Assert.Equal(HttpStatusCode.Redirect, transaction.Response.StatusCode);
             Assert.Equal("/foo", transaction.Response.Headers.GetValues("Location").First());
         }
@@ -1143,14 +1123,11 @@ namespace UnitTest
             });
 
             var properties = new AuthenticationProperties();
-            var correlationKey = ".xsrf";
-            var correlationValue = "TestCorrelationId";
             properties.Items.Add(correlationKey, correlationValue);
-            var state = stateFormat.Protect(properties);
 
             var error3 = await Assert.ThrowsAnyAsync<Exception>(()
                 => server.SendAsync(
-                    "https://example.com/signin-WeixinAuth?state=" + UrlEncoder.Default.Encode(state)));
+                    $"https://example.com/signin-WeixinAuth?state={correlationValue}"));
             Assert.StartsWith("The oauth state cookie was missing: ", error3.GetBaseException().Message);
         }
 
@@ -1165,17 +1142,14 @@ namespace UnitTest
             });
 
             var properties = new AuthenticationProperties();
-            var correlationKey = ".xsrf";
-            var correlationValue = "TestCorrelationId";
-            var correlationMarker = "N";
             properties.Items.Add(correlationKey, correlationValue);
-            var state = stateFormat.Protect(properties);
+
 
             var error = await Assert.ThrowsAnyAsync<Exception>(()
                 => server.SendAsync(
-                    $"https://example.com/signin-WeixinAuth?state={UrlEncoder.Default.Encode(correlationValue)}",
-                    $".AspNetCore.Correlation.{WeixinAuthDefaults.AuthenticationScheme}.{correlationValue}=HERE_MUST_BE_N"
-                    + $";.AspNetCore.Correlation.{ WeixinAuthDefaults.AuthenticationScheme}.{correlationValue}.{correlationMarker}={state}"));
+                    $"https://example.com/signin-WeixinAuth?state={correlationValue}",
+                $".AspNetCore.Correlation.{WeixinAuthDefaults.AuthenticationScheme}.{correlationValue}=HERE_MUST_BE_{correlationMarker}",
+                $".AspNetCore.Correlation.{WeixinAuthDefaults.AuthenticationScheme}.{correlationValue}.{correlationMarker}={stateFormat.Protect(properties)}"));
             Assert.Equal("Correlation failed.", error.GetBaseException().Message);
         }
 
@@ -1190,16 +1164,13 @@ namespace UnitTest
             });
 
             var properties = new AuthenticationProperties();
-            var correlationKey = ".xsrf";
-            var correlationValue = "TestCorrelationId";
             properties.Items.Add(correlationKey, correlationValue);
-            var state = stateFormat.Protect(properties);
 
             var error2 = await Assert.ThrowsAnyAsync<Exception>(()
                 => server.SendAsync(
                     "https://example.com/signin-WeixinAuth?state=" + UrlEncoder.Default.Encode(correlationValue),
-                    $".AspNetCore.Correlation.{WeixinAuthDefaults.AuthenticationScheme}.{correlationValue}=N"
-                    + $";.AspNetCore.Correlation.{WeixinAuthDefaults.AuthenticationScheme}.{correlationValue}.N={state}"));
+                $".AspNetCore.Correlation.{WeixinAuthDefaults.AuthenticationScheme}.{correlationValue}={correlationMarker}",
+                $".AspNetCore.Correlation.{WeixinAuthDefaults.AuthenticationScheme}.{correlationValue}.{correlationMarker}={stateFormat.Protect(properties)}"));
             Assert.Equal("Code was not found.", error2.GetBaseException().Message);
         }
 
@@ -1216,17 +1187,13 @@ namespace UnitTest
             // Skip the challenge step, go directly to the callback path
 
             var properties = new AuthenticationProperties();
-            var correlationKey = ".xsrf";
-            var correlationId = "TestCorrelationId";
-            var correlationMarker = "N";
-            properties.Items.Add(correlationKey, correlationId);
+            properties.Items.Add(correlationKey, correlationValue);
             properties.RedirectUri = "/me";
-            var state = stateFormat.Protect(properties);
 
             var result = await Assert.ThrowsAnyAsync<Exception>(() => server.SendAsync(
-                $"https://example.com/signin-{WeixinAuthDefaults.AuthenticationScheme}?code=TestCode&state={UrlEncoder.Default.Encode(correlationId)}",
-                $".AspNetCore.Correlation.{WeixinAuthDefaults.AuthenticationScheme}.{correlationId}={correlationMarker}"
-                + $";.AspNetCore.Correlation.{WeixinAuthDefaults.AuthenticationScheme}.{correlationId}.{correlationMarker}={state}"));
+                $"https://example.com/signin-{WeixinAuthDefaults.AuthenticationScheme}?code=TestCode&state={UrlEncoder.Default.Encode(correlationValue)}",
+                $".AspNetCore.Correlation.{WeixinAuthDefaults.AuthenticationScheme}.{correlationValue}={correlationMarker}",
+                $".AspNetCore.Correlation.{WeixinAuthDefaults.AuthenticationScheme}.{correlationValue}.{correlationMarker}={stateFormat.Protect(properties)}"));
 
             Assert.StartsWith("OAuth token endpoint failure: ", result.GetBaseException().Message);
             Assert.Contains("invalid appid", result.GetBaseException().Message);
@@ -1275,16 +1242,13 @@ namespace UnitTest
             // Skip the challenge step, go directly to the callback path
 
             var properties = new AuthenticationProperties();
-            var correlationKey = ".xsrf";
-            var correlationId = "TestCorrelationId";
-            var correlationMarker = "N";
-            properties.Items.Add(correlationKey, correlationId);
+            properties.Items.Add(correlationKey, correlationValue);
             properties.RedirectUri = "/me";
-            var state = stateFormat.Protect(properties);
+
             var transaction = await server.SendAsync(
-                $"https://example.com/signin-{WeixinAuthDefaults.AuthenticationScheme}?code=TestCode&state={UrlEncoder.Default.Encode(correlationId)}",
-                $".AspNetCore.Correlation.{WeixinAuthDefaults.AuthenticationScheme}.{correlationId}={correlationMarker}"
-                + $";.AspNetCore.Correlation.{WeixinAuthDefaults.AuthenticationScheme}.{correlationId}.{correlationMarker}={state}");
+                $"https://example.com/signin-{WeixinAuthDefaults.AuthenticationScheme}?code=TestCode&state={UrlEncoder.Default.Encode(correlationValue)}",
+                $".AspNetCore.Correlation.{WeixinAuthDefaults.AuthenticationScheme}.{correlationValue}={correlationMarker}",
+                $".AspNetCore.Correlation.{WeixinAuthDefaults.AuthenticationScheme}.{correlationValue}.{correlationMarker}={stateFormat.Protect(properties)}");
             Assert.Equal(HttpStatusCode.Redirect, transaction.Response.StatusCode);
             Assert.Equal("/me", transaction.Response.Headers.GetValues("Location").First());
             Assert.True(transaction.SetCookie.Count >= 2);
@@ -1293,7 +1257,7 @@ namespace UnitTest
             transaction = await server.SendAsync("https://example.com/authenticate", authCookie);
             Assert.Equal(HttpStatusCode.OK, transaction.Response.StatusCode);
             Assert.Equal("Test Name", transaction.FindClaimValue(ClaimTypes.Name));
-            Assert.Equal("Test User ID", transaction.FindClaimValue(ClaimTypes.NameIdentifier));
+            Assert.Equal("Test Open ID", transaction.FindClaimValue(ClaimTypes.NameIdentifier));
 
             // Ensure claims transformation
             Assert.Equal("yup", transaction.FindClaimValue("xform"));
@@ -1314,16 +1278,13 @@ namespace UnitTest
             // Skip the challenge step, go directly to the callback path
 
             var properties = new AuthenticationProperties();
-            var correlationKey = ".xsrf";
-            var correlationId = "TestCorrelationId";
-            var correlationMarker = "N";
-            properties.Items.Add(correlationKey, correlationId);
+            properties.Items.Add(correlationKey, correlationValue);
             properties.RedirectUri = "/me";
-            var state = stateFormat.Protect(properties);
+
             var transaction = await server.SendAsync(
-                $"https://example.com/signin-{WeixinAuthDefaults.AuthenticationScheme}?code=TestCode&state={UrlEncoder.Default.Encode(correlationId)}",
-                $".AspNetCore.Correlation.{WeixinAuthDefaults.AuthenticationScheme}.{correlationId}={correlationMarker}"
-                + $";.AspNetCore.Correlation.{WeixinAuthDefaults.AuthenticationScheme}.{correlationId}.{correlationMarker}={state}");
+                $"https://example.com/signin-{WeixinAuthDefaults.AuthenticationScheme}?code=TestCode&state={UrlEncoder.Default.Encode(correlationValue)}",
+                $".AspNetCore.Correlation.{WeixinAuthDefaults.AuthenticationScheme}.{correlationValue}={correlationMarker}",
+                $".AspNetCore.Correlation.{WeixinAuthDefaults.AuthenticationScheme}.{correlationValue}.{correlationMarker}={stateFormat.Protect(properties)}");
             Assert.Equal(HttpStatusCode.Redirect, transaction.Response.StatusCode);
             Assert.Equal("/me", transaction.Response.Headers.GetValues("Location").First());
             Assert.True(transaction.SetCookie.Count >= 2);
@@ -1332,7 +1293,7 @@ namespace UnitTest
             transaction = await server.SendAsync("https://example.com/authenticate-WeixinAuth", authCookie);
             Assert.Equal(HttpStatusCode.OK, transaction.Response.StatusCode);
             Assert.Equal("Test Name", transaction.FindClaimValue(ClaimTypes.Name));
-            Assert.Equal("Test User ID", transaction.FindClaimValue(ClaimTypes.NameIdentifier));
+            Assert.Equal("Test Open ID", transaction.FindClaimValue(ClaimTypes.NameIdentifier));
 
             // Ensure claims transformation
             Assert.Equal("yup", transaction.FindClaimValue("xform"));
@@ -1353,16 +1314,13 @@ namespace UnitTest
             // Skip the challenge step, go directly to the callback path
 
             var properties = new AuthenticationProperties();
-            var correlationKey = ".xsrf";
-            var correlationId = "TestCorrelationId";
-            var correlationMarker = "N";
-            properties.Items.Add(correlationKey, correlationId);
+            properties.Items.Add(correlationKey, correlationValue);
             properties.RedirectUri = "/me";
-            var state = stateFormat.Protect(properties);
+
             var transaction = await server.SendAsync(
-                $"https://example.com/signin-{WeixinAuthDefaults.AuthenticationScheme}?code=TestCode&state={UrlEncoder.Default.Encode(correlationId)}",
-                $".AspNetCore.Correlation.{WeixinAuthDefaults.AuthenticationScheme}.{correlationId}={correlationMarker}"
-                + $";.AspNetCore.Correlation.{WeixinAuthDefaults.AuthenticationScheme}.{correlationId}.{correlationMarker}={state}");
+                $"https://example.com/signin-{WeixinAuthDefaults.AuthenticationScheme}?code=TestCode&state={UrlEncoder.Default.Encode(correlationValue)}",
+                $".AspNetCore.Correlation.{WeixinAuthDefaults.AuthenticationScheme}.{correlationValue}={correlationMarker}",
+                $".AspNetCore.Correlation.{WeixinAuthDefaults.AuthenticationScheme}.{correlationValue}.{correlationMarker}={stateFormat.Protect(properties)}");
             Assert.Equal(HttpStatusCode.Redirect, transaction.Response.StatusCode);
             Assert.Equal("/me", transaction.Response.Headers.GetValues("Location").First());
             Assert.True(transaction.SetCookie.Count >= 2);
@@ -1388,16 +1346,13 @@ namespace UnitTest
             // Skip the challenge step, go directly to the callback path
 
             var properties = new AuthenticationProperties();
-            var correlationKey = ".xsrf";
-            var correlationId = "TestCorrelationId";
-            var correlationMarker = "N";
-            properties.Items.Add(correlationKey, correlationId);
+            properties.Items.Add(correlationKey, correlationValue);
             properties.RedirectUri = "/me";
-            var state = stateFormat.Protect(properties);
+
             var transaction = await server.SendAsync(
-                $"https://example.com/signin-{WeixinAuthDefaults.AuthenticationScheme}?code=TestCode&state={UrlEncoder.Default.Encode(correlationId)}",
-                $".AspNetCore.Correlation.{WeixinAuthDefaults.AuthenticationScheme}.{correlationId}={correlationMarker}"
-                + $";.AspNetCore.Correlation.{WeixinAuthDefaults.AuthenticationScheme}.{correlationId}.{correlationMarker}={state}");
+                $"https://example.com/signin-{WeixinAuthDefaults.AuthenticationScheme}?code=TestCode&state={UrlEncoder.Default.Encode(correlationValue)}",
+                $".AspNetCore.Correlation.{WeixinAuthDefaults.AuthenticationScheme}.{correlationValue}={correlationMarker}",
+                $".AspNetCore.Correlation.{WeixinAuthDefaults.AuthenticationScheme}.{correlationValue}.{correlationMarker}={stateFormat.Protect(properties)}");
             Assert.Equal(HttpStatusCode.Redirect, transaction.Response.StatusCode);
             Assert.Equal("/me", transaction.Response.Headers.GetValues("Location").First());
             Assert.True(transaction.SetCookie.Count >= 2);
@@ -1423,7 +1378,7 @@ namespace UnitTest
                             refresh_token = "Test Refresh Token",
                             openid = "Test Open ID",
                             scope = "Test_Scope,snsapi_userinfo",
-                            unionid = "Test User ID"
+                            unionid = "Test Union ID"
                             //token_type = "Bearer"
                         });
                     }
@@ -1443,7 +1398,7 @@ namespace UnitTest
                                     "PRIVILEGE1",
                                     "PRIVILEGE2"
                                 },
-                            unionid = "Test User ID"
+                            unionid = "Test Union ID"
                         });
                     }
 
@@ -1487,12 +1442,12 @@ namespace UnitTest
                         if (req.Path == new PathString("/challenge"))
                         {
                             await context.ChallengeAsync();
-						}
-						else if (req.Path == new PathString("/challenge-facebook"))
-						{
-							await context.ChallengeAsync(FacebookDefaults.AuthenticationScheme);
-						}
-						else if (req.Path == new PathString("/challenge-WeixinAuth"))
+                        }
+                        else if (req.Path == new PathString("/challenge-facebook"))
+                        {
+                            await context.ChallengeAsync(FacebookDefaults.AuthenticationScheme);
+                        }
+                        else if (req.Path == new PathString("/challenge-WeixinAuth"))
                         {
                             var provider = WeixinAuthDefaults.AuthenticationScheme;
                             string userId = "1234567890123456789012";
@@ -1520,18 +1475,18 @@ namespace UnitTest
                         {
                             var result = await context.AuthenticateAsync(TestExtensions.CookieAuthenticationScheme);
                             res.Describe(result.Principal);
-						}
-						else if (req.Path == new PathString("/authenticate-WeixinAuth"))
+                        }
+                        else if (req.Path == new PathString("/authenticate-WeixinAuth"))
                         {
                             var result = await context.AuthenticateAsync(WeixinAuthDefaults.AuthenticationScheme);
                             res.Describe(result?.Principal);
-						}
-						else if (req.Path == new PathString("/authenticate-facebook"))
-						{
-							var result = await context.AuthenticateAsync(FacebookDefaults.AuthenticationScheme);
-							res.Describe(result?.Principal);
-						}
-						else if (req.Path == new PathString("/401"))
+                        }
+                        else if (req.Path == new PathString("/authenticate-facebook"))
+                        {
+                            var result = await context.AuthenticateAsync(FacebookDefaults.AuthenticationScheme);
+                            res.Describe(result?.Principal);
+                        }
+                        else if (req.Path == new PathString("/401"))
                         {
                             res.StatusCode = (int)HttpStatusCode.Unauthorized;// 401;
                         }
@@ -1574,12 +1529,12 @@ namespace UnitTest
                     services.AddAuthentication(TestExtensions.CookieAuthenticationScheme)
                         .AddCookie(TestExtensions.CookieAuthenticationScheme, o => o.ForwardChallenge = WeixinAuthDefaults.AuthenticationScheme)
                         .AddWeixinAuth(configureOptions)
-						.AddFacebook(o =>
-						{
-							o.ClientId = "Test Facebook ClientId";
-							o.ClientSecret = "Test Facebook AppSecrent";
-						});
-				});
+                        .AddFacebook(o =>
+                        {
+                            o.ClientId = "Test Facebook ClientId";
+                            o.ClientSecret = "Test Facebook AppSecrent";
+                        });
+                });
             return new TestServer(builder);
         }
 
