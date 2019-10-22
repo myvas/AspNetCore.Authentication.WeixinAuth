@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.OAuth;
-using Myvas.AspNetCore.Authentication.WeixinAuth;
+using Myvas.AspNetCore.Authentication.WeixinAuth.Extensions;
 using Myvas.AspNetCore.Authentication.WeixinAuth.Extensions;
 using System;
 using System.Security.Claims;
