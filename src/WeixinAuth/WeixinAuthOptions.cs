@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.OAuth;
 using Myvas.AspNetCore.Authentication.WeixinAuth;
+using Myvas.AspNetCore.Authentication.WeixinAuth.Extensions;
 using System;
 using System.Security.Claims;
 
@@ -71,6 +72,9 @@ namespace Myvas.AspNetCore.Authentication
 
             ClaimsIssuer = WeixinAuthDefaults.ClaimsIssuer;
 
+            ClaimActions.MapJsonKey(ClaimTypes.NameIdentifier, "openid");
+            ClaimActions.MapJsonKey(ClaimTypes.Name, "nickname");
+
             ClaimActions.MapJsonKey(WeixinAuthClaimTypes.UnionId, "unionid");
             ClaimActions.MapJsonKey(WeixinAuthClaimTypes.OpenId, "openid");
             ClaimActions.MapJsonKey(WeixinAuthClaimTypes.NickName, "nickname");
@@ -79,14 +83,8 @@ namespace Myvas.AspNetCore.Authentication
             ClaimActions.MapJsonKey(WeixinAuthClaimTypes.City, "city");
             ClaimActions.MapJsonKey(WeixinAuthClaimTypes.Country, "country");
             ClaimActions.MapJsonKey(WeixinAuthClaimTypes.HeadImageUrl, "headimgurl");
-            ClaimActions.MapJsonKey(WeixinAuthClaimTypes.Privilege, "privilege");
+            ClaimActions.MapJsonKeyArray(WeixinAuthClaimTypes.Privilege, "privilege");
             ClaimActions.MapJsonKey(WeixinAuthClaimTypes.Scope, "scope");
-
-            ClaimActions.MapJsonKey(ClaimTypes.NameIdentifier, "openid");
-            ClaimActions.MapJsonKey(ClaimTypes.Name, "nickname");
-            ClaimActions.MapJsonKey(ClaimTypes.Gender, "sex");
-            ClaimActions.MapJsonKey(ClaimTypes.Country, "country");
-            ClaimActions.MapJsonKey(ClaimTypes.StateOrProvince, "province");
         }
 
         public override void Validate()

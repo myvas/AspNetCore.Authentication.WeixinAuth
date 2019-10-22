@@ -22,12 +22,12 @@ namespace UnitTest
     {
         public const string CookieAuthenticationScheme = "External";
 
-        public static async Task<TestTransaction> SendAsync(this TestServer server, string uri, string cookieHeader = null)
+        public static async Task<TestTransaction> SendAsync(this TestServer server, string uri, params string[] cookies)
         {
             var request = new HttpRequestMessage(HttpMethod.Get, uri);
-            if (!string.IsNullOrEmpty(cookieHeader))
+            if (cookies != null && cookies.Count() > 0)
             {
-                request.Headers.Add("Cookie", cookieHeader);
+                request.Headers.Add("Cookie", string.Join("; ", cookies));
             }
 
             var transaction = new TestTransaction

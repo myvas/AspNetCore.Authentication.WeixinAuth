@@ -70,6 +70,10 @@ services.AddAuthentication()
 
 3.WeixinAuth: 微信公众平台(https://mp.weixin.qq.com)
 
+微信公众平台/网页授权获取用户信息，须在微信公众平台（mp.weixin.qq.com）上开通服务号，并认证。
+___订阅号无网页授权权限，即使是已认证的订阅号也不行！___
+用户在微信客户端中访问网页时，可以通过此组件Challenge后获取用户的OpenId或UnionId，据此可以识别用户。
+
 （1）微信公众平台-测试账号/开发/开发者工具/公众平台测试号/...
 
 - 开通功能：网页服务/网页授权获取用户基本信息。
@@ -105,7 +109,7 @@ services.AddAuthentication()
 ```
 
 # Dev
-* .NET Core SDK 2.1.508
+* .NET Core SDK 2.1.509
 * 下载[微信开发者工具](https://mp.weixin.qq.com/debug/wxadoc/dev/devtools/download.html)
 
 
