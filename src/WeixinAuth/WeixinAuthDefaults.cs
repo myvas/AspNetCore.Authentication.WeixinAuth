@@ -1,7 +1,4 @@
-﻿using System;
-using System.ComponentModel.DataAnnotations;
-
-namespace Myvas.AspNetCore.Authentication
+﻿namespace Myvas.AspNetCore.Authentication
 {
     public static class WeixinAuthDefaults
     {

@@ -80,8 +80,10 @@ namespace UnitTest
                         Assert.Equal("Test Access Token", context.AccessToken);
                         Assert.Equal("Test Refresh Token", context.RefreshToken);
                         Assert.Equal(TimeSpan.FromSeconds(3600), context.ExpiresIn);
-                        Assert.Equal("Test User ID", context.Identity.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+                        Assert.Equal("Test Open ID", context.Identity.FindFirst(ClaimTypes.NameIdentifier)?.Value);
                         Assert.Equal("Test Name", context.Identity.FindFirst(ClaimTypes.Name)?.Value);
+                        Assert.Equal("Test Open ID", context.Identity.FindFirst(WeixinAuthClaimTypes.OpenId)?.Value);
+                        Assert.Equal("Test Union ID", context.Identity.FindFirst(WeixinAuthClaimTypes.UnionId)?.Value);
                         return Task.FromResult(0);
                     }
                 };
@@ -865,7 +867,9 @@ namespace UnitTest
             Assert.Equal(HttpStatusCode.OK, transaction.Response.StatusCode);
             var expectedIssuer = claimsIssuer ?? WeixinAuthDefaults.AuthenticationScheme;
             Assert.Equal("Test Name", transaction.FindClaimValue(ClaimTypes.Name, expectedIssuer));
-            Assert.Equal("Test User ID", transaction.FindClaimValue(ClaimTypes.NameIdentifier, expectedIssuer));
+            Assert.Equal("Test Open ID", transaction.FindClaimValue(ClaimTypes.NameIdentifier, expectedIssuer));
+            Assert.Equal("Test Open ID", transaction.FindClaimValue(WeixinAuthClaimTypes.OpenId, expectedIssuer));
+            Assert.Equal("Test Union ID", transaction.FindClaimValue(WeixinAuthClaimTypes.UnionId, expectedIssuer));
 
             // Ensure claims transformation
             Assert.Equal("yup", transaction.FindClaimValue("xform"));
@@ -1080,9 +1084,10 @@ namespace UnitTest
                         Assert.Equal("Test Access Token", context.AccessToken);
                         Assert.Equal("Test Refresh Token", context.RefreshToken);
                         Assert.Equal(TimeSpan.FromSeconds(3600), context.ExpiresIn);
-                        Assert.Equal("Test User ID", context.Identity.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+                        Assert.Equal("Test Open ID", context.Identity.FindFirst(ClaimTypes.NameIdentifier)?.Value);
                         Assert.Equal("Test Name", context.Identity.FindFirst(ClaimTypes.Name)?.Value);
                         Assert.Equal("Test Open ID", context.Identity.FindFirst(WeixinAuthClaimTypes.OpenId)?.Value);
+                        Assert.Equal("Test Union ID", context.Identity.FindFirst(WeixinAuthClaimTypes.UnionId)?.Value);
                         return Task.FromResult(0);
                     }
                 };
@@ -1293,7 +1298,9 @@ namespace UnitTest
             transaction = await server.SendAsync("https://example.com/authenticate", authCookie);
             Assert.Equal(HttpStatusCode.OK, transaction.Response.StatusCode);
             Assert.Equal("Test Name", transaction.FindClaimValue(ClaimTypes.Name));
-            Assert.Equal("Test User ID", transaction.FindClaimValue(ClaimTypes.NameIdentifier));
+            Assert.Equal("Test Open ID", transaction.FindClaimValue(ClaimTypes.NameIdentifier));
+            Assert.Equal("Test Open ID", transaction.FindClaimValue(WeixinAuthClaimTypes.OpenId));
+            Assert.Equal("Test Union ID", transaction.FindClaimValue(WeixinAuthClaimTypes.UnionId));
 
             // Ensure claims transformation
             Assert.Equal("yup", transaction.FindClaimValue("xform"));
@@ -1332,7 +1339,9 @@ namespace UnitTest
             transaction = await server.SendAsync("https://example.com/authenticate-WeixinAuth", authCookie);
             Assert.Equal(HttpStatusCode.OK, transaction.Response.StatusCode);
             Assert.Equal("Test Name", transaction.FindClaimValue(ClaimTypes.Name));
-            Assert.Equal("Test User ID", transaction.FindClaimValue(ClaimTypes.NameIdentifier));
+            Assert.Equal("Test Open ID", transaction.FindClaimValue(ClaimTypes.NameIdentifier));
+            Assert.Equal("Test Open ID", transaction.FindClaimValue(WeixinAuthClaimTypes.OpenId));
+            Assert.Equal("Test Union ID", transaction.FindClaimValue(WeixinAuthClaimTypes.UnionId));
 
             // Ensure claims transformation
             Assert.Equal("yup", transaction.FindClaimValue("xform"));
@@ -1423,7 +1432,7 @@ namespace UnitTest
                             refresh_token = "Test Refresh Token",
                             openid = "Test Open ID",
                             scope = "Test_Scope,snsapi_userinfo",
-                            unionid = "Test User ID"
+                            unionid = "Test Union ID"
                             //token_type = "Bearer"
                         });
                     }
@@ -1443,7 +1452,7 @@ namespace UnitTest
                                     "PRIVILEGE1",
                                     "PRIVILEGE2"
                                 },
-                            unionid = "Test User ID"
+                            unionid = "Test Union ID"
                         });
                     }
 
