@@ -109,7 +109,7 @@ services.AddAuthentication()
 ```
 
 # Dev
-* .NET Core SDK 2.1.509
+* .NET Core SDK 2.1.802
 * 下载[微信开发者工具](https://mp.weixin.qq.com/debug/wxadoc/dev/devtools/download.html)
 
 
