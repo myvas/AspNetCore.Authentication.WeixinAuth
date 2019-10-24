@@ -1,5 +1,5 @@
-# AspNetCore.Authentication Family
-## 1.AspNetCore.Authentication.QQConnect
+# Myvas.AspNetCore.Authentication Family
+## 1.QQConnect
 An ASP.NET Core authentication middleware: QQConnect for https://connect.qq.com (腾讯QQ互联平台/QQ登录）
 
 腾讯QQ互联平台/QQ登录：须腾讯QQ互联平台（connect.qq.com）账号，用户通过点击“QQ登录”图标按钮，或使用手机QQ扫码登入网站。
@@ -8,7 +8,7 @@ An ASP.NET Core authentication middleware: QQConnect for https://connect.qq.com 
 * github: https://github.com/myvas/AspNetCore.Authentication.QQConnect
 
 
-## 2.AspNetCore.Authentication.WeixinOpen
+## 2.WeixinOpen
 An ASP.NET Core authentication middleware: WeixinOpen for https://open.weixin.qq.com (微信开放平台/微信扫码登录)
 
 
@@ -17,7 +17,7 @@ An ASP.NET Core authentication middleware: WeixinOpen for https://open.weixin.qq
 * nuget: https://www.nuget.org/packages/Myvas.AspNetCore.Authentication.WeixinOpen
 * github: https://github.com/myvas/AspNetCore.Authentication.WeixinOpen
 
-## 3.AspNetCore.Authentication.WeixinAuth
+## 3.WeixinAuth
 An ASP.NET Core authentication middleware: WeixinAuth for https://mp.weixin.qq.com （微信公众平台/网页授权登录）
 
 微信公众平台/网页授权登录，须微信公众平台（mp.weixin.qq.com）已认证的服务号（或测试号），用户在微信客户端访问网站时自动登入网站。
@@ -109,8 +109,8 @@ services.AddAuthentication()
 ```
 
 # Dev
-* .NET Core SDK 2.1.802
-* 下载[微信开发者工具](https://mp.weixin.qq.com/debug/wxadoc/dev/devtools/download.html)
+* [.NET Core SDK 2.1 LTS](https://dotnet.microsoft.com/download/dotnet-core/2.1) 2.1.802
+* [微信开发者工具](https://mp.weixin.qq.com/debug/wxadoc/dev/devtools/download.html)
 
 
 # Demo Online
