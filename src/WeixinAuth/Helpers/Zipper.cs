@@ -5,7 +5,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Text;
 
-namespace Myvas.AspNetCore.Authentication.WeixinAuth
+namespace Myvas.AspNetCore.Authentication.WeixinAuth.Internal
 {
     internal class Zipper
     {

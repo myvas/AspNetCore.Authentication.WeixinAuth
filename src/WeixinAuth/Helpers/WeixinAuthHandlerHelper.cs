@@ -2,7 +2,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Myvas.AspNetCore.Authentication
+namespace Myvas.AspNetCore.Authentication.WeixinAuth.Internal
 {
     internal static class WeixinAuthHandlerHelper
     {

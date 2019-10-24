@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Myvas.AspNetCore.Authentication.WeixinAuth.Extensions
+namespace Myvas.AspNetCore.Authentication.WeixinAuth.Internal
 {
     internal static class ClaimActionCollectionMapExtensions
     {

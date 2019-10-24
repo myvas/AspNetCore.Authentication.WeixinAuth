@@ -7,7 +7,7 @@ using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Myvas.AspNetCore.Authentication.WeixinAuth
+namespace Myvas.AspNetCore.Authentication.WeixinAuth.Internal
 {
     /// <summary>
     /// ref. https://stackoverflow.com/questions/7343465/compression-decompression-string-with-c-sharp
