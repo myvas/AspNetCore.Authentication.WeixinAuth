@@ -4,7 +4,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 
-namespace Myvas.AspNetCore.Authentication.WeixinAuth.Extensions
+namespace Myvas.AspNetCore.Authentication.WeixinAuth.Internal
 {
     internal static class WeixinAuthClaimsExtensions
     {

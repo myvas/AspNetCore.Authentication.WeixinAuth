@@ -4,8 +4,8 @@
     <PackageId>Myvas.AspNetCore.Authentication.WeixinAuth</PackageId>
     <AssemblyName>Myvas.AspNetCore.Authentication.WeixinAuth</AssemblyName>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <Version>2.2.1026.3</Version>
-    <PackageVersion>2.2.1026</PackageVersion>
+    <Version>2.2.1027.4</Version>
+    <PackageVersion>2.2.1027-alpha4</PackageVersion>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageTags>Myvas,AspNetCore, Authentication, Weixin Auth, Tencent</PackageTags>
     <PackageProjectUrl>https://github.com/myvas/AspNetCore.Authentication.WeixinAuth</PackageProjectUrl>   
