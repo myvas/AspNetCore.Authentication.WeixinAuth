@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Myvas.AspNetCore.Authentication.WeixinAuth.Extensions
 {
-    internal static class JsonKeyArrayClaimActionCollectionMapExtensions
+    internal static class ClaimActionCollectionMapExtensions
     {
         public static void MapJsonKeyArray(this ClaimActionCollection collection, string claimType, string jsonKey)
         {

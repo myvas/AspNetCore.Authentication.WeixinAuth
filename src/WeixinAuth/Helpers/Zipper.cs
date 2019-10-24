@@ -7,7 +7,7 @@ using System.Text;
 
 namespace Myvas.AspNetCore.Authentication.WeixinAuth
 {
-    public class Zipper
+    internal class Zipper
     {
         public static void CopyTo(Stream src, Stream dest)
         {

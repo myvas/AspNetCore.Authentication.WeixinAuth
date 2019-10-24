@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace Myvas.AspNetCore.Authentication
 {
-    public class WeixinAuthApi : IWeixinAuthApi
+    internal class WeixinAuthApi : IWeixinAuthApi
     {
         protected ILogger Logger { get; }
         protected IOptionsMonitor<WeixinAuthOptions> OptionsMonitor;

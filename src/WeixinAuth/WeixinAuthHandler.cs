@@ -25,11 +25,12 @@ namespace Myvas.AspNetCore.Authentication
     {
         private readonly IWeixinAuthApi _api;
 
-        protected const string CorrelationPrefix = ".AspNetCore.Correlation.";
+        //protected const string CorrelationPrefix = ".AspNetCore.Correlation.";
         protected const string CorrelationProperty = ".xsrf";
         private const string CorrelationMarker = "N";
+        //protected const string AuthSchemeKey = ".AuthScheme";
 
-        protected static readonly RandomNumberGenerator CryptoRandom = RandomNumberGenerator.Create();
+        //protected static readonly RandomNumberGenerator CryptoRandom = RandomNumberGenerator.Create();
 
         public WeixinAuthHandler(
             IWeixinAuthApi api,
@@ -44,24 +45,6 @@ namespace Myvas.AspNetCore.Authentication
 
         protected override string FormatScope(IEnumerable<string> scopes)
             => string.Join(",", scopes); // // OAuth2 3.3 space separated, but weixin not
-
-
-        protected virtual async Task HandleChallengeAsyncX(AuthenticationProperties properties)
-        {
-            if (string.IsNullOrEmpty(properties.RedirectUri))
-            {
-                properties.RedirectUri = CurrentUri;
-            }
-
-            // OAuth2 10.12 CSRF
-            GenerateCorrelationId(properties);
-
-            var authorizationEndpoint = BuildChallengeUrl(properties, BuildRedirectUri(Options.CallbackPath));
-            var redirectContext = new RedirectContext<OAuthOptions>(
-                Context, Scheme, Options,
-                properties, authorizationEndpoint);
-            await Events.RedirectToAuthorizationEndpoint(redirectContext);
-        }
 
         /// <summary>
         /// 生成网页授权调用URL，用于获取code。（然后可以用此code换取网页授权access_token）
@@ -82,10 +65,20 @@ namespace Myvas.AspNetCore.Authentication
             var scope = PickAuthenticationProperty(properties, OAuthChallengeProperties.ScopeKey, FormatScope, Options.Scope);
             queryStrings.Add(OAuthChallengeProperties.ScopeKey, scope);
 
-            //腾讯规定state最长128字节，所以properties只能存放在Cookie中，state作为Cookie值的索引键。
-            //https://mp.weixin.qq.com/wiki?t=resource/res_main&id=mp1421140842
+            // 测试表明properties添加returnUrl和scheme后，state为1264字符，此时报错：state参数过长。
+            // 所以properties只能存放在Cookie中，state作为Cookie值的索引键。
+            // 腾讯规定state最长128字节，所以properties只能存放在Cookie中，state作为Cookie值的索引键。
+            // https://mp.weixin.qq.com/wiki?t=resource/res_main&id=mp1421140842
+            var protectedProperties = Options.StateDataFormat.Protect(properties);
+            // queryStrings.Add("state", state);
             var correlationId = properties.Items[CorrelationProperty];
-            Context.Response.Cookies.Append(BuildStateCookieName(correlationId), Options.StateDataFormat.Protect(properties));
+            var protectedPropertiesCookieName = BuildStateCookieName(correlationId);
+            // Clean up all the deprecated cookies with pattern: "Options.CorrelationCookie.Name + Scheme.Name + "." + correlationId + "." + CorrelationMarker"
+            var deprecatedCookieNames = Context.Request.Cookies.Keys.Where(x => x.StartsWith(Options.CorrelationCookie.Name + Scheme.Name + "."));// && x.EndsWith("."+CorrelationMarker));
+            var cookieOptions = Options.CorrelationCookie.Build(Context);
+            deprecatedCookieNames.ToList().ForEach(x => Context.Response.Cookies.Delete(x));//, cookieOptions));
+            // Append a response cookie for state/properties
+            Context.Response.Cookies.Append(protectedPropertiesCookieName, protectedProperties);
             queryStrings.Add("state", correlationId);
 
             var authorizationUrl = QueryHelpers.AddQueryString(Options.AuthorizationEndpoint, queryStrings);
@@ -178,10 +171,7 @@ namespace Myvas.AspNetCore.Authentication
             {
                 return HandleRequestResult.Fail($"The oauth state cookie was missing: Cookie: {stateCookieName}");
             }
-
-            var cookieOptions = Options.CorrelationCookie.Build(Context, Clock.UtcNow);
-            Response.Cookies.Delete(stateCookieName, cookieOptions);
-
+            
             var properties = Options.StateDataFormat.Unprotect(protectedProperties);
             if (properties == null)
             {
@@ -193,6 +183,11 @@ namespace Myvas.AspNetCore.Authentication
             {
                 return HandleRequestResult.Fail("Correlation failed.", properties);
             }
+
+            //var cookieOptions = Options.CorrelationCookie.Build(Context, Clock.UtcNow);
+            Response.Cookies.Delete(stateCookieName);//, cookieOptions);
+            var correlationCookieName = BuildCorrelationCookieName(state);
+            Response.Cookies.Delete(correlationCookieName);//, cookieOptions);
 
 
             var code = query["code"];
@@ -284,15 +279,6 @@ namespace Myvas.AspNetCore.Authentication
             return await _api.GetToken(Options.Backchannel, Options.TokenEndpoint, Options.AppId, Options.AppSecret, code, Context.RequestAborted);
         }
 
-        private static async Task<string> Display(HttpResponseMessage response)
-        {
-            var output = new StringBuilder();
-            output.Append("Status: " + response.StatusCode + ";");
-            output.Append("Headers: " + response.Headers.ToString() + ";");
-            output.Append("Body: " + await response.Content.ReadAsStringAsync() + ";");
-            return output.ToString();
-        }
-
         /// <summary>
         /// Call the OAuthServer and get a user's information.
         /// The context object will have the Identity, AccessToken, and UserInformationEndpoint available.
@@ -348,77 +334,16 @@ namespace Myvas.AspNetCore.Authentication
             await Events.CreatingTicket(context);
             return new AuthenticationTicket(context.Principal, context.Properties, Scheme.Name);
         }
-
-        /// <summary>
-        /// 生成一个较短的CorrelationId，以便解决state长度限制为128字节的问题
-        /// </summary>
-        /// <param name="properties"></param>
-        protected virtual void GenerateCorrelationIdX(AuthenticationProperties properties)
-        {
-            if (properties == null)//contains .redirect={redirect_uri}
-            {
-                throw new ArgumentNullException(nameof(properties));
-            }
-
-            var bytes = new byte[8];//32->12->8
-            CryptoRandom.GetBytes(bytes);
-            var correlationId = Base64UrlTextEncoder.Encode(bytes);
-
-            var cookieOptions = Options.CorrelationCookie.Build(Context, Clock.UtcNow);
-
-            properties.Items[CorrelationProperty] = correlationId; //need to build challenge url
-
-            var cookieName1 = BuildCorelationCookieName(correlationId);
-            Response.Cookies.Append(cookieName1, CorrelationMarker, cookieOptions);
-
-            var cookieName2 = BuildStateCookieName(correlationId);
-            Response.Cookies.Append(cookieName2, Options.StateDataFormat.Protect(properties), cookieOptions);
-        }
-
-        #region Handle big properties protected output, by store it to cookie 'xxxx.state'
-        protected virtual string BuildCorelationCookieName(string correlationId)
+        
+        #region To satisfy too big protected properties, we should store it to cookie '.{CorrelationCookieName}.{SchemeName}.{CorrelationMarker}.{CorrelationId|state}'
+        protected virtual string BuildCorrelationCookieName(string correlationId)
         {
             return Options.CorrelationCookie.Name + Scheme.Name + "." + correlationId;
         }
         protected virtual string BuildStateCookieName(string correlationId)
         {
-            return Options.CorrelationCookie.Name + Scheme.Name + "." + correlationId + "." + CorrelationMarker;
+            return Options.CorrelationCookie.Name + Scheme.Name + "." + CorrelationMarker + "." + correlationId;
         }
         #endregion
-
-        protected virtual bool ValidateCorrelationIdX(AuthenticationProperties properties)
-        {
-            if (properties == null)
-            {
-                throw new ArgumentNullException(nameof(properties));
-            }
-
-            string correlationId;
-            if (!properties.Items.TryGetValue(CorrelationProperty, out correlationId))
-            {
-                Logger.LogWarning($"{CorrelationProperty} state property not found.");
-                return false;
-            }
-            properties.Items.Remove(CorrelationProperty);
-
-            var cookieOptions = new CookieOptions
-            {
-                HttpOnly = true,
-                Secure = Request.IsHttps
-            };
-            var corelationCookieName = BuildCorelationCookieName(correlationId);
-            Response.Cookies.Delete(corelationCookieName, cookieOptions);
-
-            var stateCookieName = BuildStateCookieName(correlationId);
-            Response.Cookies.Delete(stateCookieName, cookieOptions);
-
-            if (!string.Equals(correlationId, CorrelationMarker, StringComparison.Ordinal))
-            {
-                Logger.LogWarning($"The correlation value in cookie '{corelationCookieName}' did not match the expected value '{CorrelationMarker}'.");
-                return false;
-            }
-
-            return true;
-        }
     }
 }
