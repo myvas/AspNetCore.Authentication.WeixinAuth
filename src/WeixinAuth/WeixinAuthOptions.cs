@@ -82,7 +82,8 @@ namespace Myvas.AspNetCore.Authentication
             ClaimActions.MapJsonKey(WeixinAuthClaimTypes.City, "city");
             ClaimActions.MapJsonKey(WeixinAuthClaimTypes.Country, "country");
             ClaimActions.MapJsonKey(WeixinAuthClaimTypes.HeadImageUrl, "headimgurl");
-            ClaimActions.MapJsonKeyArray(WeixinAuthClaimTypes.Privilege, "privilege");
+            ClaimActions.MapJsonKey(WeixinAuthClaimTypes.Privilege, "privilege");
+            //ClaimActions.MapJsonKeyArray(WeixinAuthClaimTypes.Privilege, "privilege");
             ClaimActions.MapJsonKey(WeixinAuthClaimTypes.Scope, "scope");
         }
 

@@ -1,6 +1,6 @@
-﻿using Newtonsoft.Json.Linq;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using System.Text.Json;
 
 namespace Myvas.AspNetCore.Authentication.WeixinAuth.Internal
 {
@@ -10,50 +10,50 @@ namespace Myvas.AspNetCore.Authentication.WeixinAuth.Internal
         /// <summary>
         ///  errcode
         /// </summary>
-        public static int GetErrorCode(JObject payload)
+        public static int GetErrorCode(JsonDocument payload)
         {
             if (payload == null)
             {
                 throw new ArgumentNullException(nameof(payload));
             }
-            return payload.Value<int?>("errcode") ?? 0;
+            return payload.RootElement.GetInt32("errcode", 0);
         }
 
         /// <summary>
         ///  errmsg
         /// </summary>
-        public static string GetErrorMessage(JObject payload)
+        public static string GetErrorMessage(JsonDocument payload)
         {
             if (payload == null)
             {
                 throw new ArgumentNullException(nameof(payload));
             }
-            return payload.Value<string>("errmsg");
+            return payload.RootElement.GetString("errmsg");
         }
         #endregion
 
         /// <summary>
         ///  openid
         /// </summary>
-        public static string GetOpenId(JObject payload)
+        public static string GetOpenId(JsonDocument payload)
         {
             if (payload == null)
             {
                 throw new ArgumentNullException(nameof(payload));
             }
-            return payload.Value<string>("openid");
+            return payload.RootElement.GetString("openid");
         }
 
         /// <summary>
         /// nickname 微信用户昵称。
         /// </summary>
-        public static string GetNickName(JObject payload)
+        public static string GetNickName(JsonDocument payload)
         {
             if (payload == null)
             {
                 throw new ArgumentNullException(nameof(payload));
             }
-            return payload.Value<string>("nickname");
+            return payload.RootElement.GetString("nickname");
         }
 
         /// <summary>
@@ -61,13 +61,13 @@ namespace Myvas.AspNetCore.Authentication.WeixinAuth.Internal
         /// </summary>
         /// <param name="payload"></param>
         /// <returns></returns>
-        public static string GetHeadImageUrl(JObject payload)
+        public static string GetHeadImageUrl(JsonDocument payload)
         {
             if (payload == null)
             {
                 throw new ArgumentNullException(nameof(payload));
             }
-            return payload.Value<string>("headimgurl");
+            return payload.RootElement.GetString("headimgurl");
         }
 
         /// <summary>
@@ -75,13 +75,13 @@ namespace Myvas.AspNetCore.Authentication.WeixinAuth.Internal
         /// </summary>
         /// <param name="payload"></param>
         /// <returns></returns>
-        public static string GetGender(JObject payload)
+        public static string GetGender(JsonDocument payload)
         {
             if (payload == null)
             {
                 throw new ArgumentNullException(nameof(payload));
             }
-            return payload.Value<string>("sex");
+            return payload.RootElement.GetString("sex");
         }
 
         /// <summary>
@@ -89,13 +89,13 @@ namespace Myvas.AspNetCore.Authentication.WeixinAuth.Internal
         /// </summary>
         /// <param name="payload"></param>
         /// <returns></returns>
-        public static string GetCountry(JObject payload)
+        public static string GetCountry(JsonDocument payload)
         {
             if (payload == null)
             {
                 throw new ArgumentNullException(nameof(payload));
             }
-            return payload.Value<string>("country");
+            return payload.RootElement.GetString("country");
         }
 
         /// <summary>
@@ -103,13 +103,13 @@ namespace Myvas.AspNetCore.Authentication.WeixinAuth.Internal
         /// </summary>
         /// <param name="payload"></param>
         /// <returns></returns>
-        public static string GetProvince(JObject payload)
+        public static string GetProvince(JsonDocument payload)
         {
             if (payload == null)
             {
                 throw new ArgumentNullException(nameof(payload));
             }
-            return payload.Value<string>("province");
+            return payload.RootElement.GetString("province");
         }
 
         /// <summary>
@@ -117,13 +117,13 @@ namespace Myvas.AspNetCore.Authentication.WeixinAuth.Internal
         /// </summary>
         /// <param name="payload"></param>
         /// <returns></returns>
-        public static string GetCity(JObject payload)
+        public static string GetCity(JsonDocument payload)
         {
             if (payload == null)
             {
                 throw new ArgumentNullException(nameof(payload));
             }
-            return payload.Value<string>("city");
+            return payload.RootElement.GetString("city");
         }
 
         /// <summary>
@@ -131,13 +131,13 @@ namespace Myvas.AspNetCore.Authentication.WeixinAuth.Internal
         /// </summary>
         /// <param name="payload"></param>
         /// <returns></returns>
-        public static string GetUnionId(JObject payload)
+        public static string GetUnionId(JsonDocument payload)
         {
             if (payload == null)
             {
                 throw new ArgumentNullException(nameof(payload));
             }
-            return payload.Value<string>("unionid");
+            return payload.RootElement.GetString("unionid");
         }
 
         /// <summary>
@@ -145,13 +145,13 @@ namespace Myvas.AspNetCore.Authentication.WeixinAuth.Internal
         /// </summary>
         /// <param name="payload"></param>
         /// <returns></returns>
-        public static IEnumerable<string> GetPrivileges(JObject payload)
+        public static IEnumerable<string> GetPrivileges(JsonDocument payload)
         {
             if (payload == null)
             {
                 throw new ArgumentNullException(nameof(payload));
             }
-            return payload.Value<JArray>("privilege").Values<string>();
+            return payload.RootElement.GetStringArray("privilege");
         }
     }
 }

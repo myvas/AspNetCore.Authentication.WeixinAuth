@@ -1,28 +1,38 @@
 ﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.OAuth;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Primitives;
+using Microsoft.Net.Http.Headers;
 using Myvas.AspNetCore.Authentication.WeixinAuth.Internal;
-using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Net.Http;
 using System.Security.Claims;
-using System.Security.Cryptography;
 using System.Text;
 using System.Text.Encodings.Web;
+using System.Text.Json;
 using System.Threading.Tasks;
-using Base64UrlTextEncoder = Microsoft.AspNetCore.Authentication.Base64UrlTextEncoder;
 
 namespace Myvas.AspNetCore.Authentication
 {
-    internal class WeixinAuthHandler : OAuthHandler<WeixinAuthOptions>
+    internal class WeixinAuthHandler : RemoteAuthenticationHandler<WeixinAuthOptions>
     {
+        protected HttpClient Backchannel => Options.Backchannel;
+
+        /// <summary>
+        /// The handler calls methods on the events which give the application control at certain points where processing is occurring. 
+        /// If it is not provided a default instance is supplied which does nothing when the methods are called.
+        /// </summary>
+        protected new OAuthEvents Events
+        {
+            get { return (OAuthEvents)base.Events; }
+            set { base.Events = value; }
+        }
+
         private readonly IWeixinAuthApi _api;
 
         //protected const string CorrelationPrefix = ".AspNetCore.Correlation.";
@@ -43,8 +53,37 @@ namespace Myvas.AspNetCore.Authentication
             _api = api ?? throw new ArgumentNullException(nameof(api));
         }
 
-        protected override string FormatScope(IEnumerable<string> scopes)
+        protected virtual string FormatScope(IEnumerable<string> scopes)
             => string.Join(",", scopes); // // OAuth2 3.3 space separated, but weixin not
+
+        protected override async Task HandleChallengeAsync(AuthenticationProperties properties)
+        {
+            if (string.IsNullOrEmpty(properties.RedirectUri))
+            {
+                properties.RedirectUri = OriginalPathBase + OriginalPath + Request.QueryString;
+            }
+
+            // OAuth2 10.12 CSRF
+            GenerateCorrelationId(properties);
+
+            var authorizationEndpoint = BuildChallengeUrl(properties, BuildRedirectUri(Options.CallbackPath));
+            var redirectContext = new RedirectContext<OAuthOptions>(
+                Context, Scheme, Options,
+                properties, authorizationEndpoint);
+            await Events.RedirectToAuthorizationEndpoint(redirectContext);
+
+            var location = Context.Response.Headers[HeaderNames.Location];
+            if (location == StringValues.Empty)
+            {
+                location = "(not set)";
+            }
+            var cookie = Context.Response.Headers[HeaderNames.SetCookie];
+            if (cookie == StringValues.Empty)
+            {
+                cookie = "(not set)";
+            }
+            Logger.HandleChallenge(location, cookie);
+        }
 
         /// <summary>
         /// 生成网页授权调用URL，用于获取code。（然后可以用此code换取网页授权access_token）
@@ -54,7 +93,7 @@ namespace Myvas.AspNetCore.Authentication
         /// （3）Challenge成功后，将跳转到由properties.Items[".redirect"]指定的url。</param>
         /// <param name="redirectUri">供Challenge使用的回调地址。由HandleChallengeAsyc在调用本函数时将Options.Callback处理成AbsoluteUri。</param>
         /// <returns></returns>
-        protected override string BuildChallengeUrl(AuthenticationProperties properties, string redirectUri)
+        protected virtual string BuildChallengeUrl(AuthenticationProperties properties, string redirectUri)
         {
             //注意：参数只有五个，顺序不能改变！微信对该链接做了正则强匹配校验，如果链接的参数顺序不对，授权页面将无法正常访问!!!
             var queryStrings = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
@@ -274,7 +313,7 @@ namespace Myvas.AspNetCore.Authentication
         /// <param name="code">用于换取网页授权access_token。此code只能使用一次，5分钟未被使用自动过期。</param>
         /// <param name="redirectUri"></param>
         /// <returns></returns>
-        protected override async Task<OAuthTokenResponse> ExchangeCodeAsync(string code, string redirectUri)
+        protected virtual async Task<OAuthTokenResponse> ExchangeCodeAsync(string code, string redirectUri)
         {
             return await _api.GetToken(Options.Backchannel, Options.TokenEndpoint, Options.AppId, Options.AppSecret, code, Context.RequestAborted);
         }
@@ -290,7 +329,7 @@ namespace Myvas.AspNetCore.Authentication
         /// <param name="properties"></param>
         /// <param name="tokens"></param>
         /// <returns></returns>
-        protected override async Task<AuthenticationTicket> CreateTicketAsync(
+        protected virtual async Task<AuthenticationTicket> CreateTicketAsync(
             ClaimsIdentity identity,
             AuthenticationProperties properties,
             OAuthTokenResponse tokens)
@@ -312,23 +351,25 @@ namespace Myvas.AspNetCore.Authentication
             var openid = tokens.GetOpenId();
             var scope = tokens.GetScope();
 
-            JObject payload = new JObject();
+            var payload = JsonDocument.Parse("{}");
             if (/*WeixinAuthScopes.Contains(Options.Scope, WeixinAuthScopes.Items.snsapi_userinfo)
                 || */WeixinAuthScopes.Contains(scope, WeixinAuthScopes.snsapi_userinfo))
             {
                 payload = await _api.GetUserInfo(Options.Backchannel, Options.UserInformationEndpoint, tokens.AccessToken, openid, Context.RequestAborted, WeixinAuthLanguageCodes.zh_CN);
             }
-            if (!payload.ContainsKey("unionid") && !string.IsNullOrWhiteSpace(unionid))
-            {
-                payload.Add("unionid", unionid);
-            }
-            if (!payload.ContainsKey("openid") && !string.IsNullOrWhiteSpace(openid))
-            {
-                payload.Add("openid", openid);
-            }
-            payload.Add("scope", scope);
 
-            var context = new OAuthCreatingTicketContext(new ClaimsPrincipal(identity), properties, Context, Scheme, Options, Backchannel, tokens, payload);
+            //if (!payload.RootElement.GetString("unionid") )
+            //{
+            //    payload.Add("unionid", unionid);
+            //}
+            //if (!payload.ContainsKey("openid") && !string.IsNullOrWhiteSpace(openid))
+            //{
+            //    payload.Add("openid", openid);
+            //}
+            //payload.Add("scope", scope);
+            payload.AppendElement("scope", scope);
+
+            var context = new OAuthCreatingTicketContext(new ClaimsPrincipal(identity), properties, Context, Scheme, Options, Backchannel, tokens, payload.RootElement);
             context.RunClaimActions();
 
             await Events.CreatingTicket(context);
