@@ -1,14 +1,17 @@
 ﻿using Microsoft.AspNetCore.Authentication.OAuth.Claims;
-using Newtonsoft.Json.Linq;
-using System;
-using System.Collections.Generic;
 using System.Security.Claims;
-using System.Text;
+using System.Text.Json;
 
 namespace Myvas.AspNetCore.Authentication.WeixinAuth.Internal
 {
     internal class JsonKeyArrayClaimAction : ClaimAction
     {
+        public JsonKeyArrayClaimAction(string claimType, string valueType)
+            : base(claimType, valueType)
+        {
+            JsonKey = claimType.ToLower();
+        }
+
         /// <summary>
         /// Creates a new JsonKeyArrayClaimAction.
         /// </summary>
@@ -25,14 +28,32 @@ namespace Myvas.AspNetCore.Authentication.WeixinAuth.Internal
         /// </summary>
         public string JsonKey { get; }
 
-        public override void Run(JObject userData, ClaimsIdentity identity, string issuer)
-        {
-            var values = userData?[JsonKey];
-            if (!(values is JArray)) return;
+        #region removed from 3.0, JObject replaced by JsonElement
+        //public override void Run(JObject userData, ClaimsIdentity identity, string issuer)
+        //{
+        //    var values = userData?[JsonKey];
+        //    if (!(values is JArray)) return;
 
-            foreach (var value in values)
+        //    foreach (var value in values)
+        //    {
+        //        identity.AddClaim(new Claim(ClaimType, value.ToString(), ValueType, issuer));
+        //    }
+        //}
+        #endregion
+
+        public override void Run(JsonElement userData, ClaimsIdentity identity, string issuer)
+        {
+            var isArray = userData.GetArrayLength() > 0;
+            if (isArray)
             {
-                identity.AddClaim(new Claim(ClaimType, value.ToString(), ValueType, issuer));
+                var arr = userData.GetStringArray(JsonKey);
+                foreach (var value in arr)
+                    identity.AddClaim(new Claim(ClaimType, value.ToString(), ValueType, issuer));
+            }
+            else
+            {
+                var s = userData.GetString(JsonKey);
+                identity.AddClaim(new Claim(ClaimType, s, ValueType, issuer));
             }
         }
     }

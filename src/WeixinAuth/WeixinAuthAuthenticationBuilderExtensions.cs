@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Options;
 using Myvas.AspNetCore.Authentication;
 using Myvas.AspNetCore.Authentication.WeixinAuth.Internal;
 using System;
@@ -33,8 +34,10 @@ namespace Microsoft.Extensions.DependencyInjection
             }
 
             builder.Services.TryAddTransient<IWeixinAuthApi, WeixinAuthApi>();
+            //return builder.AddOAuth<WeixinAuthOptions, WeixinAuthHandler>(authenticationScheme, displayName, setupAction);
+            builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<IPostConfigureOptions<WeixinAuthOptions>, WeixinAuthPostConfigureOptions>());
+            return builder.AddRemoteScheme<WeixinAuthOptions, WeixinAuthHandler>(authenticationScheme, displayName, setupAction);
 
-            return builder.AddOAuth<WeixinAuthOptions, WeixinAuthHandler>(authenticationScheme, displayName, setupAction);
         }
     }
 }

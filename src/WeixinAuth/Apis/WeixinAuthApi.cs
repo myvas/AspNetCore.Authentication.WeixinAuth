@@ -2,11 +2,11 @@
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Text;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -67,7 +67,7 @@ namespace Myvas.AspNetCore.Authentication.WeixinAuth.Internal
             //    "scope":"SCOPE",
             //    "unionid": "o6_bmasdasdsad6_2sgVt7hMZOPfL"
             //}
-            var payload = JObject.Parse(content);
+            var payload = JsonDocument.Parse(content);
             int errorCode = WeixinAuthHandlerHelper.GetErrorCode(payload);
             if (errorCode != 0)
             {
@@ -113,7 +113,7 @@ namespace Myvas.AspNetCore.Authentication.WeixinAuth.Internal
             //    "openid":"OPENID",
             //    "scope":"SCOPE"
             //}
-            var payload = JObject.Parse(content);
+            var payload = JsonDocument.Parse(content);
             int errorCode = WeixinAuthHandlerHelper.GetErrorCode(payload);
             if (errorCode != 0)
             {
@@ -149,10 +149,10 @@ namespace Myvas.AspNetCore.Authentication.WeixinAuth.Internal
             }
 
             var content = await response.Content.ReadAsStringAsync();
-            var payload = JObject.Parse(content);
+            var payload = JsonDocument.Parse(content);
             try
             {
-                var errcode = payload.Value<int>("errcode");
+                var errcode = payload.RootElement.GetInt32("errcode", 0);
                 return (errcode == 0);
             }
             catch { }
@@ -164,7 +164,7 @@ namespace Myvas.AspNetCore.Authentication.WeixinAuth.Internal
         /// </summary>
         /// <param name="accessToken"></param>
         /// <returns></returns>
-        public async Task<JObject> GetUserInfo(HttpClient backchannel, string userInformationEndpoint, string accessToken, string openid, CancellationToken cancellationToken, WeixinAuthLanguageCodes languageCode = WeixinAuthLanguageCodes.zh_CN)
+        public async Task<JsonDocument> GetUserInfo(HttpClient backchannel, string userInformationEndpoint, string accessToken, string openid, CancellationToken cancellationToken, WeixinAuthLanguageCodes languageCode = WeixinAuthLanguageCodes.zh_CN)
         {
             var tokenRequestParameters = new Dictionary<string, string>()
             {
@@ -198,7 +198,7 @@ namespace Myvas.AspNetCore.Authentication.WeixinAuth.Internal
             //    ],
             //    "unionid": " o6_bmasdasdsad6_2sgVt7hMZOPfL"
             //}
-            var payload = JObject.Parse(content);
+            var payload = JsonDocument.Parse(content);
 
             int errorCode = WeixinAuthHandlerHelper.GetErrorCode(payload);
             if (errorCode != 0)
