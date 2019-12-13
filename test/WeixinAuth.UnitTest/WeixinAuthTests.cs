@@ -11,8 +11,6 @@ using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Myvas.AspNetCore.Authentication;
-using Myvas.AspNetCore.Authentication.WeixinAuth;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,12 +19,13 @@ using System.Net.Http;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Encodings.Web;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Xunit;
 
 namespace UnitTest
 {
-	public class WeixinAuthTests
+    public class WeixinAuthTests
     {
         string correlationKey = ".xsrf";
         string correlationId = "TestCorrelationId";
@@ -1397,7 +1396,7 @@ namespace UnitTest
         private static HttpResponseMessage ReturnJsonResponse(object content, HttpStatusCode code = HttpStatusCode.OK)
         {
             var res = new HttpResponseMessage(code);
-            var text = JsonConvert.SerializeObject(content);
+            var text = JsonSerializer.Serialize(content);
             res.Content = new StringContent(text, Encoding.UTF8, "application/json");
             return res;
         }
