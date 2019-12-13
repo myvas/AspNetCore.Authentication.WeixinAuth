@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.27130.2010
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29424.173
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{672FEA18-F072-4549-9C4C-DBD1F9CDC7BB}"
 EndProject
@@ -11,6 +11,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "_", "_", "{E9754587-13F5-4E
 		.gitignore = .gitignore
 		Changelog.md = Changelog.md
 		global.json = global.json
+		NuGet.Config = NuGet.Config
 		README.md = README.md
 	EndProjectSection
 EndProject
