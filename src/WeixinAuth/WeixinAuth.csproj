@@ -1,10 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <TargetFrameworks>netcoreapp3.1;netcoreapp3.0</TargetFrameworks>
     <PackageId>Myvas.AspNetCore.Authentication.WeixinAuth</PackageId>
     <AssemblyName>Myvas.AspNetCore.Authentication.WeixinAuth</AssemblyName>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
-    <Version>3.1.0.1</Version>
+    <Version>3.1.0.2</Version>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageTags>Myvas,AspNetCore, Authentication, Weixin Auth, Tencent</PackageTags>
     <PackageProjectUrl>https://github.com/myvas/AspNetCore.Authentication.WeixinAuth</PackageProjectUrl>   
@@ -16,8 +16,12 @@
     <Product>Myvas.AspNetCore.Authentication</Product>
   </PropertyGroup>
 
-  <ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp3.1'">
     <PackageReference Include="Microsoft.AspNetCore.Authentication.Twitter" Version="3.1.0" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp3.0'">
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.Twitter" Version="3.0.0" />
   </ItemGroup>
 
 </Project>
