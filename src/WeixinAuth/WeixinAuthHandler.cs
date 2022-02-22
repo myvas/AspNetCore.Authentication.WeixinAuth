@@ -175,6 +175,45 @@ namespace Myvas.AspNetCore.Authentication
             => PickAuthenticationProperty(properties, name, x => x, defaultValue);
         #endregion
 
+        protected override bool ValidateCorrelationId(AuthenticationProperties properties)
+        {
+            //return base.ValidateCorrelationId(properties);
+
+            if (properties == null)
+            {
+                throw new ArgumentNullException(nameof(properties));
+            }
+
+            if (!properties.Items.TryGetValue(CorrelationProperty, out var correlationId))
+            {
+                Logger.LogWarning($"The CorrectionId not found in '{Options.CorrelationCookie.Name!}'");
+                return false;
+            }
+
+            properties.Items.Remove(CorrelationProperty);
+
+            var cookieName = BuildCorrelationCookieName(correlationId); //Options.CorrelationCookie.Name + correlationId;//
+
+            var correlationCookie = Request.Cookies[cookieName];
+            if (string.IsNullOrEmpty(correlationCookie))
+            {
+                Logger.LogWarning($"The CorrectionCookie not found in '{cookieName}'");
+                return false;
+            }
+
+            var cookieOptions = Options.CorrelationCookie.Build(Context, Clock.UtcNow);
+
+            Response.Cookies.Delete(cookieName, cookieOptions);
+
+            if (!string.Equals(correlationCookie, CorrelationMarker, StringComparison.Ordinal))
+            {
+                Logger.LogWarning($"Unexcepted CorrectionCookieValue: '{cookieName}'='{correlationCookie}'");
+                return false;
+            }
+
+            return true;
+        }
+
         protected override async Task<HandleRequestResult> HandleRemoteAuthenticateAsync()
         {
             var query = Request.Query;

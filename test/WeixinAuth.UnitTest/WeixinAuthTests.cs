@@ -1451,26 +1451,26 @@ namespace UnitTest
                         {
                             var result = await context.AuthenticateAsync(TestExtensions.CookieAuthenticationScheme);
                             var tokens = result.Properties.GetTokens();
-                            res.DescribeAsync(tokens);
+                            await res.DescribeAsync(tokens);
                         }
                         else if (req.Path == new PathString("/me"))
                         {
-                            res.DescribeAsync(context.User);
+                            await res.DescribeAsync(context.User);
                         }
                         else if (req.Path == new PathString("/authenticate"))
                         {
                             var result = await context.AuthenticateAsync(TestExtensions.CookieAuthenticationScheme);
-                            res.DescribeAsync(result.Principal);
+                            await res.DescribeAsync(result.Principal);
 						}
 						else if (req.Path == new PathString("/authenticate-WeixinAuth"))
                         {
                             var result = await context.AuthenticateAsync(WeixinAuthDefaults.AuthenticationScheme);
-                            res.DescribeAsync(result?.Principal);
+                            await res.DescribeAsync(result?.Principal);
 						}
 						else if (req.Path == new PathString("/authenticate-facebook"))
 						{
 							var result = await context.AuthenticateAsync(FacebookDefaults.AuthenticationScheme);
-							res.DescribeAsync(result?.Principal);
+							await res.DescribeAsync(result?.Principal);
 						}
 						else if (req.Path == new PathString("/401"))
                         {
