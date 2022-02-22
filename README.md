@@ -109,7 +109,7 @@ services.AddAuthentication()
 ```
 
 # Dev
-* [.NET Core SDK 2.2](https://dotnet.microsoft.com/download/dotnet-core/2.2) (2.2.402)
+* [.NET Core SDK 6.0](https://dotnet.microsoft.com/en-us/download/dotnet/6.0)
 * [微信开发者工具](https://mp.weixin.qq.com/debug/wxadoc/dev/devtools/download.html)
 
 
