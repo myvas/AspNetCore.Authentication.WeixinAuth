@@ -1,9 +1,4 @@
 ﻿using Microsoft.AspNetCore.Authentication.OAuth;
-using Newtonsoft.Json.Linq;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Myvas.AspNetCore.Authentication.WeixinAuth.Internal
 {
@@ -11,27 +6,27 @@ namespace Myvas.AspNetCore.Authentication.WeixinAuth.Internal
     {
         public static string GetUnionId(this OAuthTokenResponse response)
         {
-            return response.Response.Value<string>("unionid");
+            return response.Response.RootElement.GetString("unionid");
         }
 
         public static string GetOpenId (this OAuthTokenResponse response)
         {
-            return response.Response.Value<string>("openid");
+            return response.Response.RootElement.GetString("openid");
         }
         
         public static string GetScope(this OAuthTokenResponse response)
         {
-            return response.Response.Value<string>("scope");
+            return response.Response.RootElement.GetString("scope");
         }
 
         public static string GetErrorCode(this OAuthTokenResponse response)
         {
-            return response.Response.Value<string>("errcode");
+            return response.Response.RootElement.GetString("errcode");
         }
 
         public static string GetErrorMsg(this OAuthTokenResponse response)
         {
-            return response.Response.Value<string>("errmsg");
+            return response.Response.RootElement.GetString("errmsg");
         }
     }
 }

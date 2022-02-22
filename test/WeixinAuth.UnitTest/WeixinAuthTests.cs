@@ -11,8 +11,6 @@ using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Myvas.AspNetCore.Authentication;
-using Myvas.AspNetCore.Authentication.WeixinAuth;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,12 +19,13 @@ using System.Net.Http;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Encodings.Web;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Xunit;
 
 namespace UnitTest
 {
-	public class WeixinAuthTests
+    public class WeixinAuthTests
     {
         string correlationKey = ".xsrf";
         string correlationId = "TestCorrelationId";
@@ -37,34 +36,6 @@ namespace UnitTest
             o.AppId = "Test Id";
             o.AppSecret = "Test Secret";
             //o.SignInScheme = "auth1";//WeixinAuthDefaults.AuthenticationScheme;
-        }
-
-        [Fact]
-        public async Task ChallengeWithRealAccount()
-        {
-            var stateFormat = new PropertiesDataFormat(new EphemeralDataProtectionProvider(NullLoggerFactory.Instance).CreateProtector("WeixinAuthTest"));
-            var server = CreateServer(o =>
-            {
-                ConfigureDefaults(o);
-                o.AppId = "wx02056e2b2b9cc4ef";
-                o.AppSecret = "c175a359cd383213906bc3aa346fff2f";
-                o.StateDataFormat = stateFormat;
-            });
-
-            var transaction = await server.SendAsync("http://weixinoauth.myvas.com/challenge-weixinauth");
-            Assert.Equal(HttpStatusCode.Redirect, transaction.Response.StatusCode);
-            //Location: https://open.weixin.qq.com/connect/oauth2/authorize?appid=wx02056e2b2b9cc4ef&redirect_uri=http%3A%2F%2Fweixinoauth.myvas.com%2Fsignin-weixinauth&response_type=code&scope=snsapi_base,snsapi_userinfo&state=n6TFxuWkbt56BFslzKvkKXi1VgIHkUprbxyLM82mVm8#wechat_redirect
-            Assert.StartsWith(WeixinAuthDefaults.AuthorizationEndpoint, transaction.Response.Headers.Location.AbsoluteUri);
-
-            var query = System.Web.HttpUtility.ParseQueryString(transaction.Response.Headers.Location.Query);
-            Assert.Equal("wx02056e2b2b9cc4ef", query.Get("appid"));
-            Assert.NotEmpty(query.Get("redirect_uri"));
-            Assert.Equal("code", query.Get("response_type"));
-            Assert.Equal("snsapi_base", query.Get("scope"));
-
-            var state = query.Get("state");
-            Assert.NotEmpty(state);
-            Assert.True(state.Length <= 128, $"state length must less than 128, but actual is {state.Length}");
         }
 
         [Fact]
@@ -80,7 +51,7 @@ namespace UnitTest
                 {
                     OnCreatingTicket = context =>
                     {
-                        Assert.NotNull(context.User);
+                        Assert.True(context.User.ToString().Length > 0);
                         Assert.Equal("Test Access Token", context.AccessToken);
                         Assert.Equal("Test Refresh Token", context.RefreshToken);
                         Assert.Equal(TimeSpan.FromSeconds(3600), context.ExpiresIn);
@@ -1066,7 +1037,7 @@ namespace UnitTest
                 {
                     OnCreatingTicket = context =>
                     {
-                        Assert.NotNull(context.User);
+                        Assert.True(context.User.ToString().Length > 0);
                         Assert.Equal("Test Access Token", context.AccessToken);
                         Assert.Equal("Test Refresh Token", context.RefreshToken);
                         Assert.Equal(TimeSpan.FromSeconds(3600), context.ExpiresIn);
@@ -1425,7 +1396,7 @@ namespace UnitTest
         private static HttpResponseMessage ReturnJsonResponse(object content, HttpStatusCode code = HttpStatusCode.OK)
         {
             var res = new HttpResponseMessage(code);
-            var text = JsonConvert.SerializeObject(content);
+            var text = JsonSerializer.Serialize(content);
             res.Content = new StringContent(text, Encoding.UTF8, "application/json");
             return res;
         }
@@ -1480,26 +1451,26 @@ namespace UnitTest
                         {
                             var result = await context.AuthenticateAsync(TestExtensions.CookieAuthenticationScheme);
                             var tokens = result.Properties.GetTokens();
-                            res.Describe(tokens);
+                            res.DescribeAsync(tokens);
                         }
                         else if (req.Path == new PathString("/me"))
                         {
-                            res.Describe(context.User);
+                            res.DescribeAsync(context.User);
                         }
                         else if (req.Path == new PathString("/authenticate"))
                         {
                             var result = await context.AuthenticateAsync(TestExtensions.CookieAuthenticationScheme);
-                            res.Describe(result.Principal);
+                            res.DescribeAsync(result.Principal);
 						}
 						else if (req.Path == new PathString("/authenticate-WeixinAuth"))
                         {
                             var result = await context.AuthenticateAsync(WeixinAuthDefaults.AuthenticationScheme);
-                            res.Describe(result?.Principal);
+                            res.DescribeAsync(result?.Principal);
 						}
 						else if (req.Path == new PathString("/authenticate-facebook"))
 						{
 							var result = await context.AuthenticateAsync(FacebookDefaults.AuthenticationScheme);
-							res.Describe(result?.Principal);
+							res.DescribeAsync(result?.Principal);
 						}
 						else if (req.Path == new PathString("/401"))
                         {
