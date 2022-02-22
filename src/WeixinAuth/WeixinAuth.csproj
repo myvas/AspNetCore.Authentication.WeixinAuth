@@ -1,5 +1,4 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
 	<PropertyGroup>
 		<PackageId>Myvas.AspNetCore.Authentication.WeixinAuth</PackageId>
 		<AssemblyName>Myvas.AspNetCore.Authentication.WeixinAuth</AssemblyName>
@@ -27,5 +26,4 @@
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.OAuth" Version="2.2.0" />
 		<!--<PackageReference Include="System.Text.Json" Version="4.7.0" />-->
 	</ItemGroup>
-
 </Project>
