@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.29424.173
+# Visual Studio Version 17
+VisualStudioVersion = 17.1.32319.34
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{672FEA18-F072-4549-9C4C-DBD1F9CDC7BB}"
 EndProject
@@ -10,7 +10,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "_", "_", "{E9754587-13F5-4E
 		.gitattributes = .gitattributes
 		.gitignore = .gitignore
 		Changelog.md = Changelog.md
+		delete_all_bin_and_obj.cmd = delete_all_bin_and_obj.cmd
+		Directory.Build.props = Directory.Build.props
+		Directory.Build.targets = Directory.Build.targets
 		global.json = global.json
+		LICENSE.md = LICENSE.md
 		NuGet.Config = NuGet.Config
 		README.md = README.md
 	EndProjectSection
@@ -20,6 +24,10 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WeixinAuth", "src\WeixinAuth\WeixinAuth.csproj", "{009C886C-3B18-44F3-8509-5EAF6731E276}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WeixinAuth.UnitTest", "test\WeixinAuth.UnitTest\WeixinAuth.UnitTest.csproj", "{94ABBE67-3755-4DD1-A25E-2407FB32C60E}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WeixinAuth.UnitTest_3_1", "test\WeixinAuth.UnitTest_3_1\WeixinAuth.UnitTest_3_1.csproj", "{688F627F-FF2D-4FE4-BAA7-BD94C139798B}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WeixinAuth.UnitTest_5_0", "test\WeixinAuth.UnitTest_5_0\WeixinAuth.UnitTest_5_0.csproj", "{B812C99A-70DF-4EB6-95B6-E3B8CECE5A3A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -35,6 +43,14 @@ Global
 		{94ABBE67-3755-4DD1-A25E-2407FB32C60E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{94ABBE67-3755-4DD1-A25E-2407FB32C60E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{94ABBE67-3755-4DD1-A25E-2407FB32C60E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{688F627F-FF2D-4FE4-BAA7-BD94C139798B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{688F627F-FF2D-4FE4-BAA7-BD94C139798B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{688F627F-FF2D-4FE4-BAA7-BD94C139798B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{688F627F-FF2D-4FE4-BAA7-BD94C139798B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B812C99A-70DF-4EB6-95B6-E3B8CECE5A3A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B812C99A-70DF-4EB6-95B6-E3B8CECE5A3A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B812C99A-70DF-4EB6-95B6-E3B8CECE5A3A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B812C99A-70DF-4EB6-95B6-E3B8CECE5A3A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -42,6 +58,8 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{009C886C-3B18-44F3-8509-5EAF6731E276} = {672FEA18-F072-4549-9C4C-DBD1F9CDC7BB}
 		{94ABBE67-3755-4DD1-A25E-2407FB32C60E} = {73FCFCF4-3A1C-4D4D-939A-9CABDC2341DC}
+		{688F627F-FF2D-4FE4-BAA7-BD94C139798B} = {73FCFCF4-3A1C-4D4D-939A-9CABDC2341DC}
+		{B812C99A-70DF-4EB6-95B6-E3B8CECE5A3A} = {73FCFCF4-3A1C-4D4D-939A-9CABDC2341DC}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {2AEDFD1F-BBE1-4727-9978-2FB04DCE84AF}

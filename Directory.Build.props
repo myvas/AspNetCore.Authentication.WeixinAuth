@@ -1,0 +1,47 @@
+﻿<Project>
+	<PropertyGroup>
+		<RepositoryUrl>https://github.com/myvas/AspNetCore.Authentication.WeixinAuth</RepositoryUrl>
+		<RepositoryType>git</RepositoryType>
+		<LangVersion>latest</LangVersion>
+		<Product>Myvas.AspNetCore.Authentication</Product>
+		<Copyright>© $([System.DateTime]::Now.Year) Myvas Foundation</Copyright>
+	</PropertyGroup>
+	
+	<PropertyGroup>
+		<MinVerVersion>6.0.3</MinVerVersion>
+		<MinVerDefaultPreReleasePhase>alpha</MinVerDefaultPreReleasePhase>
+	</PropertyGroup>
+	<Target Name="CustomFileVersion" AfterTargets="MinVer">
+		<PropertyGroup>
+			<FileVersion>$(MinVerMajor).$(MinVerMinor).$(MinVerPatch).$([System.DateTime]::Now.AddYears(-2021).ToString("yMMdd"))</FileVersion>
+		</PropertyGroup>
+	</Target>
+
+	<PropertyGroup>
+		<RepoRoot>$(MSBuildThisFileDirectory)</RepoRoot>
+		<!--<OutputPath>$(RepoRoot)artifacts\$(Configuration)\$(ProjectName)\</OutputPath>-->
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)'=='Release'">
+		<DebugType>none</DebugType>
+		<DebugSymbols>false</DebugSymbols>
+	</PropertyGroup>
+
+	<!--<PropertyGroup>
+		<Platforms>AnyCPU</Platforms>
+		<GenerateAssemblyInfo>True</GenerateAssemblyInfo>
+		<SignAssembly>false</SignAssembly>
+		<AppendTargetFrameworkToOutputPath>true</AppendTargetFrameworkToOutputPath>
+	</PropertyGroup>-->
+
+	<!--<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Latest|AnyCPU' ">
+		<DebugSymbols>true</DebugSymbols>
+		<DebugType>full</DebugType>
+		<Optimize>false</Optimize>
+		<DefineConstants>DEBUG;TRACE</DefineConstants>
+		<ErrorReport>prompt</ErrorReport>
+		<WarningLevel>4</WarningLevel>
+		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+	</PropertyGroup>-->
+
+</Project>

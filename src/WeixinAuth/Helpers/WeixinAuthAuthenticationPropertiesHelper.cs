@@ -31,7 +31,7 @@ namespace Myvas.AspNetCore.Authentication
             {
                 var trimedFullCookieString = fullCookieString.Substring(key.Length);
 
-                var regexPattern = "=(?<Value>.+);";
+                var regexPattern = "=(?<Value>[^;]+);";
                 var regex = new Regex(regexPattern, RegexOptions.Compiled | RegexOptions.Multiline, TimeSpan.FromSeconds(10));
                 var match = regex.Match(trimedFullCookieString);
                 if (match.Success && match.Groups["Value"].Success)
