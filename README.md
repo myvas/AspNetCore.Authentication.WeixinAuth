@@ -1,17 +1,15 @@
 # Myvas.AspNetCore.Authentication Family
 * QQConnect: [Here](https://github.com/myvas/AspNetCore.Authentication.QQConnect)
 * WeixinOpen: [Here](https://github.com/myvas/AspNetCore.Authentication.WeixinOpen)
-* WeixinAuth: this repo
+* WeixinAuth: _this repo_
 
 # What's this?
 An ASP.NET Core authentication middleware for https://mp.weixin.qq.com （微信公众平台/网页授权登录）
-
-微信公众平台/网页授权登录，须微信公众平台（mp.weixin.qq.com）已认证的服务号（或测试号），用户在微信客户端访问网站时自动登入网站。
-
-* nuget: [Myvas.AspNetCore.Authentication.WeixinAuth](https://www.nuget.org/packages/Myvas.AspNetCore.Authentication.WeixinAuth)
+* 须微信公众平台（mp.weixin.qq.com）已认证的服务号（或测试号）。
+* 用户可在微信客户端访问网站时自动登入网站。
 
 # How to Use?
-## 1.Create account
+## 0.Create account
 在微信公众平台(https://mp.weixin.qq.com)上创建账号。
 
 微信公众平台/网页授权获取用户信息，须在微信公众平台（mp.weixin.qq.com）上开通服务号，并认证。
@@ -28,6 +26,9 @@ ___订阅号无网页授权权限，即使是已认证的订阅号也不行！__
 - 开通功能：网页服务/网页授权获取用户基本信息。
 - 设置好网页授权域名：例如，auth.myvas.com。
 - 将文件MP_verify_xxxxxxxxx.txt上传至wwwroot目录下。
+
+## 1.nuget
+[Myvas.AspNetCore.Authentication.WeixinAuth](https://www.nuget.org/packages/Myvas.AspNetCore.Authentication.WeixinAuth)
 
 ## 2.Configure
 ```csharp
