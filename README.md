@@ -12,8 +12,8 @@ An ASP.NET Core authentication middleware for https://mp.weixin.qq.com （微信
 ## 0.Create account
 （1）在微信公众平台(https://mp.weixin.qq.com)上创建账号。
 
-微信公众平台/网页授权获取用户信息，须在微信公众平台（mp.weixin.qq.com）上开通服务号，并认证。
-___订阅号无网页授权权限，即使是已认证的订阅号也不行！___
+微信公众平台/网页授权获取用户信息，须在微信公众平台（mp.weixin.qq.com）上开通服务号，并认证。  
+___注意：订阅号无网页授权权限，即使是已认证的订阅号也不行！___
 
 （2）配置功能权限：微信公众平台-已认证服务号/开发/接口权限/...
 - 开通功能：网页服务/网页授权获取用户基本信息。
