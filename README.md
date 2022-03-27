@@ -25,7 +25,7 @@ ___注意：订阅号无网页授权权限，即使是已认证的订阅号也�
 - 设置授权回调页面域名：例如，auth.myvas.com。
 
 ## 1.nuget
-[Myvas.AspNetCore.Authentication.WeixinAuth](https://www.nuget.org/packages/Myvas.AspNetCore.Authentication.WeixinAuth)
+* [Myvas.AspNetCore.Authentication.WeixinAuth](https://www.nuget.org/packages/Myvas.AspNetCore.Authentication.WeixinAuth)
 
 ## 2.Configure
 ```csharp
