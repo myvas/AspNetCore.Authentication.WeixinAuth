@@ -1,4 +1,8 @@
 # Myvas.AspNetCore.Authentication Family
+[![QQConnect](https://githubfast.com/myvas/AspNetCore.Authentication.QQConnect/actions/workflows/dotnet.yml/badge.svg)](https://github.com/myvas/AspNetCore.Authentication.QQConnect)
+[![WeixinOpen](https://githubfast.com/myvas/AspNetCore.Authentication.WeixinOpen/actions/workflows/dotnet.yml/badge.svg)](https://github.com/myvas/AspNetCore.Authentication.WeixinOpen)
+[![WeixinAuth](https://githubfast.com/myvas/AspNetCore.Authentication.WeixinAuth/actions/workflows/dotnet.yml/badge.svg)](https://github.com/myvas/AspNetCore.Authentication.WeixinAuth)
+
 * QQConnect: [Here](https://github.com/myvas/AspNetCore.Authentication.QQConnect)
 * WeixinOpen: [Here](https://github.com/myvas/AspNetCore.Authentication.WeixinOpen)
 * WeixinAuth: _this repo_
