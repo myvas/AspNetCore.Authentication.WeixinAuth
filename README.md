@@ -1,7 +1,7 @@
 # Myvas.AspNetCore.Authentication Family
-[![QQConnect](https://githubfast.com/myvas/AspNetCore.Authentication.QQConnect/actions/workflows/dotnet.yml/badge.svg)](https://github.com/myvas/AspNetCore.Authentication.QQConnect)
-[![WeixinOpen](https://githubfast.com/myvas/AspNetCore.Authentication.WeixinOpen/actions/workflows/dotnet.yml/badge.svg)](https://github.com/myvas/AspNetCore.Authentication.WeixinOpen)
-[![WeixinAuth](https://githubfast.com/myvas/AspNetCore.Authentication.WeixinAuth/actions/workflows/dotnet.yml/badge.svg)](https://github.com/myvas/AspNetCore.Authentication.WeixinAuth)
+[![QQConnect](https://github.com/myvas/AspNetCore.Authentication.QQConnect/actions/workflows/dotnet.yml/badge.svg)](https://github.com/myvas/AspNetCore.Authentication.QQConnect)
+[![WeixinOpen](https://github.com/myvas/AspNetCore.Authentication.WeixinOpen/actions/workflows/dotnet.yml/badge.svg)](https://github.com/myvas/AspNetCore.Authentication.WeixinOpen)
+[![WeixinAuth](https://github.com/myvas/AspNetCore.Authentication.WeixinAuth/actions/workflows/dotnet.yml/badge.svg)](https://github.com/myvas/AspNetCore.Authentication.WeixinAuth)
 
 * QQConnect: [Here](https://github.com/myvas/AspNetCore.Authentication.QQConnect)
 * WeixinOpen: [Here](https://github.com/myvas/AspNetCore.Authentication.WeixinOpen)
@@ -59,7 +59,8 @@ services.AddAuthentication()
 ```
 
 # Dev
-* [.NET Core SDK 6.0](https://dotnet.microsoft.com/en-us/download/dotnet/6.0)
+* [Visual Studio 2022](https://visualstudio.microsoft.com)
+* [.NET 7.0, 6.0, 5.0, 3.1](https://dotnet.microsoft.com/en-us/download/dotnet)
 * [微信开发者工具](https://mp.weixin.qq.com/debug/wxadoc/dev/devtools/download.html)
 
 # Demo

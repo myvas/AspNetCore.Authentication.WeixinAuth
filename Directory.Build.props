@@ -8,8 +8,8 @@
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<MinVerVersion>7.0.11</MinVerVersion>
-		<MinVerDefaultPreReleaseIdentifiers>alpha</MinVerDefaultPreReleaseIdentifiers>
+		<MinVerVersion>7.0</MinVerVersion>
+		<MinVerIgnoreHeight>alpha</MinVerIgnoreHeight>
 	</PropertyGroup>
 	<Target Name="CustomFileVersion" AfterTargets="MinVer">
 		<PropertyGroup>

@@ -16,7 +16,11 @@
 		</Description>
 		<RootNamespace>Myvas.AspNetCore.Authentication.WeixinAuth</RootNamespace>
 		<Product>Myvas.AspNetCore.Authentication</Product>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
 	</PropertyGroup>
+	<ItemGroup>
+		<None Include="..\..\README.md" Pack="true" PackagePath="\" />
+	</ItemGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)' == 'net7.0'">
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.Twitter" Version="7.0.0" />
