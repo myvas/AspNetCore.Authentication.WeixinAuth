@@ -28,6 +28,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WeixinAuth.UnitTest_3_1", "
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WeixinAuth.UnitTest_5_0", "test\WeixinAuth.UnitTest_5_0\WeixinAuth.UnitTest_5_0.csproj", "{B812C99A-70DF-4EB6-95B6-E3B8CECE5A3A}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QQConnect.UnitTest_6_0", "..\Myvas.AspNetCore.Authentication.QQConnect\test\QQConnect.UnitTest_6_0\QQConnect.UnitTest_6_0.csproj", "{5198DC01-2C6E-461C-A051-E9F0AF1A8640}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -50,6 +52,10 @@ Global
 		{B812C99A-70DF-4EB6-95B6-E3B8CECE5A3A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B812C99A-70DF-4EB6-95B6-E3B8CECE5A3A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B812C99A-70DF-4EB6-95B6-E3B8CECE5A3A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5198DC01-2C6E-461C-A051-E9F0AF1A8640}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5198DC01-2C6E-461C-A051-E9F0AF1A8640}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5198DC01-2C6E-461C-A051-E9F0AF1A8640}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5198DC01-2C6E-461C-A051-E9F0AF1A8640}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -59,6 +65,7 @@ Global
 		{94ABBE67-3755-4DD1-A25E-2407FB32C60E} = {73FCFCF4-3A1C-4D4D-939A-9CABDC2341DC}
 		{688F627F-FF2D-4FE4-BAA7-BD94C139798B} = {73FCFCF4-3A1C-4D4D-939A-9CABDC2341DC}
 		{B812C99A-70DF-4EB6-95B6-E3B8CECE5A3A} = {73FCFCF4-3A1C-4D4D-939A-9CABDC2341DC}
+		{5198DC01-2C6E-461C-A051-E9F0AF1A8640} = {73FCFCF4-3A1C-4D4D-939A-9CABDC2341DC}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {2AEDFD1F-BBE1-4727-9978-2FB04DCE84AF}

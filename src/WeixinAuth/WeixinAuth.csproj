@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFrameworks>net6.0;net5.0;netcoreapp3.1</TargetFrameworks>
+		<TargetFrameworks>net7.0;net6.0;net5.0;netcoreapp3.1</TargetFrameworks>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<!--<Nullable>enable</Nullable>-->
 		<PackageId>Myvas.AspNetCore.Authentication.WeixinAuth</PackageId>
@@ -17,6 +17,10 @@
 		<RootNamespace>Myvas.AspNetCore.Authentication.WeixinAuth</RootNamespace>
 		<Product>Myvas.AspNetCore.Authentication</Product>
 	</PropertyGroup>
+
+	<ItemGroup Condition="'$(TargetFramework)' == 'net7.0'">
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.Twitter" Version="7.0.0" />
+	</ItemGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)' == 'net6.0'">
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.Twitter" Version="6.0.0" />

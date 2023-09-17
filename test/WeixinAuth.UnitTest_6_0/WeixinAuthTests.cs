@@ -736,7 +736,7 @@ namespace UnitTest
         }
 
         [Fact]
-        public async Task AuthenticateWithoutCookieWillReturnNone()
+        public async Task AuthenticateWithoutCookieWillFail()
         {
             var server = CreateServer(o =>
             {
@@ -749,9 +749,8 @@ namespace UnitTest
                 if (req.Path == new PathString("/auth"))
                 {
                     var result = await context.AuthenticateAsync("WeixinAuth");
-					//Assert.NotNull(result.Failure);
-					Assert.True(result.None);
-				}
+                    Assert.NotNull(result.Failure);
+                }
             });
             var transaction = await server.SendAsync("https://example.com/auth");
             Assert.Equal(HttpStatusCode.OK, transaction.Response.StatusCode);
