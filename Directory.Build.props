@@ -6,10 +6,10 @@
 		<Product>Myvas.AspNetCore.Authentication</Product>
 		<Copyright>© $([System.DateTime]::Now.Year) Myvas Foundation</Copyright>
 	</PropertyGroup>
-	
+
 	<PropertyGroup>
-		<MinVerVersion>6.0.3</MinVerVersion>
-		<MinVerDefaultPreReleasePhase>alpha</MinVerDefaultPreReleasePhase>
+		<MinVerVersion>6.0.22</MinVerVersion>
+		<MinVerDefaultPreReleaseIdentifiers>alpha</MinVerDefaultPreReleaseIdentifiers>
 	</PropertyGroup>
 	<Target Name="CustomFileVersion" AfterTargets="MinVer">
 		<PropertyGroup>

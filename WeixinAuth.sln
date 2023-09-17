@@ -7,15 +7,14 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{672FEA18-F07
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "_", "_", "{E9754587-13F5-4E3A-9F3F-71C98EF97990}"
 	ProjectSection(SolutionItems) = preProject
-		.gitattributes = .gitattributes
 		.gitignore = .gitignore
 		Changelog.md = Changelog.md
 		delete_all_bin_and_obj.cmd = delete_all_bin_and_obj.cmd
 		Directory.Build.props = Directory.Build.props
 		Directory.Build.targets = Directory.Build.targets
+		.github\workflows\dotnet.yml = .github\workflows\dotnet.yml
 		global.json = global.json
-		LICENSE.md = LICENSE.md
-		NuGet.Config = NuGet.Config
+		LICENSE = LICENSE
 		README.md = README.md
 	EndProjectSection
 EndProject
