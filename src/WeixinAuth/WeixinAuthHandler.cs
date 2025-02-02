@@ -43,7 +43,12 @@ namespace Myvas.AspNetCore.Authentication
         //protected const string AuthSchemeKey = ".AuthScheme";
 
         //protected static readonly RandomNumberGenerator CryptoRandom = RandomNumberGenerator.Create();
-
+#if NET8_0_OR_GREATER
+        /// <summary>
+        /// Initializes a new instance of <see cref="WeixinAuthHandler"/>.
+        /// </summary>
+        /// <inheritdoc />
+        [Obsolete("ISystemClock is obsolete, use TimeProvider on AuthenticationSchemeOptions instead.")]
         public WeixinAuthHandler(
             IWeixinAuthApi api,
             IOptionsMonitor<WeixinAuthOptions> optionsAccessor,
@@ -54,6 +59,32 @@ namespace Myvas.AspNetCore.Authentication
         {
             _api = api ?? throw new ArgumentNullException(nameof(api));
         }
+        
+        /// <summary>
+        /// Initializes a new instance of <see cref="WeixinAuthHandler"/>.
+        /// </summary>
+        /// <inheritdoc />
+        public WeixinAuthHandler(
+            IWeixinAuthApi api,
+            IOptionsMonitor<WeixinAuthOptions> optionsAccessor,
+            ILoggerFactory loggerFactory,
+            UrlEncoder encoder)
+            : base(optionsAccessor, loggerFactory, encoder)
+        {
+            _api = api ?? throw new ArgumentNullException(nameof(api));
+        }
+#else
+        public WeixinAuthHandler(
+            IWeixinAuthApi api,
+            IOptionsMonitor<WeixinAuthOptions> optionsAccessor,
+            ILoggerFactory loggerFactory,
+            UrlEncoder encoder,
+            ISystemClock clock)
+            : base(optionsAccessor, loggerFactory, encoder, clock)
+        {
+            _api = api ?? throw new ArgumentNullException(nameof(api));
+        }
+#endif
 
         protected override async Task HandleChallengeAsync(AuthenticationProperties properties)
         {
@@ -116,7 +147,11 @@ namespace Myvas.AspNetCore.Authentication
             var deprecatedCookieNames = Context.Request.Cookies.Keys.Where(x => x.StartsWith(Options.CorrelationCookie.Name + Scheme.Name + "."));
             deprecatedCookieNames.ToList().ForEach(x => Context.Response.Cookies.Delete(x));
             // Append a response cookie for state/properties
+#if NET8_0_OR_GREATER
+            var cookieOptions = Options.CorrelationCookie.Build(Context, TimeProvider.GetUtcNow());
+#else
             var cookieOptions = Options.CorrelationCookie.Build(Context, Clock.UtcNow);
+#endif
             var protectedPropertiesCookieName = FormatStateCookieName(correlationId);
             Context.Response.Cookies.Append(protectedPropertiesCookieName, protectedProperties, cookieOptions);
 
@@ -150,7 +185,11 @@ namespace Myvas.AspNetCore.Authentication
             RandomNumberGenerator.Fill(bytes);
             var correlationId = Base64UrlTextEncoder.Encode(bytes);
 
+#if NET8_0_OR_GREATER
+            var cookieOptions = Options.CorrelationCookie.Build(Context, TimeProvider.GetUtcNow());
+#else
             var cookieOptions = Options.CorrelationCookie.Build(Context, Clock.UtcNow);
+#endif
 
             properties.Items[CorrelationProperty] = correlationId;
 
@@ -187,7 +226,11 @@ namespace Myvas.AspNetCore.Authentication
                 return false;
             }
 
+#if NET8_0_OR_GREATER
+            var cookieOptions = Options.CorrelationCookie.Build(Context, TimeProvider.GetUtcNow());
+#else
             var cookieOptions = Options.CorrelationCookie.Build(Context, Clock.UtcNow);
+#endif
 
             Response.Cookies.Delete(cookieName, cookieOptions);
 
@@ -306,7 +349,7 @@ namespace Myvas.AspNetCore.Authentication
 
             if (StringValues.IsNullOrEmpty(code))
             {
-                Logger.LogWarning("Code was not found.", properties);
+                Logger.LogWarning("Code was not found.");
                 return HandleRequestResult.Fail("Code was not found.", properties);
             }
 
@@ -358,7 +401,11 @@ namespace Myvas.AspNetCore.Authentication
                     {
                         // https://www.w3.org/TR/xmlschema-2/#dateTime
                         // https://msdn.microsoft.com/en-us/library/az4se3k1(v=vs.110).aspx
+#if NET8_0_OR_GREATER
+                        var expiresAt = TimeProvider.GetUtcNow() + TimeSpan.FromSeconds(value);
+#else
                         var expiresAt = Clock.UtcNow + TimeSpan.FromSeconds(value);
+#endif
                         authTokens.Add(new AuthenticationToken
                         {
                             Name = WeixinAuthenticationTokenNames.expires_at,

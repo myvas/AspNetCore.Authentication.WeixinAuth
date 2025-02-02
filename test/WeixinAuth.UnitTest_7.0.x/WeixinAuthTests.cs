@@ -736,7 +736,7 @@ namespace UnitTest
         }
 
         [Fact]
-        public async Task AuthenticateWithoutCookieWillReturnNone()
+        public async Task AuthenticateWithoutCookieWillFail()
         {
             var server = CreateServer(o =>
             {
@@ -750,7 +750,7 @@ namespace UnitTest
                 {
                     var result = await context.AuthenticateAsync(WeixinAuthDefaults.AuthenticationScheme);
                     Assert.False(result.Succeeded);
-                    {//8.0
+                    {//7.0
                         Assert.True(result.None);
                         Assert.Null(result.Failure);
                     }
@@ -1133,7 +1133,7 @@ namespace UnitTest
                 => server.SendAsync(
                     $"https://example.com/signin-WeixinAuth?state={UrlEncoder.Default.Encode(correlationId)}",
                     $".AspNetCore.Correlation.{WeixinAuthDefaults.AuthenticationScheme}.{correlationId}=HERE_MUST_BE_N"
-                    + $";.AspNetCore.Correlation.{WeixinAuthDefaults.AuthenticationScheme}.{correlationMarker}.{correlationId}={state}"));
+                    + $";.AspNetCore.Correlation.{ WeixinAuthDefaults.AuthenticationScheme}.{correlationMarker}.{correlationId}={state}"));
             Assert.Equal("Correlation failed.", error.GetBaseException().Message);
         }
 
@@ -1432,12 +1432,12 @@ namespace UnitTest
                         if (req.Path == new PathString("/challenge"))
                         {
                             await context.ChallengeAsync();
-                        }
-                        else if (req.Path == new PathString("/challenge-twitter"))
-                        {
-                            await context.ChallengeAsync(TwitterDefaults.AuthenticationScheme);
-                        }
-                        else if (req.Path == new PathString("/challenge-WeixinAuth"))
+						}
+						else if (req.Path == new PathString("/challenge-twitter"))
+						{
+							await context.ChallengeAsync(TwitterDefaults.AuthenticationScheme);
+						}
+						else if (req.Path == new PathString("/challenge-WeixinAuth"))
                         {
                             var provider = WeixinAuthDefaults.AuthenticationScheme;
                             string userId = "1234567890123456789012";
@@ -1465,18 +1465,18 @@ namespace UnitTest
                         {
                             var result = await context.AuthenticateAsync(TestExtensions.CookieAuthenticationScheme);
                             await res.DescribeAsync(result.Principal);
-                        }
-                        else if (req.Path == new PathString("/authenticate-WeixinAuth"))
+						}
+						else if (req.Path == new PathString("/authenticate-WeixinAuth"))
                         {
                             var result = await context.AuthenticateAsync(WeixinAuthDefaults.AuthenticationScheme);
                             await res.DescribeAsync(result?.Principal);
-                        }
-                        else if (req.Path == new PathString("/authenticate-twitter"))
-                        {
-                            var result = await context.AuthenticateAsync(TwitterDefaults.AuthenticationScheme);
-                            await res.DescribeAsync(result?.Principal);
-                        }
-                        else if (req.Path == new PathString("/401"))
+						}
+						else if (req.Path == new PathString("/authenticate-twitter"))
+						{
+							var result = await context.AuthenticateAsync(TwitterDefaults.AuthenticationScheme);
+							await res.DescribeAsync(result?.Principal);
+						}
+						else if (req.Path == new PathString("/401"))
                         {
                             res.StatusCode = (int)HttpStatusCode.Unauthorized;// 401;
                         }
