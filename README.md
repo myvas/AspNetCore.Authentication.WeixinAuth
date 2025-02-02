@@ -74,7 +74,7 @@ services.AddAuthentication()
 
 # Dev
 * [Visual Studio 2022](https://visualstudio.microsoft.com)
-* [.NET 8.0, 7.0, 6.0, 5.0, 3.1](https://dotnet.microsoft.com/en-us/download/dotnet)
+* [.NET 9.0, 8.0, 7.0, 6.0, 5.0, 3.1](https://dotnet.microsoft.com/en-us/download/dotnet)
 * [微信开发者工具](https://mp.weixin.qq.com/debug/wxadoc/dev/devtools/download.html)
 
 # Demo

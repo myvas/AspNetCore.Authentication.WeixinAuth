@@ -29,6 +29,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WeixinAuth.UnitTest_6.0.x",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WeixinAuth.UnitTest_7.0.x", "test\WeixinAuth.UnitTest_7.0.x\WeixinAuth.UnitTest_7.0.x.csproj", "{439BCABC-9551-41E3-88B9-4876F3D71843}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WeixinAuth.UnitTest_8.0.x", "test\WeixinAuth.UnitTest_8.0.x\WeixinAuth.UnitTest_8.0.x.csproj", "{BB4A2455-5EC3-4EFB-B245-9E83EBD6D419}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -51,6 +53,10 @@ Global
 		{439BCABC-9551-41E3-88B9-4876F3D71843}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{439BCABC-9551-41E3-88B9-4876F3D71843}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{439BCABC-9551-41E3-88B9-4876F3D71843}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BB4A2455-5EC3-4EFB-B245-9E83EBD6D419}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BB4A2455-5EC3-4EFB-B245-9E83EBD6D419}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BB4A2455-5EC3-4EFB-B245-9E83EBD6D419}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BB4A2455-5EC3-4EFB-B245-9E83EBD6D419}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -60,6 +66,7 @@ Global
 		{94ABBE67-3755-4DD1-A25E-2407FB32C60E} = {73FCFCF4-3A1C-4D4D-939A-9CABDC2341DC}
 		{0E17A946-9CA1-43D2-97A4-0A5E2F367EDA} = {73FCFCF4-3A1C-4D4D-939A-9CABDC2341DC}
 		{439BCABC-9551-41E3-88B9-4876F3D71843} = {73FCFCF4-3A1C-4D4D-939A-9CABDC2341DC}
+		{BB4A2455-5EC3-4EFB-B245-9E83EBD6D419} = {73FCFCF4-3A1C-4D4D-939A-9CABDC2341DC}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {2AEDFD1F-BBE1-4727-9978-2FB04DCE84AF}

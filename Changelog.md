@@ -1,5 +1,15 @@
 # Changelog
 
+## 9.0.0 (2024-12-06)
+- Added target framework: net9.0
+
+## 8.0.0 (2023-11-17)
+- Added target framework: net8.0
+- Added GitHub actions to test and deploy.
+
+## 7.0.11 (2023-09-15)
+- Added target framework: net7.0
+
 ## 6.0.3
 - Update to net6.0
 
