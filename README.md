@@ -2,8 +2,9 @@
 
 * QQConnect: [Here](https://github.com/myvas/AspNetCore.Authentication.QQConnect)
 
-[![QQConnect](https://github.com/myvas/AspNetCore.Authentication.QQConnect/actions/workflows/dotnet.yml/badge.svg)](https://github.com/myvas/AspNetCore.Authentication.QQConnect)
 [![GitHub (Pre-)Release Date](https://img.shields.io/github/release-date-pre/myvas/AspNetCore.Authentication.QQConnect?label=github)](https://github.com/myvas/AspNetCore.Authentication.QQConnect)
+[![test](https://github.com/myvas/AspNetCore.Authentication.QQConnect/actions/workflows/dotnet.yml/badge.svg)](https://github.com/myvas/AspNetCore.Authentication.QQConnect/actions)
+[![deploy](https://github.com/myvas/AspNetCore.Authentication.QQConnect/actions/workflows/nuget.yml/badge.svg)](https://github.com/myvas/AspNetCore.Authentication.QQConnect/actions)
 [![NuGet](https://img.shields.io/nuget/v/Myvas.AspNetCore.Authentication.QQConnect.svg)](https://www.nuget.org/packages/Myvas.AspNetCore.Authentication.QQConnect)
 
 * WeixinOpen: [Here](https://github.com/myvas/AspNetCore.Authentication.WeixinOpen)
