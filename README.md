@@ -2,8 +2,9 @@
 
 * QQConnect: [Here](https://github.com/myvas/AspNetCore.Authentication.QQConnect)
 
-[![QQConnect](https://github.com/myvas/AspNetCore.Authentication.QQConnect/actions/workflows/dotnet.yml/badge.svg)](https://github.com/myvas/AspNetCore.Authentication.QQConnect)
 [![GitHub (Pre-)Release Date](https://img.shields.io/github/release-date-pre/myvas/AspNetCore.Authentication.QQConnect?label=github)](https://github.com/myvas/AspNetCore.Authentication.QQConnect)
+[![test](https://github.com/myvas/AspNetCore.Authentication.QQConnect/actions/workflows/dotnet.yml/badge.svg)](https://github.com/myvas/AspNetCore.Authentication.QQConnect/actions)
+[![deploy](https://github.com/myvas/AspNetCore.Authentication.QQConnect/actions/workflows/nuget.yml/badge.svg)](https://github.com/myvas/AspNetCore.Authentication.QQConnect/actions)
 [![NuGet](https://img.shields.io/nuget/v/Myvas.AspNetCore.Authentication.QQConnect.svg)](https://www.nuget.org/packages/Myvas.AspNetCore.Authentication.QQConnect)
 
 * WeixinOpen: [Here](https://github.com/myvas/AspNetCore.Authentication.WeixinOpen)
@@ -74,7 +75,7 @@ services.AddAuthentication()
 
 # Dev
 * [Visual Studio 2022](https://visualstudio.microsoft.com)
-* [.NET 8.0, 7.0, 6.0, 5.0, 3.1](https://dotnet.microsoft.com/en-us/download/dotnet)
+* [.NET 9.0, 8.0, 7.0, 6.0, 5.0, 3.1](https://dotnet.microsoft.com/en-us/download/dotnet)
 * [微信开发者工具](https://mp.weixin.qq.com/debug/wxadoc/dev/devtools/download.html)
 
 # Demo

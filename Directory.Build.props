@@ -8,7 +8,7 @@
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<MinVerMinimumMajorMinor>8.0</MinVerMinimumMajorMinor>
+		<MinVerMinimumMajorMinor>9.0</MinVerMinimumMajorMinor>
 		<MinVerTagPrefix>v</MinVerTagPrefix>
 		<MinVerDefaultPreReleaseIdentifiers>alpha</MinVerDefaultPreReleaseIdentifiers>
 		<MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>
