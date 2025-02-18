@@ -750,9 +750,16 @@ namespace UnitTest
                 {
                     var result = await context.AuthenticateAsync(WeixinAuthDefaults.AuthenticationScheme);
                     Assert.False(result.Succeeded);
-                    {//7.0, 8.0, 9.0
+                    {
+                        //7.0, 8.0, 9.0
+#if NET7_0_OR_GREATER
                         Assert.True(result.None);
                         Assert.Null(result.Failure);
+#else
+                        Assert.False(result.None);
+                        Assert.NotNull(result.Failure);
+                        Assert.Equal("Not authenticated", result.Failure.Message);
+#endif
                     }
                 }
             });
