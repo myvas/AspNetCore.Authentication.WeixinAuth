@@ -1,0 +1,54 @@
+# This workflow will build a .NET project
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
+
+name: pack-and-publish (reusable workflow)
+
+on:
+  workflow_call:
+    secrets:
+      NUGET_TOKEN:
+        description: 'A nuget token to publish to nuget.org'
+        required: true
+        
+jobs:
+  pack-and-publish:
+    runs-on: ubuntu-latest
+    env:
+      NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages
+      CONFIGURATION: 'Release'
+    steps:
+      - run: echo "The job was automatically triggered by a ${{ github.event_name }} event."
+      - run: echo "This job is now running on a ${{ runner.os }} server hosted by GitHub!"
+      - run: echo "The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
+      
+      - name: Check out repository code
+        uses: actions/checkout@v4
+      - run: echo "The ${{ github.repository }} repository has been cloned to the runner."
+      - run: echo "The workflow is now ready to pack your code on the runner."
+      - name: List files in the repository
+        run: |
+          ls -la ${{ github.workspace }}
+    
+      - name: Setup dotnet
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+          cache: false
+      - name: Display dotnet version
+        run: dotnet --version
+    
+      - name: Install dependencies
+        run: dotnet restore
+      - name: Build
+        run: dotnet build --no-restore --configuration ${{ env.CONFIGURATION }}
+             
+      - name: Create the NuGet package (.nupkg)
+        run: dotnet pack --configuration Release
+      - name: Publish the NuGet package to nuget.org
+        run: dotnet nuget push "**/bin/Release/*.nupkg" -k $NUGET_AUTH_TOKEN -s https://api.nuget.org/v3/index.json --skip-duplicate
+        env:
+          NUGET_AUTH_TOKEN: ${{ secrets.NUGET_TOKEN }}
+          # You should create this repository secret on https://github.com/myvas/AspNetCore.Email/settings/secrets/actions
+
+      - run: echo "This job's status is ${{ job.status }}."
+      

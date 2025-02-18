@@ -1,0 +1,37 @@
+# This workflow will build a .NET project
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
+
+name: test
+on:
+  workflow_dispatch:
+  push:
+    branches: [ master ]
+    paths-ignore:
+      - "*.md"
+      - ".github/**"
+  pull_request:
+    branches: [ master ]
+    paths-ignore:
+      - "*.md"
+      - ".github/**"
+
+jobs:
+  build-and-test:
+    strategy:
+      matrix:
+        dotnet:
+          - version: '6.0.x'
+            framework: 'net6.0'
+          - version: '7.0.x'
+            framework: 'net7.0'
+          - version: '8.0.x'
+            framework: 'net8.0'
+          - version: '9.0.x'
+            framework: 'net9.0'
+        configuration: [ 'Debug', 'Release' ]
+    uses: ./.github/workflows/build-and-test.yml
+    with:
+      dotnet-version: ${{ matrix.dotnet.version }}
+      dotnet-framework: ${{ matrix.dotnet.framework }}
+      configuration: ${{ matrix.configuration }}
+      

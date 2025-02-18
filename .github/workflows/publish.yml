@@ -1,0 +1,35 @@
+# This workflow will publish NuGet packages to nuget.org
+# For more information see: https://docs.github.com/en/actions/use-cases-and-examples/publishing-packages/about-packaging-with-github-actions
+
+name: publish
+
+on:
+  workflow_dispatch:
+  release:
+    types: [ published ]
+
+jobs:
+  build-and-test:
+    strategy:
+      matrix:
+        dotnet:
+          - version: '6.0.x'
+            framework: 'net6.0'
+          - version: '7.0.x'
+            framework: 'net7.0'
+          - version: '8.0.x'
+            framework: 'net8.0'
+          - version: '9.0.x'
+            framework: 'net9.0'
+        configuration: [ 'Release' ]
+    uses: ./.github/workflows/build-and-test.yml
+    with:
+      dotnet-version: ${{ matrix.dotnet.version }}
+      dotnet-framework: ${{ matrix.dotnet.framework }}
+      configuration: ${{ matrix.configuration }}
+  
+  pack-and-publish:
+    needs: [ 'build-and-test' ]
+    uses: ./.github/workflows/pack-and-publish.yml
+    secrets:
+      NUGET_TOKEN: ${{ secrets.NUGET_TOKEN }}

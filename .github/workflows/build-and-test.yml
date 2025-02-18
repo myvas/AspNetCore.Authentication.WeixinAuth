@@ -1,0 +1,69 @@
+# This workflow will build a .NET project
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
+
+name: build-and-test (reusable workflow)
+
+on:
+  workflow_call:
+    inputs:
+      dotnet-version:
+        description: "required dotnet version. The default is '8.0.x'."
+        required: true
+        type: string
+        default: '8.0.x'
+      dotnet-framework:
+        description: "target framework for dotnet test. The default is 'net8.0'."
+        required: true
+        type: string
+        default: 'net8.0'
+      configuration:
+        description: "The configuration to use for building the package. The default is 'Release'."
+        required: true
+        type: string
+        default: 'Release'
+                  
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    env:
+      NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages
+    steps:
+      - run: echo "The inputs.dotnet version is ${{ inputs.dotnet-version }}, framework is ${{ inputs.dotnet-framework }}."
+      - run: echo "The inputs.configuration is ${{ inputs.configuration }}."
+      - run: echo "The job was automatically triggered by a ${{ github.event_name }} event."
+      - run: echo "This job is now running on a ${{ runner.os }} server hosted by GitHub!"
+      - run: echo "The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
+      
+      - name: Check out repository code
+        uses: actions/checkout@v4
+      - run: echo "The ${{ github.repository }} repository has been cloned to the runner."
+      - run: echo "The workflow is now ready to test your code on the runner."
+      - name: List files in the repository
+        run: |
+          ls -la ${{ github.workspace }}
+    
+      - name: Setup dotnet
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ inputs.dotnet-version }}
+          global-json-file: global.json
+          cache: false
+      - name: Display dotnet version
+        run: dotnet --version
+    
+      - name: Install dependencies
+        run: dotnet restore
+      - name: Build
+        run: dotnet build --no-restore --configuration ${{ inputs.configuration }}
+
+      - name: Test with the dotnet CLI
+        run: dotnet test --no-build --framework ${{ inputs.dotnet-framework }} --configuration ${{ inputs.configuration }} --verbosity normal --logger trx --results-directory "TestResults-${{ inputs.configuration }}-${{ inputs.dotnet-framework }}"
+      - name: Upload dotnet test results
+        uses: actions/upload-artifact@v4
+        with:
+          name: dontet-results-${{ inputs.configuration }}-${{ inputs.dotnet-framework }}
+          path: TestResults-${{ inputs.configuration }}-${{ inputs.dotnet-framework }}
+        if: ${{ always() }}
+
+      - run: echo "This job's status is ${{ job.status }}."
+      
