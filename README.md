@@ -3,22 +3,22 @@
 * QQConnect: [Here](https://github.com/myvas/AspNetCore.Authentication.QQConnect)
 
 [![GitHub (Pre-)Release Date](https://img.shields.io/github/release-date-pre/myvas/AspNetCore.Authentication.QQConnect?label=github)](https://github.com/myvas/AspNetCore.Authentication.QQConnect)
-[![test](https://github.com/myvas/AspNetCore.Authentication.QQConnect/actions/workflows/dotnet.yml/badge.svg)](https://github.com/myvas/AspNetCore.Authentication.QQConnect/actions)
-[![deploy](https://github.com/myvas/AspNetCore.Authentication.QQConnect/actions/workflows/nuget.yml/badge.svg)](https://github.com/myvas/AspNetCore.Authentication.QQConnect/actions)
+[![test](https://github.com/myvas/AspNetCore.Authentication.QQConnect/actions/workflows/test.yml/badge.svg)](https://github.com/myvas/AspNetCore.Authentication.QQConnect/actions/workflows/test.yml)
+[![deploy](https://github.com/myvas/AspNetCore.Authentication.QQConnect/actions/workflows/publish.yml/badge.svg)](https://github.com/myvas/AspNetCore.Authentication.QQConnect/actions/workflows/publish.yml)
 [![NuGet](https://img.shields.io/nuget/v/Myvas.AspNetCore.Authentication.QQConnect.svg)](https://www.nuget.org/packages/Myvas.AspNetCore.Authentication.QQConnect)
 
 * WeixinOpen: [Here](https://github.com/myvas/AspNetCore.Authentication.WeixinOpen)
 
 [![GitHub (Pre-)Release Date](https://img.shields.io/github/release-date-pre/myvas/AspNetCore.Authentication.WeixinOpen?label=github)](https://github.com/myvas/AspNetCore.Authentication.WeixinOpen)
-[![test](https://github.com/myvas/AspNetCore.Authentication.WeixinOpen/actions/workflows/dotnet.yml/badge.svg)](https://github.com/myvas/AspNetCore.Authentication.WeixinOpen/actions)
-[![deploy](https://github.com/myvas/AspNetCore.Authentication.WeixinOpen/actions/workflows/nuget.yml/badge.svg)](https://github.com/myvas/AspNetCore.Authentication.WeixinOpen/actions)
+[![test](https://github.com/myvas/AspNetCore.Authentication.WeixinOpen/actions/workflows/test.yml/badge.svg)](https://github.com/myvas/AspNetCore.Authentication.WeixinOpen/actions/workflows/test.yml)
+[![deploy](https://github.com/myvas/AspNetCore.Authentication.WeixinOpen/actions/workflows/publish.yml/badge.svg)](https://github.com/myvas/AspNetCore.Authentication.WeixinOpen/actions/workflows/publish.yml)
 [![NuGet](https://img.shields.io/nuget/v/Myvas.AspNetCore.Authentication.WeixinOpen.svg)](https://www.nuget.org/packages/Myvas.AspNetCore.Authentication.WeixinOpen)
 
 * WeixinAuth: _this repo_
 
 [![GitHub (Pre-)Release Date](https://img.shields.io/github/release-date-pre/myvas/AspNetCore.Authentication.WeixinAuth?label=github)](https://github.com/myvas/AspNetCore.Authentication.WeixinAuth)
-[![test](https://github.com/myvas/AspNetCore.Authentication.WeixinAuth/actions/workflows/dotnet.yml/badge.svg)](https://github.com/myvas/AspNetCore.Authentication.WeixinAuth/actions)
-[![deploy](https://github.com/myvas/AspNetCore.Authentication.WeixinAuth/actions/workflows/nuget.yml/badge.svg)](https://github.com/myvas/AspNetCore.Authentication.WeixinAuth/actions)
+[![test](https://github.com/myvas/AspNetCore.Authentication.WeixinAuth/actions/workflows/test.yml/badge.svg)](https://github.com/myvas/AspNetCore.Authentication.WeixinAuth/actions/workflows/test.yml)
+[![deploy](https://github.com/myvas/AspNetCore.Authentication.WeixinAuth/actions/workflows/publish.yml/badge.svg)](https://github.com/myvas/AspNetCore.Authentication.WeixinAuth/actions/workflows/publish.yml)
 [![NuGet](https://img.shields.io/nuget/v/Myvas.AspNetCore.Authentication.WeixinAuth.svg)](https://www.nuget.org/packages/Myvas.AspNetCore.Authentication.WeixinAuth)
 
 
