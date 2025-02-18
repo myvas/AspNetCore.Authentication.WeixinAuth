@@ -11,6 +11,7 @@
 		<MinVerMinimumMajorMinor>9.0</MinVerMinimumMajorMinor>
 		<MinVerTagPrefix>v</MinVerTagPrefix>
 		<MinVerDefaultPreReleaseIdentifiers>alpha</MinVerDefaultPreReleaseIdentifiers>
+		<MinVerIgnoreHeight>false</MinVerIgnoreHeight>
 		<MinVerSkip Condition="'$(Configuration)' == 'Debug'">true</MinVerSkip>
 	</PropertyGroup>
 	<Target Name="CustomFileVersion" AfterTargets="MinVer">
